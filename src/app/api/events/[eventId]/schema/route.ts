@@ -262,7 +262,7 @@ export async function POST(
               description: criterion.description,
               verificationMethod: criterion.verificationMethod,
               maxScore: criterion.maxScore,
-              judgementOptions: criterion.judgementOptions || null,
+              judgementOptions: criterion.judgementOptions || undefined,
               order: critOrder,
             },
           })
