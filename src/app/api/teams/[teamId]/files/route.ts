@@ -3,6 +3,12 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { writeFile, mkdir, unlink } from "fs/promises"
 import path from "path"
+import { existsSync } from "fs"
+
+// Use Railway Volume path in production, local public folder in development
+const UPLOADS_BASE = process.env.NODE_ENV === "production"
+  ? "/app/uploads"
+  : path.join(process.cwd(), "public", "uploads")
 
 // GET - fetch all files for a team
 export async function GET(
@@ -110,8 +116,11 @@ export async function POST(
     if (existingFile) {
       // Delete physical file
       try {
-        const filePath = path.join(process.cwd(), "public", existingFile.fileUrl)
-        await unlink(filePath)
+        const oldFilePath = existingFile.fileUrl.replace(/^\/api\/files\//, "")
+        const fullOldPath = path.join(UPLOADS_BASE, oldFilePath)
+        if (existsSync(fullOldPath)) {
+          await unlink(fullOldPath)
+        }
       } catch (e) {
         // Ignore if file doesn't exist
       }
@@ -122,13 +131,12 @@ export async function POST(
     }
 
     // Create uploads directory
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "team-files", teamId)
+    const uploadsDir = path.join(UPLOADS_BASE, "team-files", teamId)
     await mkdir(uploadsDir, { recursive: true })
 
     // Generate filename
     const timestamp = Date.now()
     const ext = path.extname(file.name)
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
     const filename = `${moduleCode}-${timestamp}${ext}`
     const filePath = path.join(uploadsDir, filename)
 
@@ -136,14 +144,14 @@ export async function POST(
     const buffer = Buffer.from(await file.arrayBuffer())
     await writeFile(filePath, buffer)
 
-    // Create database record
+    // Create database record (use API route for serving files)
     const teamFile = await prisma.teamFile.create({
       data: {
         teamId,
         uploadedById: session.user.id,
         moduleCode,
         fileName: file.name,
-        fileUrl: `/uploads/team-files/${teamId}/${filename}`,
+        fileUrl: `/api/files/team-files/${teamId}/${filename}`,
         fileSize: buffer.length,
       },
     })
@@ -201,8 +209,11 @@ export async function DELETE(
 
     // Delete physical file
     try {
-      const filePath = path.join(process.cwd(), "public", file.fileUrl)
-      await unlink(filePath)
+      const relativeFilePath = file.fileUrl.replace(/^\/api\/files\//, "")
+      const fullFilePath = path.join(UPLOADS_BASE, relativeFilePath)
+      if (existsSync(fullFilePath)) {
+        await unlink(fullFilePath)
+      }
     } catch (e) {
       // Ignore if file doesn't exist
     }

@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
+// Use Railway Volume path in production, local public folder in development
+const UPLOADS_BASE = process.env.NODE_ENV === "production"
+  ? "/app/uploads"
+  : path.join(process.cwd(), "public", "uploads")
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
@@ -53,12 +58,11 @@ export async function POST(
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "documents", eventId)
+    const uploadsDir = path.join(UPLOADS_BASE, "documents", eventId)
     await mkdir(uploadsDir, { recursive: true })
 
     // Generate unique filename
     const timestamp = Date.now()
-    const ext = path.extname(file.name)
     const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
     const filePath = path.join(uploadsDir, filename)
 
@@ -74,14 +78,14 @@ export async function POST(
     })
     const newVersion = existingDocs.length > 0 ? existingDocs[0].version + 1 : 1
 
-    // Create document record
+    // Create document record (use API route for serving files)
     const document = await prisma.eventDocument.create({
       data: {
         eventId,
         name,
         type: type as any,
         access: access as any,
-        fileUrl: `/uploads/documents/${eventId}/${filename}`,
+        fileUrl: `/api/files/documents/${eventId}/${filename}`,
         version: newVersion,
       },
     })

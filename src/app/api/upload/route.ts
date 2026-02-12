@@ -5,6 +5,11 @@ import { writeFile, mkdir } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
 
+// Use Railway Volume path in production, local public folder in development
+const UPLOADS_BASE = process.env.NODE_ENV === "production"
+  ? "/app/uploads"
+  : path.join(process.cwd(), "public", "uploads")
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()
@@ -20,11 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: "File size exceeds 5MB limit" },
+        { error: "File size exceeds 10MB limit" },
         { status: 400 }
       )
     }
@@ -47,10 +52,19 @@ export async function POST(req: NextRequest) {
 
     // Determine upload directory
     let uploadDir: string
+    let subPath: string
     if (type === "avatar") {
-      uploadDir = path.join(process.cwd(), "public", "uploads", "avatars")
+      subPath = "avatars"
+      uploadDir = path.join(UPLOADS_BASE, "avatars")
+    } else if (type === "document") {
+      subPath = "documents"
+      uploadDir = path.join(UPLOADS_BASE, "documents")
+    } else if (type === "team") {
+      subPath = "teams"
+      uploadDir = path.join(UPLOADS_BASE, "teams")
     } else {
-      uploadDir = path.join(process.cwd(), "public", "uploads")
+      subPath = ""
+      uploadDir = UPLOADS_BASE
     }
 
     // Ensure directory exists
@@ -64,10 +78,10 @@ export async function POST(req: NextRequest) {
     const filePath = path.join(uploadDir, filename)
     await writeFile(filePath, buffer)
 
-    // Generate public URL
-    const url = type === "avatar"
-      ? `/uploads/avatars/${filename}`
-      : `/uploads/${filename}`
+    // Generate URL (use API route to serve files in production)
+    const url = subPath
+      ? `/api/files/${subPath}/${filename}`
+      : `/api/files/${filename}`
 
     // If avatar upload, update user profile
     if (type === "avatar") {
