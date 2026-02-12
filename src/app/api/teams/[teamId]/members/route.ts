@@ -46,7 +46,8 @@ export async function POST(
     }
 
     const { teamId } = await params
-    const { userId, role = "MEMBER" } = await req.json()
+    const { userId } = await req.json()
+    const role = "MEMBER" // Only MEMBER role is supported
 
     if (!userId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })

@@ -115,7 +115,7 @@ export default function AdminPassportsPage() {
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">Выберите мероприятие</option>
             {events.map((event) => (
@@ -135,7 +135,7 @@ export default function AdminPassportsPage() {
         </Card>
       ) : isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
       ) : passports.length === 0 ? (
         <Card>
@@ -184,7 +184,7 @@ export default function AdminPassportsPage() {
                     {passport.team?.name || "—"}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-lg font-bold text-blue-600">
+                    <span className="text-lg font-bold text-red-600">
                       {passport.totalScore.toFixed(1)}
                     </span>
                     <span className="text-gray-400">/100</span>

@@ -52,7 +52,7 @@ export default function EventsPage() {
       DRAFT: { label: "Черновик", className: "bg-gray-100 text-gray-700" },
       REGISTRATION_OPEN: { label: "Регистрация открыта", className: "bg-green-100 text-green-700" },
       REGISTRATION_CLOSED: { label: "Регистрация закрыта", className: "bg-yellow-100 text-yellow-700" },
-      IN_PROGRESS: { label: "Идёт мероприятие", className: "bg-blue-100 text-blue-700" },
+      IN_PROGRESS: { label: "Идёт мероприятие", className: "bg-red-100 text-red-700" },
       SCORING: { label: "Оценивание", className: "bg-purple-100 text-purple-700" },
       RESULTS_PUBLISHED: { label: "Результаты опубликованы", className: "bg-green-100 text-green-700" },
       ARCHIVED: { label: "Архив", className: "bg-gray-100 text-gray-500" },
@@ -63,7 +63,7 @@ export default function EventsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -97,7 +97,7 @@ export default function EventsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg">{event.name}</CardTitle>
-                      <p className="text-sm text-blue-600 mt-1">{event.competency}</p>
+                      <p className="text-sm text-red-600 mt-1">{event.competency}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
                       {badge.label}

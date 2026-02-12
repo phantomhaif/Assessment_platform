@@ -241,7 +241,7 @@ export default function AdminScoringPage() {
                   setSelectedEventId(e.target.value)
                   setSelectedTeamId("")
                 }}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="">Выберите мероприятие</option>
                 {events.map(event => (
@@ -259,7 +259,7 @@ export default function AdminScoringPage() {
                 value={selectedTeamId}
                 onChange={(e) => setSelectedTeamId(e.target.value)}
                 disabled={!selectedEventId}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
               >
                 <option value="">Выберите команду</option>
                 {teams.map(team => (
@@ -276,7 +276,7 @@ export default function AdminScoringPage() {
       {/* Scoring Interface */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
       ) : !selectedTeamId ? (
         <Card>
@@ -315,7 +315,7 @@ export default function AdminScoringPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-red-600">
                       {((calculateModuleScore(module) / module.maxScore) * 100).toFixed(0)}%
                     </div>
                   </div>
@@ -384,7 +384,7 @@ export default function AdminScoringPage() {
                                         parseFloat(e.target.value),
                                         criterion.maxScore
                                       )}
-                                      className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                                     >
                                       {criterion.judgementOptions?.map(option => (
                                         <option key={option.score} value={option.score}>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Award, Download, Calendar } from "lucide-react"
+import { Award, Download, Calendar, Trophy, Users } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 
@@ -19,6 +19,18 @@ interface SkillPassport {
     eventStart: string
     eventEnd: string
   }
+  team: {
+    name: string
+    rank: number | null
+    totalScore: number | null
+  } | null
+}
+
+const getMedalEmoji = (rank: number | null) => {
+  if (rank === 1) return "🥇"
+  if (rank === 2) return "🥈"
+  if (rank === 3) return "🥉"
+  return null
 }
 
 export default function MyPassportsPage() {
@@ -65,7 +77,7 @@ export default function MyPassportsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -112,7 +124,7 @@ export default function MyPassportsPage() {
                 <h4 className="font-semibold text-gray-900 mb-1">
                   {passport.event.name}
                 </h4>
-                <p className="text-sm text-blue-600 mb-2">
+                <p className="text-sm text-red-600 mb-2">
                   {passport.event.competency}
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mb-4">
@@ -120,6 +132,32 @@ export default function MyPassportsPage() {
                   {format(new Date(passport.event.eventStart), "d MMM", { locale: ru })} —{" "}
                   {format(new Date(passport.event.eventEnd), "d MMM yyyy", { locale: ru })}
                 </div>
+
+                {/* Team rank display */}
+                {passport.team && passport.team.rank && (
+                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100">
+                        {getMedalEmoji(passport.team.rank) ? (
+                          <span className="text-2xl">{getMedalEmoji(passport.team.rank)}</span>
+                        ) : (
+                          <Trophy className="h-5 w-5 text-amber-600" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-amber-900">
+                            {passport.team.rank} место
+                          </span>
+                        </div>
+                        <div className="flex items-center text-sm text-amber-700">
+                          <Users className="h-3 w-3 mr-1" />
+                          {passport.team.name}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Module scores preview */}
                 <div className="space-y-2 mb-4">

@@ -19,8 +19,8 @@ export function Header() {
           <Bell className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="h-5 w-5 text-blue-600" />
+          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+            <User className="h-5 w-5 text-red-600" />
           </div>
           <span className="text-sm font-medium text-gray-700">
             {session?.user?.role === "ADMIN" && "Администратор"}

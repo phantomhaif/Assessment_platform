@@ -110,7 +110,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -156,7 +156,7 @@ export default function ProfilePage() {
                     </span>
                   )}
                 </div>
-                <label className="absolute bottom-0 right-0 p-1 bg-blue-600 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+                <label className="absolute bottom-0 right-0 p-1 bg-red-600 rounded-full cursor-pointer hover:bg-red-700 transition-colors">
                   <Camera className="h-4 w-4 text-white" />
                   <input
                     type="file"
@@ -191,7 +191,7 @@ export default function ProfilePage() {
               <Input
                 label="Отчество"
                 name="middleName"
-                value={profile.middleName}
+                value={profile.middleName || ""}
                 onChange={handleChange}
               />
               <Input
@@ -205,14 +205,14 @@ export default function ProfilePage() {
               <Input
                 label="Организация"
                 name="organization"
-                value={profile.organization}
+                value={profile.organization || ""}
                 onChange={handleChange}
                 placeholder="МИРЭА — Российский технологический университет"
               />
               <Input
                 label="Должность"
                 name="position"
-                value={profile.position}
+                value={profile.position || ""}
                 onChange={handleChange}
                 placeholder="Студент / Преподаватель"
               />
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                 label="Телефон"
                 name="phone"
                 type="tel"
-                value={profile.phone}
+                value={profile.phone || ""}
                 onChange={handleChange}
                 placeholder="+7 (999) 123-45-67"
               />

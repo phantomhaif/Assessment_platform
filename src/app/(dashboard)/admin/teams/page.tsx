@@ -113,7 +113,7 @@ export default function AdminTeamsPage() {
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="">Выберите мероприятие</option>
                 {events.map((event) => (
@@ -163,7 +163,7 @@ export default function AdminTeamsPage() {
         </Card>
       ) : isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
       ) : teams.length === 0 ? (
         <Card>
@@ -180,7 +180,7 @@ export default function AdminTeamsPage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   {team.number && (
-                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-sm">
+                    <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-sm">
                       #{team.number}
                     </span>
                   )}

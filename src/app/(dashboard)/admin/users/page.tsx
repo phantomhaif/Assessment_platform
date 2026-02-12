@@ -68,14 +68,14 @@ export default function AdminUsersPage() {
   const roleLabels: Record<string, { label: string; color: string }> = {
     ADMIN: { label: "Администратор", color: "bg-red-100 text-red-700" },
     ORGANIZER: { label: "Организатор", color: "bg-purple-100 text-purple-700" },
-    EXPERT: { label: "Эксперт", color: "bg-blue-100 text-blue-700" },
+    EXPERT: { label: "Эксперт", color: "bg-red-100 text-red-700" },
     PARTICIPANT: { label: "Участник", color: "bg-gray-100 text-gray-700" },
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }

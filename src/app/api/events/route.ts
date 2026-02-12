@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { EventStatus } from "@prisma/client"
 
 const createEventSchema = z.object({
   name: z.string().min(1, "Название обязательно"),
@@ -25,7 +26,13 @@ export async function GET(req: NextRequest) {
       ? {}
       : {
           status: {
-            in: ["REGISTRATION_OPEN", "REGISTRATION_CLOSED", "IN_PROGRESS", "SCORING", "RESULTS_PUBLISHED"],
+            in: [
+              EventStatus.REGISTRATION_OPEN,
+              EventStatus.REGISTRATION_CLOSED,
+              EventStatus.IN_PROGRESS,
+              EventStatus.SCORING,
+              EventStatus.RESULTS_PUBLISHED,
+            ],
           },
         }
 
@@ -87,7 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.issues[0]?.message || "Validation error" }, { status: 400 })
     }
     console.error("Error creating event:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })

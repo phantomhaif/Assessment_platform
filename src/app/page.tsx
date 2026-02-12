@@ -141,7 +141,6 @@ export default function Home() {
       <footer className="py-8 px-4 border-t border-gray-200">
         <div className="max-w-6xl mx-auto text-center text-gray-500 text-sm">
           <p>Assessment Platform - Платформа оценки соревнований профессионального мастерства</p>
-          <p className="mt-2">Robotics Skills / Industry Skills</p>
         </div>
       </footer>
     </div>

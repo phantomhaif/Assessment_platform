@@ -24,6 +24,28 @@ export async function GET(
             name: true,
           },
         },
+        teams: {
+          where: {
+            rank: { not: null },
+          },
+          orderBy: { rank: "asc" },
+          select: {
+            id: true,
+            name: true,
+            rank: true,
+            totalScore: true,
+            members: {
+              include: {
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     })
 

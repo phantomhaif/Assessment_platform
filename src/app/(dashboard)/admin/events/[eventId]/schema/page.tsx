@@ -100,7 +100,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 className="hidden"
                 disabled={isUploading}
               />
-              <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-blue-600 text-white shadow hover:bg-blue-700 transition-colors">
+              <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-red-600 text-white shadow hover:bg-red-700 transition-colors">
                 {isUploading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -139,7 +139,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
           <CardContent>
             <div className="space-y-4">
               <div className="flex gap-4 text-sm">
-                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                <div className="bg-red-50 text-red-700 px-3 py-1 rounded-full">
                   Модулей: {schema.modules?.length || 0}
                 </div>
                 <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full">

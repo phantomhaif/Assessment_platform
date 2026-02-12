@@ -26,8 +26,8 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Calendar className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <Calendar className="h-6 w-6 text-red-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Мероприятия</p>

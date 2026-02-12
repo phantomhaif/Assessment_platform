@@ -172,7 +172,7 @@ export default function RegisterPage() {
                 label={
                   <span>
                     Я принимаю{" "}
-                    <a href="/terms" className="text-blue-600 hover:underline">
+                    <a href="/terms" className="text-red-600 hover:underline">
                       условия использования
                     </a>
                   </span>
@@ -192,7 +192,7 @@ export default function RegisterPage() {
             </Button>
             <p className="text-sm text-gray-600 text-center">
               Уже есть аккаунт?{" "}
-              <Link href="/login" className="text-blue-600 hover:underline">
+              <Link href="/login" className="text-red-600 hover:underline">
                 Войти
               </Link>
             </p>

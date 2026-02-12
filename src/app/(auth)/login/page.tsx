@@ -57,10 +57,10 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="mb-8">
-            <div className="w-16 h-16 rounded-xl bg-[#0066cc] flex items-center justify-center mb-6">
+            <div className="w-16 h-16 rounded-xl bg-[#C41E3A] flex items-center justify-center mb-6">
               <span className="text-white font-bold text-2xl">IS</span>
             </div>
-            <h1 className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+            <h1 className="text-4xl font-bold mb-4 text-white" style={{ fontFamily: 'var(--font-heading)', color: 'white' }}>
               Industry Skills
             </h1>
             <p className="text-xl text-gray-300 mb-2">
@@ -73,15 +73,15 @@ export default function LoginPage() {
 
           <div className="space-y-4 text-gray-300">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#0066cc]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
               <span>Управление мероприятиями</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#0066cc]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
               <span>Оценка участников</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#0066cc]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
               <span>Skills Passports</span>
             </div>
           </div>
@@ -93,7 +93,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-[#0066cc] flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-xl bg-[#C41E3A] flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-xl">IS</span>
             </div>
             <h1 className="text-2xl font-bold text-[#0f172a]" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -148,7 +148,7 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-[#64748b]">
                 Нет аккаунта?{" "}
-                <Link href="/register" className="text-[#0066cc] font-medium hover:underline">
+                <Link href="/register" className="text-[#C41E3A] font-medium hover:underline">
                   Зарегистрироваться
                 </Link>
               </p>

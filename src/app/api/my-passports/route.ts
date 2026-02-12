@@ -23,6 +23,13 @@ export async function GET() {
             eventEnd: true,
           },
         },
+        team: {
+          select: {
+            name: true,
+            rank: true,
+            totalScore: true,
+          },
+        },
       },
       orderBy: { publishedAt: "desc" },
     })

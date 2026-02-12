@@ -228,7 +228,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -371,9 +371,9 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                 )}
 
                 {addingToTeamId === team.id && (
-                  <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="mb-4 p-4 bg-red-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-blue-900">Добавить участника</h4>
+                      <h4 className="font-medium text-red-900">Добавить участника</h4>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -403,23 +403,13 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                             </p>
                             <p className="text-xs text-gray-500">{user.email}</p>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAddMember(team.id, user.id, "CAPTAIN")}
-                              disabled={isAddingMember}
-                            >
-                              Капитан
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleAddMember(team.id, user.id, "MEMBER")}
-                              disabled={isAddingMember}
-                            >
-                              Участник
-                            </Button>
-                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddMember(team.id, user.id, "MEMBER")}
+                            disabled={isAddingMember}
+                          >
+                            Добавить
+                          </Button>
                         </div>
                       ))}
                       {getAvailableUsers(team).length === 0 && (
@@ -447,8 +437,8 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                           <p className="text-sm text-gray-500">{member.user.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                            {member.role === "CAPTAIN" ? "Капитан" : "Участник"}
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                            Участник
                           </span>
                           <Button
                             variant="ghost"

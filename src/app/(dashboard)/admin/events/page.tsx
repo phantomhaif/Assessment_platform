@@ -75,7 +75,7 @@ export default function AdminEventsPage() {
       DRAFT: { label: "Черновик", className: "bg-gray-100 text-gray-700" },
       REGISTRATION_OPEN: { label: "Регистрация", className: "bg-green-100 text-green-700" },
       REGISTRATION_CLOSED: { label: "Рег. закрыта", className: "bg-yellow-100 text-yellow-700" },
-      IN_PROGRESS: { label: "В процессе", className: "bg-blue-100 text-blue-700" },
+      IN_PROGRESS: { label: "В процессе", className: "bg-red-100 text-red-700" },
       SCORING: { label: "Оценивание", className: "bg-purple-100 text-purple-700" },
       RESULTS_PUBLISHED: { label: "Опубликовано", className: "bg-green-100 text-green-700" },
       ARCHIVED: { label: "Архив", className: "bg-gray-100 text-gray-500" },
@@ -100,7 +100,7 @@ export default function AdminEventsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
       ) : events.length === 0 ? (
         <Card>

@@ -7,7 +7,299 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============== ПОЛЬЗОВАТЕЛИ ==============
+model User {
+  id                     String                @id @default(cuid())
+  email                  String                @unique
+  passwordHash           String
+  emailVerified          DateTime?
+  firstName              String
+  lastName               String
+  middleName             String?
+  organization           String?
+  position               String?
+  phone                  String?
+  photo                  String?
+  role                   UserRole              @default(PARTICIPANT)
+  agreedToTerms          Boolean               @default(false)
+  agreedToDataProcessing Boolean               @default(false)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  applications           Application[]
+  expertAssignments      ExpertAssignment[]
+  protocolAssignments    ProtocolAssignment[]
+  protocolSignatures     ProtocolSignature[]
+  scores                 Score[]
+  skillPassports         SkillPassport[]
+  uploadedFiles          TeamFile[]
+  teamMemberships        TeamMember[]
+
+  @@map("users")
+}
+
+model Event {
+  id                String            @id @default(cuid())
+  name              String
+  description       String?
+  competency        String
+  logo              String?
+  registrationStart DateTime
+  registrationEnd   DateTime
+  eventStart        DateTime
+  eventEnd          DateTime
+  status            EventStatus       @default(DRAFT)
+  maxTeamSize       Int               @default(4)
+  minTeamSize       Int               @default(1)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  applications      Application[]
+  assessmentSchema  AssessmentSchema?
+  documents         EventDocument[]
+  protocols         Protocol[]
+  skillPassports    SkillPassport[]
+  teams             Team[]
+
+  @@map("events")
+}
+
+model EventDocument {
+  id        String         @id @default(cuid())
+  eventId   String
+  name      String
+  type      DocumentType
+  access    DocumentAccess @default(PARTICIPANTS)
+  fileUrl   String
+  version   Int            @default(1)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_documents")
+}
+
+model Application {
+  id                 String            @id @default(cuid())
+  userId             String
+  eventId            String
+  status             ApplicationStatus @default(PENDING)
+  agreedToRegulation Boolean           @default(false)
+  comment            String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  event              Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("applications")
+}
+
+model Team {
+  id             String          @id @default(cuid())
+  eventId        String
+  name           String
+  number         Int?
+  rank           Int?
+  totalScore     Float?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  scores         Score[]
+  skillPassports SkillPassport[]
+  files          TeamFile[]
+  members        TeamMember[]
+  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, name])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String         @id @default(cuid())
+  teamId    String
+  userId    String
+  role      TeamMemberRole @default(MEMBER)
+  createdAt DateTime       @default(now())
+  team      Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model TeamFile {
+  id           String   @id @default(cuid())
+  teamId       String
+  uploadedById String
+  moduleCode   String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  createdAt    DateTime @default(now())
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+
+  @@map("team_files")
+}
+
+model AssessmentSchema {
+  id            String             @id @default(cuid())
+  eventId       String             @unique
+  name          String
+  totalMaxScore Float              @default(100)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  modules       AssessmentModule[]
+  event         Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  skillGroups   SkillGroup[]
+
+  @@map("assessment_schemas")
+}
+
+model AssessmentModule {
+  id          String           @id @default(cuid())
+  schemaId    String
+  code        String
+  name        String
+  nameEn      String?
+  maxScore    Float
+  order       Int              @default(0)
+  schema      AssessmentSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  subCriteria SubCriterion[]
+
+  @@unique([schemaId, code])
+  @@map("assessment_modules")
+}
+
+model SkillGroup {
+  id       String           @id @default(cuid())
+  schemaId String
+  number   Int
+  name     String
+  nameEn   String?
+  maxScore Float
+  criteria Criterion[]
+  schema   AssessmentSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+
+  @@unique([schemaId, number])
+  @@map("skill_groups")
+}
+
+model SubCriterion {
+  id       String           @id @default(cuid())
+  moduleId String
+  code     String
+  name     String
+  order    Int              @default(0)
+  criteria Criterion[]
+  module   AssessmentModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("sub_criteria")
+}
+
+model Criterion {
+  id                 String        @id @default(cuid())
+  subCriterionId     String
+  skillGroupId       String?
+  type               CriterionType
+  description        String
+  verificationMethod String?
+  maxScore           Float
+  judgementOptions   Json?
+  order              Int           @default(0)
+  skillGroup         SkillGroup?   @relation(fields: [skillGroupId], references: [id])
+  subCriterion       SubCriterion  @relation(fields: [subCriterionId], references: [id], onDelete: Cascade)
+  scores             Score[]
+
+  @@map("criteria")
+}
+
+model Score {
+  id          String    @id @default(cuid())
+  criterionId String
+  teamId      String
+  expertId    String
+  value       Float
+  comment     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  criterion   Criterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  expert      User      @relation(fields: [expertId], references: [id])
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([criterionId, teamId])
+  @@map("scores")
+}
+
+model ExpertAssignment {
+  id         String   @id @default(cuid())
+  expertId   String
+  eventId    String
+  moduleCode String?
+  teamIds    String[]
+  createdAt  DateTime @default(now())
+  expert     User     @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@unique([expertId, eventId, moduleCode])
+  @@map("expert_assignments")
+}
+
+model Protocol {
+  id          String                @id @default(cuid())
+  eventId     String
+  title       String
+  content     String              @db.Text
+  version     Int                   @default(1)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  signatures  ProtocolSignature[]
+  assignments ProtocolAssignment[]
+  event       Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("protocols")
+}
+
+model ProtocolAssignment {
+  id         String   @id @default(cuid())
+  protocolId String
+  userId     String
+  createdAt  DateTime @default(now())
+  protocol   Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([protocolId, userId])
+  @@map("protocol_assignments")
+}
+
+model ProtocolSignature {
+  id         String   @id @default(cuid())
+  protocolId String
+  userId     String
+  signedAt   DateTime @default(now())
+  ipAddress  String?
+  protocol   Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([protocolId, userId])
+  @@map("protocol_signatures")
+}
+
+model SkillPassport {
+  id               String    @id @default(cuid())
+  userId           String
+  eventId          String
+  teamId           String?
+  totalScore       Float
+  moduleScores     Json
+  skillGroupScores Json
+  pdfUrl           String?
+  publishedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  event            Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team             Team?     @relation(fields: [teamId], references: [id])
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("skill_passports")
+}
 
 enum UserRole {
   GUEST
@@ -16,44 +308,6 @@ enum UserRole {
   ORGANIZER
   ADMIN
 }
-
-model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  passwordHash      String
-  emailVerified     DateTime?
-
-  // Профиль
-  firstName         String
-  lastName          String
-  middleName        String?
-  organization      String?   // Учреждение/университет
-  position          String?   // Должность
-  phone             String?
-  photo             String?   // URL фото
-
-  role              UserRole  @default(PARTICIPANT)
-
-  // Согласия
-  agreedToTerms     Boolean   @default(false)
-  agreedToDataProcessing Boolean @default(false)
-
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Связи
-  applications      Application[]
-  teamMemberships   TeamMember[]
-  expertAssignments ExpertAssignment[]
-  scores            Score[]
-  protocolSignatures ProtocolSignature[]
-  skillPassports    SkillPassport[]
-  uploadedFiles     TeamFile[]
-
-  @@map("users")
-}
-
-// ============== МЕРОПРИЯТИЯ ==============
 
 enum EventStatus {
   DRAFT
@@ -65,76 +319,20 @@ enum EventStatus {
   ARCHIVED
 }
 
-model Event {
-  id                String      @id @default(cuid())
-
-  // Основная информация
-  name              String
-  description       String?     @db.Text
-  competency        String      // Компетенция (например "Цифровое производство")
-  logo              String?     // URL логотипа
-
-  // Даты
-  registrationStart DateTime
-  registrationEnd   DateTime
-  eventStart        DateTime
-  eventEnd          DateTime
-
-  status            EventStatus @default(DRAFT)
-
-  // Настройки
-  maxTeamSize       Int         @default(4)
-  minTeamSize       Int         @default(1)
-
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  // Связи
-  applications      Application[]
-  teams             Team[]
-  assessmentSchema  AssessmentSchema?
-  documents         EventDocument[]
-  protocols         Protocol[]
-  skillPassports    SkillPassport[]
-
-  @@map("events")
-}
-
-// ============== ДОКУМЕНТЫ МЕРОПРИЯТИЯ ==============
-
 enum DocumentType {
-  REGULATION      // Регламент
-  SMP             // Skill Management Plan
-  INFRASTRUCTURE  // Инфраструктурный лист
-  SCHEDULE        // Расписание
+  REGULATION
+  SMP
+  INFRASTRUCTURE
+  SCHEDULE
   OTHER
 }
 
 enum DocumentAccess {
-  PUBLIC          // Для всех
-  PARTICIPANTS    // Только участникам
-  EXPERTS         // Только экспертам
-  ORGANIZERS      // Только организаторам
+  PUBLIC
+  PARTICIPANTS
+  EXPERTS
+  ORGANIZERS
 }
-
-model EventDocument {
-  id          String         @id @default(cuid())
-  eventId     String
-  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  name        String
-  type        DocumentType
-  access      DocumentAccess @default(PARTICIPANTS)
-  fileUrl     String
-  version     Int            @default(1)
-
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  @@map("event_documents")
-}
-
-// ============== ЗАЯВКИ ==============
 
 enum ApplicationStatus {
   PENDING
@@ -143,291 +341,11 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
-model Application {
-  id          String            @id @default(cuid())
-  userId      String
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventId     String
-  event       Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  status      ApplicationStatus @default(PENDING)
-
-  // Подтверждения при подаче заявки
-  agreedToRegulation Boolean    @default(false)
-
-  comment     String?           @db.Text // Комментарий от организатора
-
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  @@unique([userId, eventId])
-  @@map("applications")
-}
-
-// ============== КОМАНДЫ ==============
-
-model Team {
-  id          String       @id @default(cuid())
-  eventId     String
-  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  name        String
-  number      Int?         // Номер команды на мероприятии
-
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Связи
-  members     TeamMember[]
-  scores      Score[]
-  files       TeamFile[]
-  skillPassports SkillPassport[]
-
-  @@unique([eventId, name])
-  @@map("teams")
-}
-
 enum TeamMemberRole {
-  CAPTAIN
   MEMBER
 }
 
-model TeamMember {
-  id          String         @id @default(cuid())
-  teamId      String
-  team        Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  role        TeamMemberRole @default(MEMBER)
-
-  createdAt   DateTime       @default(now())
-
-  @@unique([teamId, userId])
-  @@map("team_members")
-}
-
-// ============== ФАЙЛЫ КОМАНДЫ (для проверки) ==============
-
-model TeamFile {
-  id          String   @id @default(cuid())
-  teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  uploadedById String
-  uploadedBy  User     @relation(fields: [uploadedById], references: [id])
-
-  moduleCode  String   // Код модуля (A, B, C, D)
-  fileName    String
-  fileUrl     String
-  fileSize    Int      // в байтах
-
-  createdAt   DateTime @default(now())
-
-  @@map("team_files")
-}
-
-// ============== СХЕМА ОЦЕНКИ ==============
-
-model AssessmentSchema {
-  id          String   @id @default(cuid())
-  eventId     String   @unique
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  name        String
-  totalMaxScore Float  @default(100)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Связи
-  modules     AssessmentModule[]
-  skillGroups SkillGroup[]
-
-  @@map("assessment_schemas")
-}
-
-// Модули оценки (A, B, C, D)
-model AssessmentModule {
-  id          String           @id @default(cuid())
-  schemaId    String
-  schema      AssessmentSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
-
-  code        String           // A, B, C, D
-  name        String           // "Моделирование производства"
-  nameEn      String?          // English name
-  maxScore    Float
-  order       Int              @default(0)
-
-  // Связи
-  subCriteria SubCriterion[]
-
-  @@unique([schemaId, code])
-  @@map("assessment_modules")
-}
-
-// Группы навыков WSSS (9 групп)
-model SkillGroup {
-  id          String           @id @default(cuid())
-  schemaId    String
-  schema      AssessmentSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
-
-  number      Int              // 1-9
-  name        String           // "Организация рабочего процесса"
-  nameEn      String?          // "Workflow organization"
-  maxScore    Float
-
-  // Связи
-  criteria    Criterion[]
-
-  @@unique([schemaId, number])
-  @@map("skill_groups")
-}
-
-// Критерии внутри модуля
-model SubCriterion {
-  id          String           @id @default(cuid())
-  moduleId    String
-  module      AssessmentModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  code        String           // Код подкритерия
-  name        String           // Название
-  order       Int              @default(0)
-
-  criteria    Criterion[]
-
-  @@map("sub_criteria")
-}
-
-// Конкретные критерии оценки
 enum CriterionType {
-  M   // Measurement - бинарная оценка (0 или max)
-  J   // Judgement - шкала (0, 1, 2, 3)
-}
-
-model Criterion {
-  id               String        @id @default(cuid())
-  subCriterionId   String
-  subCriterion     SubCriterion  @relation(fields: [subCriterionId], references: [id], onDelete: Cascade)
-  skillGroupId     String?
-  skillGroup       SkillGroup?   @relation(fields: [skillGroupId], references: [id])
-
-  type             CriterionType
-  description      String        @db.Text
-  verificationMethod String?     @db.Text // Методология проверки
-  maxScore         Float
-
-  // Для J-типа: варианты оценки
-  judgementOptions Json?         // [{score: 0, label: "..."}, {score: 1, label: "..."}, ...]
-
-  order            Int           @default(0)
-
-  scores           Score[]
-
-  @@map("criteria")
-}
-
-// ============== ОЦЕНКИ ==============
-
-model Score {
-  id          String    @id @default(cuid())
-  criterionId String
-  criterion   Criterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
-  teamId      String
-  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  expertId    String
-  expert      User      @relation(fields: [expertId], references: [id])
-
-  value       Float
-  comment     String?   @db.Text
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([criterionId, teamId])
-  @@map("scores")
-}
-
-// ============== НАЗНАЧЕНИЕ ЭКСПЕРТОВ ==============
-
-model ExpertAssignment {
-  id          String   @id @default(cuid())
-  expertId    String
-  expert      User     @relation(fields: [expertId], references: [id], onDelete: Cascade)
-  eventId     String
-
-  // Можно назначить на конкретные модули/команды
-  moduleCode  String?  // null = все модули
-  teamIds     String[] // пустой = все команды
-
-  createdAt   DateTime @default(now())
-
-  @@unique([expertId, eventId, moduleCode])
-  @@map("expert_assignments")
-}
-
-// ============== ПРОТОКОЛЫ ==============
-
-model Protocol {
-  id          String              @id @default(cuid())
-  eventId     String
-  event       Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  title       String
-  content     String              @db.Text
-  version     Int                 @default(1)
-
-  // Кому адресован
-  targetRole  UserRole?           // null = всем участникам
-
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  signatures  ProtocolSignature[]
-
-  @@map("protocols")
-}
-
-model ProtocolSignature {
-  id          String   @id @default(cuid())
-  protocolId  String
-  protocol    Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  signedAt    DateTime @default(now())
-  ipAddress   String?
-
-  @@unique([protocolId, userId])
-  @@map("protocol_signatures")
-}
-
-// ============== SKILL PASSPORT ==============
-
-model SkillPassport {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  teamId      String?
-  team        Team?    @relation(fields: [teamId], references: [id])
-
-  // Результаты
-  totalScore  Float
-
-  // Детализация по модулям (JSON)
-  moduleScores Json    // [{code: "A", name: "...", score: 42, maxScore: 53}, ...]
-
-  // Детализация по группам навыков WSSS (JSON)
-  skillGroupScores Json // [{number: 1, name: "...", score: 18, maxScore: 20}, ...]
-
-  // PDF
-  pdfUrl      String?
-
-  publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([userId, eventId])
-  @@map("skill_passports")
+  M
+  J
 }

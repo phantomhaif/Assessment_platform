@@ -112,7 +112,7 @@ export default function NewEventPage() {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 placeholder="Описание мероприятия..."
               />
             </div>

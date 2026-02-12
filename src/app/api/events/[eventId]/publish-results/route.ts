@@ -63,7 +63,9 @@ export async function POST(
     const schema = event.assessmentSchema
     const passportsCreated: string[] = []
 
-    // Create skill passports for each team member
+    // Calculate total scores for all teams first
+    const teamScoresMap: { teamId: string; totalScore: number }[] = []
+
     for (const team of event.teams) {
       // Calculate scores
       const teamScores = team.scores
@@ -110,6 +112,9 @@ export async function POST(
 
       const totalScore = moduleScores.reduce((sum, m) => sum + m.score, 0)
 
+      // Store team score for ranking
+      teamScoresMap.push({ teamId: team.id, totalScore })
+
       // Create passport for each team member
       for (const member of team.members) {
         await prisma.skillPassport.upsert({
@@ -138,6 +143,25 @@ export async function POST(
 
         passportsCreated.push(member.user.email)
       }
+    }
+
+    // Calculate rankings using Standard Competition Ranking (1, 2, 2, 4...)
+    teamScoresMap.sort((a, b) => b.totalScore - a.totalScore)
+
+    let currentRank = 1
+    for (let i = 0; i < teamScoresMap.length; i++) {
+      // If not the first team and has different score than previous, update rank
+      if (i > 0 && teamScoresMap[i].totalScore < teamScoresMap[i - 1].totalScore) {
+        currentRank = i + 1
+      }
+
+      await prisma.team.update({
+        where: { id: teamScoresMap[i].teamId },
+        data: {
+          rank: currentRank,
+          totalScore: teamScoresMap[i].totalScore,
+        },
+      })
     }
 
     // Update event status

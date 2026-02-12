@@ -5,9 +5,24 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle } from "lucide-react"
+import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
+
+interface TeamMember {
+  user: {
+    firstName: string
+    lastName: string
+  }
+}
+
+interface RankedTeam {
+  id: string
+  name: string
+  rank: number
+  totalScore: number
+  members: TeamMember[]
+}
 
 interface Event {
   id: string
@@ -26,6 +41,14 @@ interface Event {
     applications: number
   }
   assessmentSchema: { id: string; name: string } | null
+  teams: RankedTeam[]
+}
+
+const getMedalEmoji = (rank: number) => {
+  if (rank === 1) return "🥇"
+  if (rank === 2) return "🥈"
+  if (rank === 3) return "🥉"
+  return null
 }
 
 export default function EventDetailPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -84,7 +107,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -138,7 +161,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             <CardTitle className="text-lg">Статус</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600 mb-4">
+            <p className="text-2xl font-bold text-red-600 mb-4">
               {statusLabels[event.status] || event.status}
             </p>
             <div className="space-y-2">
@@ -262,6 +285,72 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           )}
         </CardContent>
       </Card>
+
+      {/* Team Rankings Table - only shown after results are published */}
+      {event.status === "RESULTS_PUBLISHED" && event.teams && event.teams.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              Рейтинг команд
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Место</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Команда</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Участники</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-600">Баллы</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {event.teams.map((team) => (
+                    <tr
+                      key={team.id}
+                      className={`border-b border-gray-100 ${
+                        team.rank <= 3 ? "bg-amber-50" : ""
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {getMedalEmoji(team.rank) ? (
+                            <span className="text-2xl">{getMedalEmoji(team.rank)}</span>
+                          ) : (
+                            <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 font-bold text-gray-600">
+                              {team.rank}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-medium text-gray-900">{team.name}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-sm text-gray-600">
+                          {team.members.map((m, idx) => (
+                            <span key={idx}>
+                              {m.user.lastName} {m.user.firstName.charAt(0)}.
+                              {idx < team.members.length - 1 && ", "}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <span className="font-bold text-lg text-red-600">
+                          {team.totalScore.toFixed(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

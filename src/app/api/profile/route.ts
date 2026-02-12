@@ -3,14 +3,19 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Transform empty strings to null
+const emptyToNull = (val: string | null | undefined) =>
+  val === "" || val === undefined ? null : val
+
 const profileSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  middleName: z.string().optional(),
-  organization: z.string().optional(),
-  position: z.string().optional(),
-  phone: z.string().optional(),
-  photo: z.string().nullable().optional(),
+  firstName: z.string().min(1, "Имя обязательно"),
+  lastName: z.string().min(1, "Фамилия обязательна"),
+  middleName: z.string().optional().nullable().transform(emptyToNull),
+  organization: z.string().optional().nullable().transform(emptyToNull),
+  position: z.string().optional().nullable().transform(emptyToNull),
+  phone: z.string().optional().nullable().transform(emptyToNull),
+  photo: z.string().nullable().optional().transform(emptyToNull),
+  email: z.string().email().optional(),
 })
 
 export async function GET() {
@@ -82,7 +87,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(user)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: error.issues[0]?.message || "Validation error" }, { status: 400 })
     }
     console.error("Error updating profile:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })

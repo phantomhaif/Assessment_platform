@@ -273,7 +273,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -305,7 +305,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-          <p className="text-blue-600">{event.competency}</p>
+          <p className="text-red-600">{event.competency}</p>
         </div>
       </div>
 
@@ -355,8 +355,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             </div>
 
             {teamInfo && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm font-medium text-blue-900">
+              <div className="mt-4 p-3 bg-red-50 rounded-lg">
+                <p className="text-sm font-medium text-red-900">
                   Ваша команда: {teamInfo.name}
                   {teamInfo.number && ` (#${teamInfo.number})`}
                 </p>

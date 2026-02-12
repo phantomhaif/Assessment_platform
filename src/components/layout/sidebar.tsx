@@ -29,6 +29,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   const participantLinks = [
     { href: "/dashboard", label: "Главная", icon: LayoutDashboard },
     { href: "/events", label: "Мероприятия", icon: Calendar },
+    { href: "/regulations", label: "Регламенты", icon: FileText },
     { href: "/my-passports", label: "Мои паспорта", icon: Award },
     { href: "/profile", label: "Профиль", icon: UserCircle },
   ]
@@ -36,6 +37,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   const expertLinks = [
     { href: "/dashboard", label: "Главная", icon: LayoutDashboard },
     { href: "/scoring", label: "Оценивание", icon: ClipboardList },
+    { href: "/regulations", label: "Регламенты", icon: FileText },
     { href: "/profile", label: "Профиль", icon: UserCircle },
   ]
 
@@ -47,6 +49,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
     { href: "/admin/scoring", label: "Оценивание", icon: ClipboardList },
     { href: "/admin/schemas", label: "Схемы оценки", icon: Upload },
     { href: "/admin/documents", label: "Документы", icon: FileText },
+    { href: "/admin/regulations", label: "Регламенты", icon: FileText },
     { href: "/admin/passports", label: "Паспорта", icon: Award },
     { href: "/admin/users", label: "Пользователи", icon: Users },
     { href: "/profile", label: "Профиль", icon: UserCircle },
@@ -74,7 +77,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
       {/* Logo section */}
       <div className="p-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#0066cc] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[#C41E3A] flex items-center justify-center">
             <span className="text-white font-bold text-lg">IS</span>
           </div>
           <div>
@@ -99,8 +102,8 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-[#0066cc] text-white shadow-lg shadow-blue-500/20"
-                      : "text-[#94a3b8] hover:text-white hover:bg-white/5"
+                      ? "bg-[#C41E3A] text-white shadow-lg shadow-red-500/20 hover:bg-[#a01830]"
+                      : "text-[#94a3b8] hover:text-[#C41E3A] hover:bg-gray-100"
                   )}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
@@ -116,8 +119,8 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
       {/* User section */}
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 px-3 py-2 mb-3">
-          <div className="w-9 h-9 rounded-full bg-[#0066cc]/20 flex items-center justify-center">
-            <UserCircle className="h-5 w-5 text-[#0066cc]" />
+          <div className="w-9 h-9 rounded-full bg-[#C41E3A]/20 flex items-center justify-center">
+            <UserCircle className="h-5 w-5 text-[#C41E3A]" />
           </div>
           <div className="flex-1 min-w-0">
             {userName && (

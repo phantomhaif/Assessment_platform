@@ -136,7 +136,7 @@ export default function AdminDocumentsPage() {
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">Выберите мероприятие</option>
             {events.map((event) => (
@@ -214,7 +214,7 @@ export default function AdminDocumentsPage() {
                       ref={fileInputRef}
                       type="file"
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
                       required
                     />
                   </div>
@@ -244,7 +244,7 @@ export default function AdminDocumentsPage() {
             <CardContent>
               {isLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
                 </div>
               ) : documents.length === 0 ? (
                 <div className="text-center py-8">
