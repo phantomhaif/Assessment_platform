@@ -7,4 +7,4 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [[deploy.beforeStartCommand]]
-command = "npx prisma migrate deploy"
+command = "npx prisma migrate deploy && npx prisma db seed"
