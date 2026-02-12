@@ -5,3 +5,6 @@ builder = "nixpacks"
 startCommand = "npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
+
+[[deploy.beforeStartCommand]]
+command = "npx prisma migrate deploy"
