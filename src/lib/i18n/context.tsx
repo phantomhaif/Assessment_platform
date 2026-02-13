@@ -37,12 +37,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(LOCALE_KEY, newLocale)
   }
 
-  const t = dictionaries[locale]
+  const t = dictionaries[locale] as Dictionary
 
   // Prevent hydration mismatch
   if (!mounted) {
     return (
-      <I18nContext.Provider value={{ locale: "ru", setLocale, t: dictionaries.ru }}>
+      <I18nContext.Provider value={{ locale: "ru", setLocale, t: dictionaries.ru as Dictionary }}>
         {children}
       </I18nContext.Provider>
     )

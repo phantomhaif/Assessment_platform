@@ -441,4 +441,10 @@ export const dictionaries = {
 } as const
 
 export type Locale = keyof typeof dictionaries
-export type Dictionary = typeof dictionaries.ru
+
+// Create a type that works for both locales
+type DeepStringify<T> = {
+  [K in keyof T]: T[K] extends object ? DeepStringify<T[K]> : string
+}
+
+export type Dictionary = DeepStringify<typeof dictionaries.ru>
