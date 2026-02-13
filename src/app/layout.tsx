@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "@/lib/i18n/context";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,8 +14,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Industry Skills - Платформа оценивания",
-  description: "Международные Чемпионаты по компетенциям профессионального мастерства",
+  title: "Industry Skills - Assessment Platform",
+  description: "International Championships for Professional Skills Competencies",
 };
 
 export default function RootLayout({
@@ -23,11 +24,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${montserrat.variable} antialiased`}
       >
-        {children}
+        <I18nProvider>
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

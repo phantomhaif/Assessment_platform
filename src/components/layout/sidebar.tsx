@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/lib/i18n/context"
 import {
   LayoutDashboard,
   Calendar,
@@ -25,34 +26,35 @@ interface SidebarProps {
 
 export function Sidebar({ userRole, userName }: SidebarProps) {
   const pathname = usePathname()
+  const { t, locale } = useI18n()
 
   const participantLinks = [
-    { href: "/dashboard", label: "Главная", icon: LayoutDashboard },
-    { href: "/events", label: "Мероприятия", icon: Calendar },
-    { href: "/regulations", label: "Регламенты", icon: FileText },
-    { href: "/my-passports", label: "Мои паспорта", icon: Award },
-    { href: "/profile", label: "Профиль", icon: UserCircle },
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/events", label: t.nav.events, icon: Calendar },
+    { href: "/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/my-passports", label: t.nav.myPassports, icon: Award },
+    { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
   const expertLinks = [
-    { href: "/dashboard", label: "Главная", icon: LayoutDashboard },
-    { href: "/scoring", label: "Оценивание", icon: ClipboardList },
-    { href: "/regulations", label: "Регламенты", icon: FileText },
-    { href: "/profile", label: "Профиль", icon: UserCircle },
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/scoring", label: t.nav.scoring, icon: ClipboardList },
+    { href: "/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
   const adminLinks = [
-    { href: "/dashboard", label: "Главная", icon: LayoutDashboard },
-    { href: "/admin/events", label: "Мероприятия", icon: Calendar },
-    { href: "/admin/applications", label: "Заявки", icon: Inbox },
-    { href: "/admin/teams", label: "Команды", icon: Users },
-    { href: "/admin/scoring", label: "Оценивание", icon: ClipboardList },
-    { href: "/admin/schemas", label: "Схемы оценки", icon: Upload },
-    { href: "/admin/documents", label: "Документы", icon: FileText },
-    { href: "/admin/regulations", label: "Регламенты", icon: FileText },
-    { href: "/admin/passports", label: "Паспорта", icon: Award },
-    { href: "/admin/users", label: "Пользователи", icon: Users },
-    { href: "/profile", label: "Профиль", icon: UserCircle },
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/admin/events", label: t.nav.events, icon: Calendar },
+    { href: "/admin/applications", label: t.nav.applications, icon: Inbox },
+    { href: "/admin/teams", label: t.nav.teams, icon: Users },
+    { href: "/admin/scoring", label: t.nav.scoring, icon: ClipboardList },
+    { href: "/admin/schemas", label: t.nav.schemas, icon: Upload },
+    { href: "/admin/documents", label: t.nav.documents, icon: FileText },
+    { href: "/admin/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/admin/passports", label: t.nav.passports, icon: Award },
+    { href: "/admin/users", label: t.nav.users, icon: Users },
+    { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
   const links =
@@ -63,13 +65,13 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
       : participantLinks
 
   const getRoleName = (role: string) => {
-    const roleNames: Record<string, string> = {
-      ADMIN: "Администратор",
-      ORGANIZER: "Организатор",
-      EXPERT: "Эксперт",
-      PARTICIPANT: "Участник",
+    switch (role) {
+      case "ADMIN": return t.roles.admin
+      case "ORGANIZER": return t.roles.organizer
+      case "EXPERT": return t.roles.expert
+      case "PARTICIPANT": return t.roles.participant
+      default: return t.roles.guest
     }
-    return roleNames[role] || role
   }
 
   return (
@@ -82,7 +84,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
           </div>
           <div>
             <h1 className="text-white font-semibold text-lg leading-tight">Industry Skills</h1>
-            <p className="text-[#64748b] text-xs">Платформа оценивания</p>
+            <p className="text-[#64748b] text-xs">{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
           </div>
         </Link>
       </div>
@@ -135,7 +137,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
           className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-[#94a3b8] hover:text-white hover:bg-white/5 transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          Выйти
+          {t.nav.logout}
         </button>
       </div>
     </aside>

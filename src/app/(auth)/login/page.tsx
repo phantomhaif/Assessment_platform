@@ -7,9 +7,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LogIn } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t, locale } = useI18n()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -28,13 +31,13 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError("Неверный email или пароль")
+        setError(t.auth.invalidCredentials)
       } else {
         router.push("/dashboard")
         router.refresh()
       }
     } catch (err) {
-      setError("Произошла ошибка при входе")
+      setError(t.errors.serverError)
     } finally {
       setIsLoading(false)
     }
@@ -64,21 +67,23 @@ export default function LoginPage() {
               Industry Skills
             </h1>
             <p className="text-xl text-gray-300 mb-2">
-              Платформа оценивания
+              {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
             </p>
             <p className="text-gray-400">
-              Международные Чемпионаты по компетенциям профессионального мастерства
+              {locale === "ru"
+                ? "Международные Чемпионаты по компетенциям профессионального мастерства"
+                : "International Championships for Professional Skills Competencies"}
             </p>
           </div>
 
           <div className="space-y-4 text-gray-300">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
-              <span>Управление мероприятиями</span>
+              <span>{locale === "ru" ? "Управление мероприятиями" : "Event Management"}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
-              <span>Оценка участников</span>
+              <span>{locale === "ru" ? "Оценка участников" : "Participant Assessment"}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-[#C41E3A]"></div>
@@ -89,7 +94,12 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#f8fafc]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#f8fafc] relative">
+        {/* Language switcher */}
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
@@ -104,10 +114,10 @@ export default function LoginPage() {
           <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-[#0f172a] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-                Вход в систему
+                {t.auth.loginTitle}
               </h2>
               <p className="text-[#64748b]">
-                Введите ваши данные для входа
+                {locale === "ru" ? "Введите ваши данные для входа" : "Enter your credentials to sign in"}
               </p>
             </div>
 
@@ -122,7 +132,7 @@ export default function LoginPage() {
               )}
 
               <Input
-                label="Email"
+                label={t.auth.email}
                 type="email"
                 placeholder="your@email.com"
                 value={email}
@@ -131,9 +141,9 @@ export default function LoginPage() {
               />
 
               <Input
-                label="Пароль"
+                label={t.auth.password}
                 type="password"
-                placeholder="Введите пароль"
+                placeholder={locale === "ru" ? "Введите пароль" : "Enter password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -141,15 +151,15 @@ export default function LoginPage() {
 
               <Button type="submit" className="w-full h-11" isLoading={isLoading}>
                 <LogIn className="w-4 h-4 mr-2" />
-                Войти
+                {t.auth.loginButton}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-[#64748b]">
-                Нет аккаунта?{" "}
+                {t.auth.noAccount}{" "}
                 <Link href="/register" className="text-[#C41E3A] font-medium hover:underline">
-                  Зарегистрироваться
+                  {t.auth.registerButton}
                 </Link>
               </p>
             </div>
