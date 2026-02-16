@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Check, FileText, Calendar, Building } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Regulation {
   id: string
@@ -26,6 +27,7 @@ export default function RegulationDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const { t, locale } = useI18n()
   const [regulation, setRegulation] = useState<Regulation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSigning, setIsSigning] = useState(false)
@@ -42,11 +44,11 @@ export default function RegulationDetailPage({
         const data = await response.json()
         setRegulation(data)
       } else {
-        setError("Регламент не найден")
+        setError(t.regulations.notFound)
       }
     } catch (error) {
       console.error("Error fetching regulation:", error)
-      setError("Ошибка загрузки регламента")
+      setError(t.regulations.loadError)
     } finally {
       setIsLoading(false)
     }
@@ -68,18 +70,18 @@ export default function RegulationDetailPage({
         )
       } else {
         const data = await response.json()
-        setError(data.error || "Ошибка подписания")
+        setError(data.error || t.regulations.signError)
       }
     } catch (error) {
       console.error("Error signing regulation:", error)
-      setError("Ошибка при подписании регламента")
+      setError(t.regulations.signErrorDetail)
     } finally {
       setIsSigning(false)
     }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ru-RU", {
+    return new Date(dateString).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -105,7 +107,7 @@ export default function RegulationDetailPage({
             <p className="text-gray-500">{error}</p>
             <Link href="/regulations">
               <Button variant="outline" className="mt-4">
-                Вернуться к списку
+                {t.regulations.backToList}
               </Button>
             </Link>
           </CardContent>
@@ -133,7 +135,7 @@ export default function RegulationDetailPage({
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Версия {regulation.version}
+              {t.regulations.version} {regulation.version}
             </span>
           </div>
         </div>
@@ -146,9 +148,9 @@ export default function RegulationDetailPage({
             <Check className="h-5 w-5 text-green-600" />
           </div>
           <div>
-            <p className="font-medium text-green-800">Регламент подписан</p>
+            <p className="font-medium text-green-800">{t.regulations.regulationSigned}</p>
             <p className="text-sm text-green-600">
-              Вы подписали этот регламент {formatDate(regulation.signedAt!)}
+              {t.regulations.youSignedOn} {formatDate(regulation.signedAt!)}
             </p>
           </div>
         </div>
@@ -158,9 +160,9 @@ export default function RegulationDetailPage({
             <FileText className="h-5 w-5 text-orange-600" />
           </div>
           <div>
-            <p className="font-medium text-orange-800">Требуется подпись</p>
+            <p className="font-medium text-orange-800">{t.regulations.signatureRequired}</p>
             <p className="text-sm text-orange-600">
-              Пожалуйста, ознакомьтесь с регламентом и подтвердите согласие
+              {t.regulations.pleaseReview}
             </p>
           </div>
         </div>
@@ -169,7 +171,7 @@ export default function RegulationDetailPage({
       {/* Regulation content */}
       <Card>
         <CardHeader>
-          <CardTitle>Содержание регламента</CardTitle>
+          <CardTitle>{t.regulations.content}</CardTitle>
         </CardHeader>
         <CardContent>
           <div
@@ -193,11 +195,10 @@ export default function RegulationDetailPage({
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-gray-900">
-                  Подтверждение ознакомления
+                  {t.regulations.confirmReading}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Нажимая кнопку, вы подтверждаете, что ознакомились с регламентом
-                  и согласны с его условиями
+                  {t.regulations.confirmText}
                 </p>
               </div>
               <Button
@@ -206,11 +207,11 @@ export default function RegulationDetailPage({
                 className="min-w-[150px]"
               >
                 {isSigning ? (
-                  "Подписание..."
+                  t.regulations.signing
                 ) : (
                   <>
                     <Check className="h-4 w-4 mr-2" />
-                    Согласен
+                    {t.regulations.agree}
                   </>
                 )}
               </Button>
