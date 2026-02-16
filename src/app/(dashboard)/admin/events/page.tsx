@@ -7,7 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Plus, Calendar, Users, Edit, Trash2, Eye, Upload } from "lucide-react"
 import { format } from "date-fns"
-import { ru } from "date-fns/locale"
+import { ru, enUS } from "date-fns/locale"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Event {
   id: string
@@ -26,6 +27,8 @@ export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "ru" ? ru : enUS
 
   useEffect(() => {
     fetchEvents()
@@ -46,7 +49,8 @@ export default function AdminEventsPage() {
   }
 
   const handleDeleteEvent = async (eventId: string, eventName: string) => {
-    if (!confirm(`Вы уверены, что хотите удалить мероприятие "${eventName}"?\n\nЭто действие нельзя отменить. Все связанные данные (команды, заявки, оценки) будут удалены.`)) {
+    const confirmMsg = t.events.confirmDeleteEvent.replace("{name}", eventName)
+    if (!confirm(confirmMsg)) {
       return
     }
 
@@ -60,11 +64,11 @@ export default function AdminEventsPage() {
         fetchEvents()
       } else {
         const data = await response.json()
-        alert(data.error || "Ошибка удаления мероприятия")
+        alert(data.error || t.events.deleteError)
       }
     } catch (error) {
       console.error("Error deleting event:", error)
-      alert("Ошибка удаления мероприятия")
+      alert(t.events.deleteError)
     } finally {
       setDeletingId(null)
     }
@@ -72,13 +76,13 @@ export default function AdminEventsPage() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string }> = {
-      DRAFT: { label: "Черновик", className: "bg-gray-100 text-gray-700" },
-      REGISTRATION_OPEN: { label: "Регистрация", className: "bg-green-100 text-green-700" },
-      REGISTRATION_CLOSED: { label: "Рег. закрыта", className: "bg-yellow-100 text-yellow-700" },
-      IN_PROGRESS: { label: "В процессе", className: "bg-red-100 text-red-700" },
-      SCORING: { label: "Оценивание", className: "bg-purple-100 text-purple-700" },
-      RESULTS_PUBLISHED: { label: "Опубликовано", className: "bg-green-100 text-green-700" },
-      ARCHIVED: { label: "Архив", className: "bg-gray-100 text-gray-500" },
+      DRAFT: { label: t.events.status.draft, className: "bg-gray-100 text-gray-700" },
+      REGISTRATION_OPEN: { label: t.events.status.registration_open, className: "bg-green-100 text-green-700" },
+      REGISTRATION_CLOSED: { label: t.events.status.registration_closed, className: "bg-yellow-100 text-yellow-700" },
+      IN_PROGRESS: { label: t.events.status.in_progress, className: "bg-red-100 text-red-700" },
+      SCORING: { label: t.events.status.scoring, className: "bg-purple-100 text-purple-700" },
+      RESULTS_PUBLISHED: { label: t.events.status.results_published, className: "bg-green-100 text-green-700" },
+      ARCHIVED: { label: t.events.status.archived, className: "bg-gray-100 text-gray-500" },
     }
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700" }
   }
@@ -87,13 +91,13 @@ export default function AdminEventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Управление мероприятиями</h1>
-          <p className="text-gray-500 mt-1">Создание и редактирование соревнований</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.events.manageEvents}</h1>
+          <p className="text-gray-500 mt-1">{t.events.manageEventsSubtitle}</p>
         </div>
         <Link href="/admin/events/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Создать мероприятие
+            {t.events.createEvent}
           </Button>
         </Link>
       </div>
@@ -107,15 +111,15 @@ export default function AdminEventsPage() {
           <CardContent className="p-12 text-center">
             <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Нет мероприятий
+              {t.events.noEventsAdmin}
             </h3>
             <p className="text-gray-500 mb-4">
-              Создайте первое мероприятие для начала работы
+              {t.events.createFirstEvent}
             </p>
             <Link href="/admin/events/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Создать мероприятие
+                {t.events.createEvent}
               </Button>
             </Link>
           </CardContent>
@@ -126,22 +130,22 @@ export default function AdminEventsPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Мероприятие
+                  {t.nav.events}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Даты
+                  {t.events.dates}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Статус
+                  {t.common.status}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Команды
+                  {t.nav.teams}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Заявки
+                  {t.nav.applications}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Действия
+                  {t.common.actions}
                 </th>
               </tr>
             </thead>
@@ -157,8 +161,8 @@ export default function AdminEventsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {format(new Date(event.eventStart), "d MMM", { locale: ru })} —{" "}
-                      {format(new Date(event.eventEnd), "d MMM yyyy", { locale: ru })}
+                      {format(new Date(event.eventStart), "d MMM", { locale: dateLocale })} —{" "}
+                      {format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
@@ -184,7 +188,7 @@ export default function AdminEventsPage() {
                           </Button>
                         </Link>
                         <Link href={`/admin/events/${event.id}/schema`}>
-                          <Button variant="ghost" size="icon" title="Схема оценки">
+                          <Button variant="ghost" size="icon" title={t.nav.schemas}>
                             <Upload className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -193,7 +197,7 @@ export default function AdminEventsPage() {
                           size="icon"
                           onClick={() => handleDeleteEvent(event.id, event.name)}
                           disabled={deletingId === event.id}
-                          title="Удалить"
+                          title={t.common.delete}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>

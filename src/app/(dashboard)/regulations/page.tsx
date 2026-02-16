@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, Check, Clock, ChevronRight } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Regulation {
   id: string
@@ -18,6 +19,7 @@ interface Regulation {
 export default function RegulationsPage() {
   const [regulations, setRegulations] = useState<Regulation[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     fetchRegulations()
@@ -38,7 +40,7 @@ export default function RegulationsPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ru-RU", {
+    return new Date(dateString).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -59,9 +61,9 @@ export default function RegulationsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Регламенты</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.regulations.title}</h1>
         <p className="text-gray-500 mt-1">
-          Ознакомьтесь и подпишите регламенты мероприятий
+          {t.regulations.subtitle}
         </p>
       </div>
 
@@ -69,7 +71,7 @@ export default function RegulationsPage() {
         <Card>
           <CardContent className="p-12 text-center">
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Нет доступных регламентов</p>
+            <p className="text-gray-500">{t.regulations.noRegulations}</p>
           </CardContent>
         </Card>
       ) : (
@@ -78,7 +80,7 @@ export default function RegulationsPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Clock className="h-5 w-5 text-orange-500" />
-                Требуют подписи ({unsignedRegulations.length})
+                {t.regulations.requiresSignature} ({unsignedRegulations.length})
               </h2>
               <div className="space-y-3">
                 {unsignedRegulations.map((regulation) => (
@@ -95,7 +97,7 @@ export default function RegulationsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Требует подписи
+                            {t.regulations.needsSignature}
                           </span>
                           <ChevronRight className="h-5 w-5 text-gray-400" />
                         </div>
@@ -111,7 +113,7 @@ export default function RegulationsPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Check className="h-5 w-5 text-green-500" />
-                Подписанные ({signedRegulations.length})
+                {t.regulations.signed} ({signedRegulations.length})
               </h2>
               <div className="space-y-3">
                 {signedRegulations.map((regulation) => (
@@ -123,13 +125,13 @@ export default function RegulationsPage() {
                             {regulation.title}
                           </h3>
                           <p className="text-sm text-gray-500">
-                            {regulation.eventName} &bull; Подписано {formatDate(regulation.signedAt!)}
+                            {regulation.eventName} &bull; {t.regulations.signedOn} {formatDate(regulation.signedAt!)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
                             <Check className="h-3 w-3" />
-                            Подписано
+                            {t.regulations.signedLabel}
                           </span>
                           <ChevronRight className="h-5 w-5 text-gray-400" />
                         </div>

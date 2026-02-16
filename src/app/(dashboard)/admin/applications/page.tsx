@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Check, X, Clock, UserPlus, Search } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Application {
   id: string
@@ -38,6 +39,7 @@ export default function AdminApplicationsPage() {
   const [showAddParticipant, setShowAddParticipant] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     fetchEvents()
@@ -123,7 +125,7 @@ export default function AdminApplicationsPage() {
         setSearchQuery("")
       } else {
         const data = await response.json()
-        alert(data.error || "Ошибка добавления участника")
+        alert(data.error || t.applications.addError)
       }
     } catch (error) {
       console.error("Error adding participant:", error)
@@ -132,10 +134,10 @@ export default function AdminApplicationsPage() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string; icon: any }> = {
-      PENDING: { label: "На рассмотрении", className: "bg-yellow-100 text-yellow-700", icon: Clock },
-      APPROVED: { label: "Одобрена", className: "bg-green-100 text-green-700", icon: Check },
-      REJECTED: { label: "Отклонена", className: "bg-red-100 text-red-700", icon: X },
-      WITHDRAWN: { label: "Отозвана", className: "bg-gray-100 text-gray-500", icon: X },
+      PENDING: { label: t.applications.pending, className: "bg-yellow-100 text-yellow-700", icon: Clock },
+      APPROVED: { label: t.applications.approved, className: "bg-green-100 text-green-700", icon: Check },
+      REJECTED: { label: t.applications.rejected, className: "bg-red-100 text-red-700", icon: X },
+      WITHDRAWN: { label: t.applications.withdrawn, className: "bg-gray-100 text-gray-500", icon: X },
     }
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700", icon: Clock }
   }
@@ -156,8 +158,8 @@ export default function AdminApplicationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Заявки на участие</h1>
-          <p className="text-gray-500 mt-1">Управление заявками участников</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.applications.title}</h1>
+          <p className="text-gray-500 mt-1">{t.applications.subtitle}</p>
         </div>
       </div>
 
@@ -166,14 +168,14 @@ export default function AdminApplicationsPage() {
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Мероприятие
+                {t.nav.events}
               </label>
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="">Выберите мероприятие</option>
+                <option value="">{t.applications.selectEvent}</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.name}
@@ -184,7 +186,7 @@ export default function AdminApplicationsPage() {
             {selectedEventId && (
               <Button onClick={() => setShowAddParticipant(!showAddParticipant)}>
                 <UserPlus className="h-4 w-4 mr-2" />
-                Добавить участника
+                {t.applications.addParticipant}
               </Button>
             )}
           </div>
@@ -194,14 +196,14 @@ export default function AdminApplicationsPage() {
       {showAddParticipant && selectedEventId && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Добавить участника вручную</CardTitle>
+            <CardTitle className="text-lg">{t.applications.addParticipantManually}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Поиск по имени или email..."
+                  placeholder={t.applications.searchByNameOrEmail}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -223,13 +225,13 @@ export default function AdminApplicationsPage() {
                       )}
                     </div>
                     <Button size="sm" onClick={() => handleAddParticipant(user.id)}>
-                      Добавить
+                      {t.applications.add}
                     </Button>
                   </div>
                 ))}
                 {filteredUsers.length === 0 && (
                   <p className="text-center text-gray-500 py-4">
-                    {searchQuery ? "Пользователи не найдены" : "Все пользователи уже добавлены"}
+                    {searchQuery ? t.applications.usersNotFound : t.applications.allUsersAdded}
                   </p>
                 )}
               </div>
@@ -241,7 +243,7 @@ export default function AdminApplicationsPage() {
       {!selectedEventId ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            Выберите мероприятие для просмотра заявок
+            {t.applications.selectEventToView}
           </CardContent>
         </Card>
       ) : isLoading ? (
@@ -254,19 +256,19 @@ export default function AdminApplicationsPage() {
             <Card className="flex-1">
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
-                <p className="text-sm text-gray-500">На рассмотрении</p>
+                <p className="text-sm text-gray-500">{t.applications.pending}</p>
               </CardContent>
             </Card>
             <Card className="flex-1">
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-green-600">{approvedCount}</p>
-                <p className="text-sm text-gray-500">Одобрено</p>
+                <p className="text-sm text-gray-500">{t.applications.approved}</p>
               </CardContent>
             </Card>
             <Card className="flex-1">
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-gray-600">{applications.length}</p>
-                <p className="text-sm text-gray-500">Всего заявок</p>
+                <p className="text-sm text-gray-500">{t.applications.totalApplications}</p>
               </CardContent>
             </Card>
           </div>
@@ -275,7 +277,7 @@ export default function AdminApplicationsPage() {
             <Card>
               <CardContent className="p-12 text-center">
                 <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Заявок пока нет</p>
+                <p className="text-gray-500">{t.applications.noApplications}</p>
               </CardContent>
             </Card>
           ) : (
@@ -285,19 +287,19 @@ export default function AdminApplicationsPage() {
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Участник
+                        {t.applications.participant}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Организация
+                        {t.common.organization}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Дата подачи
+                        {t.applications.submissionDate}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Статус
+                        {t.common.status}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                        Действия
+                        {t.common.actions}
                       </th>
                     </tr>
                   </thead>
@@ -318,7 +320,7 @@ export default function AdminApplicationsPage() {
                             {app.user.organization || "—"}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {new Date(app.createdAt).toLocaleDateString("ru-RU")}
+                            {new Date(app.createdAt).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
@@ -335,7 +337,7 @@ export default function AdminApplicationsPage() {
                                   disabled={processingId === app.id}
                                 >
                                   <Check className="h-4 w-4 mr-1" />
-                                  Одобрить
+                                  {t.applications.approve}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -344,7 +346,7 @@ export default function AdminApplicationsPage() {
                                   disabled={processingId === app.id}
                                 >
                                   <X className="h-4 w-4 mr-1" />
-                                  Отклонить
+                                  {t.applications.reject}
                                 </Button>
                               </div>
                             )}

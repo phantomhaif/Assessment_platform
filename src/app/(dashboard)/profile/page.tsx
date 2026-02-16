@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Camera } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
+
+// Profile page component with i18n support
 
 interface UserProfile {
   firstName: string
@@ -20,6 +23,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const { data: session, update } = useSession()
+  const { t } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
@@ -72,13 +76,13 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Профиль успешно обновлён" })
+        setMessage({ type: "success", text: t.profile.profileUpdated })
         await update()
       } else {
-        throw new Error("Ошибка сохранения")
+        throw new Error(t.profile.saveError)
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Ошибка при сохранении профиля" })
+      setMessage({ type: "error", text: t.profile.profileUpdateError })
     } finally {
       setIsSaving(false)
     }
@@ -118,8 +122,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Профиль</h1>
-        <p className="text-gray-500 mt-1">Управление личными данными</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.profile.title}</h1>
+        <p className="text-gray-500 mt-1">{t.profile.subtitle}</p>
       </div>
 
       {message.text && (
@@ -136,7 +140,7 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Личные данные</CardTitle>
+          <CardTitle>{t.profile.personalInfo}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -147,7 +151,7 @@ export default function ProfilePage() {
                   {profile.photo ? (
                     <img
                       src={profile.photo}
-                      alt="Фото профиля"
+                      alt={t.profile.profilePhoto}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -167,35 +171,35 @@ export default function ProfilePage() {
                 </label>
               </div>
               <div>
-                <p className="font-medium text-gray-900">Фото профиля</p>
-                <p className="text-sm text-gray-500">JPG или PNG, до 5 МБ</p>
+                <p className="font-medium text-gray-900">{t.profile.profilePhoto}</p>
+                <p className="text-sm text-gray-500">{t.profile.photoHint}</p>
               </div>
             </div>
 
             {/* Основные данные */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Фамилия"
+                label={t.profile.lastName}
                 name="lastName"
                 value={profile.lastName}
                 onChange={handleChange}
                 required
               />
               <Input
-                label="Имя"
+                label={t.profile.firstName}
                 name="firstName"
                 value={profile.firstName}
                 onChange={handleChange}
                 required
               />
               <Input
-                label="Отчество"
+                label={t.profile.middleName}
                 name="middleName"
                 value={profile.middleName || ""}
                 onChange={handleChange}
               />
               <Input
-                label="Email"
+                label={t.common.email}
                 name="email"
                 type="email"
                 value={profile.email}
@@ -203,32 +207,32 @@ export default function ProfilePage() {
                 disabled
               />
               <Input
-                label="Организация"
+                label={t.common.organization}
                 name="organization"
                 value={profile.organization || ""}
                 onChange={handleChange}
-                placeholder="МИРЭА — Российский технологический университет"
+                placeholder={t.profile.organizationPlaceholder}
               />
               <Input
-                label="Должность"
+                label={t.common.position}
                 name="position"
                 value={profile.position || ""}
                 onChange={handleChange}
-                placeholder="Студент / Преподаватель"
+                placeholder={t.profile.positionPlaceholder}
               />
               <Input
-                label="Телефон"
+                label={t.common.phone}
                 name="phone"
                 type="tel"
                 value={profile.phone || ""}
                 onChange={handleChange}
-                placeholder="+7 (999) 123-45-67"
+                placeholder={t.profile.phonePlaceholder}
               />
             </div>
 
             <div className="flex justify-end">
               <Button type="submit" isLoading={isSaving}>
-                Сохранить изменения
+                {t.profile.saveChanges}
               </Button>
             </div>
           </form>

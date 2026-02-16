@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Calendar, MapPin, Users, Clock } from "lucide-react"
 import { format } from "date-fns"
-import { ru } from "date-fns/locale"
+import { ru, enUS } from "date-fns/locale"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Event {
   id: string
@@ -28,6 +29,8 @@ interface Event {
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "ru" ? ru : enUS
 
   useEffect(() => {
     fetchEvents()
@@ -48,14 +51,15 @@ export default function EventsPage() {
   }
 
   const getStatusBadge = (status: string) => {
+    const statusLabels = t.events.status as Record<string, string>
     const badges: Record<string, { label: string; className: string }> = {
-      DRAFT: { label: "Черновик", className: "bg-gray-100 text-gray-700" },
-      REGISTRATION_OPEN: { label: "Регистрация открыта", className: "bg-green-100 text-green-700" },
-      REGISTRATION_CLOSED: { label: "Регистрация закрыта", className: "bg-yellow-100 text-yellow-700" },
-      IN_PROGRESS: { label: "Идёт мероприятие", className: "bg-red-100 text-red-700" },
-      SCORING: { label: "Оценивание", className: "bg-purple-100 text-purple-700" },
-      RESULTS_PUBLISHED: { label: "Результаты опубликованы", className: "bg-green-100 text-green-700" },
-      ARCHIVED: { label: "Архив", className: "bg-gray-100 text-gray-500" },
+      DRAFT: { label: statusLabels.draft, className: "bg-gray-100 text-gray-700" },
+      REGISTRATION_OPEN: { label: statusLabels.registration_open, className: "bg-green-100 text-green-700" },
+      REGISTRATION_CLOSED: { label: statusLabels.registration_closed, className: "bg-yellow-100 text-yellow-700" },
+      IN_PROGRESS: { label: statusLabels.in_progress, className: "bg-red-100 text-red-700" },
+      SCORING: { label: statusLabels.scoring, className: "bg-purple-100 text-purple-700" },
+      RESULTS_PUBLISHED: { label: statusLabels.results_published, className: "bg-green-100 text-green-700" },
+      ARCHIVED: { label: statusLabels.archived, className: "bg-gray-100 text-gray-500" },
     }
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700" }
   }
@@ -71,8 +75,10 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Мероприятия</h1>
-        <p className="text-gray-500 mt-1">Доступные соревнования и чемпионаты</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.events.title}</h1>
+        <p className="text-gray-500 mt-1">
+          {locale === "ru" ? "Доступные соревнования и чемпионаты" : "Available competitions and championships"}
+        </p>
       </div>
 
       {events.length === 0 ? (
@@ -80,10 +86,12 @@ export default function EventsPage() {
           <CardContent className="p-12 text-center">
             <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Нет доступных мероприятий
+              {t.events.noEvents}
             </h3>
             <p className="text-gray-500">
-              Следите за обновлениями — скоро появятся новые соревнования
+              {locale === "ru"
+                ? "Следите за обновлениями — скоро появятся новые соревнования"
+                : "Stay tuned — new competitions coming soon"}
             </p>
           </CardContent>
         </Card>
@@ -114,26 +122,26 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {format(new Date(event.eventStart), "d MMM", { locale: ru })} —{" "}
-                        {format(new Date(event.eventEnd), "d MMM yyyy", { locale: ru })}
+                        {format(new Date(event.eventStart), "d MMM", { locale: dateLocale })} —{" "}
+                        {format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       <span>
-                        Регистрация до {format(new Date(event.registrationEnd), "d MMMM", { locale: ru })}
+                        {locale === "ru" ? "Регистрация до" : "Registration until"} {format(new Date(event.registrationEnd), "d MMMM", { locale: dateLocale })}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span>{event._count.teams} команд</span>
+                      <span>{event._count.teams} {locale === "ru" ? "команд" : "teams"}</span>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
                   <Link href={`/events/${event.id}`} className="w-full">
                     <Button className="w-full" variant={event.status === "REGISTRATION_OPEN" ? "default" : "outline"}>
-                      {event.status === "REGISTRATION_OPEN" ? "Подать заявку" : "Подробнее"}
+                      {event.status === "REGISTRATION_OPEN" ? t.events.apply : t.common.details}
                     </Button>
                   </Link>
                 </CardFooter>

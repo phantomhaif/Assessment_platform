@@ -10,7 +10,8 @@ import {
   FileText, Download, Upload, File, Trash2
 } from "lucide-react"
 import { format } from "date-fns"
-import { ru } from "date-fns/locale"
+import { ru, enUS } from "date-fns/locale"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Event {
   id: string
@@ -71,6 +72,8 @@ interface TeamInfo {
 
 export default function EventDetailPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "ru" ? ru : enUS
   const [event, setEvent] = useState<Event | null>(null)
   const [application, setApplication] = useState<Application | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
@@ -149,7 +152,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
   const handleSubmitApplication = async () => {
     if (!agreedToRegulation) {
-      setError("Необходимо согласиться с регламентом мероприятия")
+      setError(t.events.mustAgreeToRegulation)
       return
     }
 
@@ -166,20 +169,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       const data = await response.json()
 
       if (response.ok) {
-        setSuccess("Заявка успешно подана!")
+        setSuccess(t.events.applicationSuccess)
         setApplication(data)
       } else {
-        setError(data.error || "Ошибка подачи заявки")
+        setError(data.error || t.events.applicationError)
       }
     } catch (error) {
-      setError("Ошибка подачи заявки")
+      setError(t.events.applicationError)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleWithdrawApplication = async () => {
-    if (!confirm("Вы уверены, что хотите отозвать заявку?")) return
+    if (!confirm(t.events.confirmWithdraw)) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/applications`, {
@@ -188,10 +191,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
       if (response.ok) {
         setApplication(null)
-        setSuccess("Заявка отозвана")
+        setSuccess(t.events.applicationWithdrawn)
       }
     } catch (error) {
-      setError("Ошибка при отзыве заявки")
+      setError(t.events.withdrawError)
     }
   }
 
@@ -214,20 +217,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       if (response.ok) {
         const newFile = await response.json()
         setTeamFiles(prev => [...prev.filter(f => f.moduleCode !== moduleCode), newFile])
-        setSuccess(`Файл для модуля ${moduleCode} успешно загружен`)
+        setSuccess(t.events.fileUploadSuccess.replace("{code}", moduleCode))
       } else {
         const data = await response.json()
-        setError(data.error || "Ошибка загрузки файла")
+        setError(data.error || t.events.fileUploadError)
       }
     } catch (error) {
-      setError("Ошибка загрузки файла")
+      setError(t.events.fileUploadError)
     } finally {
       setUploadingModule(null)
     }
   }
 
   const handleDeleteFile = async (fileId: string, moduleCode: string) => {
-    if (!teamInfo || !confirm("Удалить загруженный файл?")) return
+    if (!teamInfo || !confirm(t.events.fileDeleteConfirm)) return
 
     try {
       const response = await fetch(`/api/teams/${teamInfo.id}/files?fileId=${fileId}`, {
@@ -236,38 +239,38 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
       if (response.ok) {
         setTeamFiles(prev => prev.filter(f => f.id !== fileId))
-        setSuccess(`Файл модуля ${moduleCode} удален`)
+        setSuccess(t.events.fileDeleted.replace("{code}", moduleCode))
       }
     } catch (error) {
-      setError("Ошибка удаления файла")
+      setError(t.events.fileDeleteError)
     }
   }
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string }> = {
-      PENDING: { label: "На рассмотрении", className: "bg-yellow-100 text-yellow-700" },
-      APPROVED: { label: "Одобрена", className: "bg-green-100 text-green-700" },
-      REJECTED: { label: "Отклонена", className: "bg-red-100 text-red-700" },
-      WITHDRAWN: { label: "Отозвана", className: "bg-gray-100 text-gray-700" },
+      PENDING: { label: t.applications.pending, className: "bg-yellow-100 text-yellow-700" },
+      APPROVED: { label: t.applications.approved, className: "bg-green-100 text-green-700" },
+      REJECTED: { label: t.applications.rejected, className: "bg-red-100 text-red-700" },
+      WITHDRAWN: { label: t.applications.withdrawn, className: "bg-gray-100 text-gray-700" },
     }
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700" }
   }
 
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      REGULATION: "Регламент",
-      SMP: "Skill Management Plan",
-      INFRASTRUCTURE: "Инфраструктурный лист",
-      SCHEDULE: "Расписание",
-      OTHER: "Документ",
+      REGULATION: t.documents.types.regulation,
+      SMP: t.documents.types.smp,
+      INFRASTRUCTURE: t.documents.types.infrastructure,
+      SCHEDULE: t.documents.types.schedule,
+      OTHER: t.documents.types.other,
     }
     return labels[type] || type
   }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " Б"
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " КБ"
-    return (bytes / (1024 * 1024)).toFixed(1) + " МБ"
+    if (bytes < 1024) return bytes + (locale === "ru" ? " Б" : " B")
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + (locale === "ru" ? " КБ" : " KB")
+    return (bytes / (1024 * 1024)).toFixed(1) + (locale === "ru" ? " МБ" : " MB")
   }
 
   if (isLoading) {
@@ -281,11 +284,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   if (!event) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Мероприятие не найдено</p>
+        <p className="text-gray-500">{t.events.eventNotFound}</p>
         <Link href="/events">
           <Button variant="outline" className="mt-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            К списку мероприятий
+            {t.events.backToEvents}
           </Button>
         </Link>
       </div>
@@ -324,7 +327,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Информация</CardTitle>
+            <CardTitle className="text-lg">{t.events.information}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {event.description && (
@@ -334,22 +337,22 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  Проведение: {format(new Date(event.eventStart), "d MMMM", { locale: ru })} —{" "}
-                  {format(new Date(event.eventEnd), "d MMMM yyyy", { locale: ru })}
+                  {t.events.eventDates}: {format(new Date(event.eventStart), "d MMMM", { locale: dateLocale })} —{" "}
+                  {format(new Date(event.eventEnd), "d MMMM yyyy", { locale: dateLocale })}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock className="h-4 w-4" />
                 <span>
-                  Регистрация до: {format(new Date(event.registrationEnd), "d MMMM yyyy", { locale: ru })}
+                  {t.events.registrationUntil}: {format(new Date(event.registrationEnd), "d MMMM yyyy", { locale: dateLocale })}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Users className="h-4 w-4" />
                 <span>
-                  Размер команды: {event.minTeamSize === event.maxTeamSize
-                    ? `${event.minTeamSize} чел.`
-                    : `${event.minTeamSize}–${event.maxTeamSize} чел.`}
+                  {t.events.teamSizeLabel}: {event.minTeamSize === event.maxTeamSize
+                    ? `${event.minTeamSize} ${t.events.persons}`
+                    : `${event.minTeamSize}–${event.maxTeamSize} ${t.events.persons}`}
                 </span>
               </div>
             </div>
@@ -357,7 +360,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             {teamInfo && (
               <div className="mt-4 p-3 bg-red-50 rounded-lg">
                 <p className="text-sm font-medium text-red-900">
-                  Ваша команда: {teamInfo.name}
+                  {t.events.yourTeam}: {teamInfo.name}
                   {teamInfo.number && ` (#${teamInfo.number})`}
                 </p>
               </div>
@@ -367,7 +370,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Ваша заявка</CardTitle>
+            <CardTitle className="text-lg">{t.events.yourApplication}</CardTitle>
           </CardHeader>
           <CardContent>
             {application ? (
@@ -386,34 +389,34 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 </div>
 
                 <p className="text-sm text-gray-500">
-                  Подана: {format(new Date(application.createdAt), "d MMMM yyyy, HH:mm", { locale: ru })}
+                  {t.events.submitted}: {format(new Date(application.createdAt), "d MMMM yyyy, HH:mm", { locale: dateLocale })}
                 </p>
 
                 {application.comment && (
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      <strong>Комментарий организатора:</strong> {application.comment}
+                      <strong>{t.events.organizerComment}:</strong> {application.comment}
                     </p>
                   </div>
                 )}
 
                 {application.status === "PENDING" && (
                   <Button variant="outline" onClick={handleWithdrawApplication} className="w-full">
-                    Отозвать заявку
+                    {t.events.withdrawApplication}
                   </Button>
                 )}
               </div>
             ) : event.status === "REGISTRATION_OPEN" ? (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Для участия в мероприятии подайте заявку. После одобрения вы будете добавлены в команду.
+                  {t.events.applyDescription}
                 </p>
 
                 <Checkbox
                   name="agreedToRegulation"
                   checked={agreedToRegulation}
                   onChange={(e) => setAgreedToRegulation(e.target.checked)}
-                  label="Я ознакомился и согласен с регламентом мероприятия"
+                  label={t.events.agreeToRegulation}
                 />
 
                 <Button
@@ -422,12 +425,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   className="w-full"
                   isLoading={isSubmitting}
                 >
-                  Подать заявку
+                  {t.events.apply}
                 </Button>
               </div>
             ) : (
               <p className="text-gray-500 text-center py-4">
-                Регистрация на это мероприятие закрыта
+                {t.events.registrationClosed}
               </p>
             )}
           </CardContent>
@@ -440,7 +443,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Документы мероприятия
+              {t.events.eventDocuments}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -455,14 +458,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                     <div>
                       <p className="font-medium text-gray-900">{doc.name}</p>
                       <p className="text-sm text-gray-500">
-                        {getDocumentTypeLabel(doc.type)} • Версия {doc.version}
+                        {getDocumentTypeLabel(doc.type)} • {t.events.version} {doc.version}
                       </p>
                     </div>
                   </div>
                   <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                       <Download className="h-4 w-4 mr-2" />
-                      Скачать
+                      {t.common.download}
                     </Button>
                   </a>
                 </div>
@@ -478,24 +481,22 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Загрузка работ по модулям
+              {t.events.moduleUpload}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {modules.length === 0 ? (
               <p className="text-gray-500 text-center py-4">
-                Схема оценки для этого мероприятия ещё не настроена.
-                Модули для загрузки работ появятся после её добавления.
+                {t.events.schemaNotConfigured}
               </p>
             ) : !canUploadFiles ? (
               <p className="text-gray-500 text-center py-4">
-                Загрузка файлов доступна только во время проведения мероприятия
-                (статус «В процессе» или «Оценивание»)
+                {t.events.uploadDuringEvent}
               </p>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Загрузите итоговые файлы по каждому модулю для оценки экспертами.
+                  {t.events.uploadInstructions}
                 </p>
                 <div className="space-y-3">
                   {modules.map((module) => {
@@ -510,11 +511,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
-                              Модуль {module.code}: {module.name}
+                              {t.events.module} {module.code}: {module.name}
                             </p>
                             {existingFile && (
                               <p className="text-sm text-green-600 mt-1">
-                                Загружен: {existingFile.fileName} ({formatFileSize(existingFile.fileSize)})
+                                {t.events.uploaded}: {existingFile.fileName} ({formatFileSize(existingFile.fileSize)})
                               </p>
                             )}
                           </div>
@@ -555,7 +556,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                               ) : (
                                 <>
                                   <Upload className="h-4 w-4 mr-2" />
-                                  {existingFile ? "Заменить" : "Загрузить"}
+                                  {existingFile ? t.events.replace : t.common.upload}
                                 </>
                               )}
                             </Button>

@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Award, Download, Calendar, Trophy, Users } from "lucide-react"
 import { format } from "date-fns"
-import { ru } from "date-fns/locale"
+import { ru, enUS } from "date-fns/locale"
+import { useI18n } from "@/lib/i18n/context"
 
 interface SkillPassport {
   id: string
@@ -36,6 +37,8 @@ const getMedalEmoji = (rank: number | null) => {
 export default function MyPassportsPage() {
   const [passports, setPassports] = useState<SkillPassport[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { t, locale } = useI18n()
+  const dateLocale = locale === "ru" ? ru : enUS
 
   useEffect(() => {
     fetchPassports()
@@ -85,8 +88,8 @@ export default function MyPassportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Мои Skill Passports</h1>
-        <p className="text-gray-500 mt-1">Ваши сертификаты и результаты соревнований</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.passports.myPassports}</h1>
+        <p className="text-gray-500 mt-1">{t.passports.subtitle}</p>
       </div>
 
       {passports.length === 0 ? (
@@ -94,10 +97,10 @@ export default function MyPassportsPage() {
           <CardContent className="p-12 text-center">
             <Award className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Нет паспортов компетенций
+              {t.passports.noPassports}
             </h3>
             <p className="text-gray-500">
-              После участия в соревнованиях здесь появятся ваши результаты
+              {t.passports.noPassportsDescription}
             </p>
           </CardContent>
         </Card>
@@ -109,13 +112,13 @@ export default function MyPassportsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-white font-bold text-lg">SKILL PASSPORT</h3>
-                    <p className="text-red-100 text-sm">Паспорт компетенций</p>
+                    <p className="text-red-100 text-sm">{t.passports.skillPassportLabel}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-white text-3xl font-bold">
                       {passport.totalScore.toFixed(1)}
                     </p>
-                    <p className="text-red-100 text-xs">из 100 баллов</p>
+                    <p className="text-red-100 text-xs">{t.passports.outOf100}</p>
                   </div>
                 </div>
               </div>
@@ -129,8 +132,8 @@ export default function MyPassportsPage() {
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mb-4">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {format(new Date(passport.event.eventStart), "d MMM", { locale: ru })} —{" "}
-                  {format(new Date(passport.event.eventEnd), "d MMM yyyy", { locale: ru })}
+                  {format(new Date(passport.event.eventStart), "d MMM", { locale: dateLocale })} —{" "}
+                  {format(new Date(passport.event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
                 </div>
 
                 {/* Team rank display */}
@@ -147,7 +150,7 @@ export default function MyPassportsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-amber-900">
-                            {passport.team.rank} место
+                            {passport.team.rank} {t.passports.place}
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-amber-700">
@@ -179,7 +182,7 @@ export default function MyPassportsPage() {
                   variant="outline"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Скачать PDF
+                  {t.passports.downloadPdf}
                 </Button>
               </CardContent>
             </Card>

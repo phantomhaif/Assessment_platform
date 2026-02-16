@@ -3,24 +3,25 @@
 import { useSession } from "next-auth/react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Calendar, Users, Award, ClipboardList } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function DashboardPage() {
   const { data: session } = useSession()
+  const { t } = useI18n()
   const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "ORGANIZER"
   const isExpert = session?.user?.role === "EXPERT"
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Панель управления</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t.dashboard.title}</h1>
         <p className="text-gray-500 mt-1">
-          {isAdmin && "Управление мероприятиями и оценивание"}
-          {isExpert && "Оценивание команд"}
-          {!isAdmin && !isExpert && "Ваши мероприятия и результаты"}
+          {isAdmin && t.dashboard.adminSubtitle}
+          {isExpert && t.dashboard.expertSubtitle}
+          {!isAdmin && !isExpert && t.dashboard.participantSubtitle}
         </p>
       </div>
 
-      {/* Статистика для админа */}
       {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -30,7 +31,7 @@ export default function DashboardPage() {
                   <Calendar className="h-6 w-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Мероприятия</p>
+                  <p className="text-sm text-gray-500">{t.dashboard.eventsCount}</p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -43,7 +44,7 @@ export default function DashboardPage() {
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Участники</p>
+                  <p className="text-sm text-gray-500">{t.dashboard.participantsCount}</p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -56,7 +57,7 @@ export default function DashboardPage() {
                   <ClipboardList className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Команды</p>
+                  <p className="text-sm text-gray-500">{t.dashboard.teamsCount}</p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -69,7 +70,7 @@ export default function DashboardPage() {
                   <Award className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Паспортов выдано</p>
+                  <p className="text-sm text-gray-500">{t.dashboard.passportsIssued}</p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -78,47 +79,44 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Контент для участника */}
       {!isAdmin && !isExpert && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Мои заявки</CardTitle>
+              <CardTitle className="text-lg">{t.dashboard.myApplications}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-sm">У вас пока нет активных заявок</p>
+              <p className="text-gray-500 text-sm">{t.dashboard.noActiveApplications}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Мои результаты</CardTitle>
+              <CardTitle className="text-lg">{t.dashboard.myResults}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-sm">Результаты появятся после участия в мероприятиях</p>
+              <p className="text-gray-500 text-sm">{t.dashboard.resultsWillAppear}</p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Контент для эксперта */}
       {isExpert && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Назначенные оценки</CardTitle>
+            <CardTitle className="text-lg">{t.dashboard.assignedScores}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">Нет назначенных команд для оценивания</p>
+            <p className="text-gray-500 text-sm">{t.dashboard.noAssignedTeams}</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Ближайшие мероприятия */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Ближайшие мероприятия</CardTitle>
+          <CardTitle className="text-lg">{t.dashboard.upcomingEvents}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500 text-sm">Нет запланированных мероприятий</p>
+          <p className="text-gray-500 text-sm">{t.dashboard.noPlannedEvents}</p>
         </CardContent>
       </Card>
     </div>
