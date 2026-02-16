@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Users, Plus, UserPlus } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Team {
   id: string
@@ -33,6 +34,7 @@ export default function AdminTeamsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newTeamName, setNewTeamName] = useState("")
+  const { t } = useI18n()
 
   useEffect(() => {
     fetchEvents()
@@ -98,8 +100,8 @@ export default function AdminTeamsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Управление командами</h1>
-          <p className="text-gray-500 mt-1">Формирование и редактирование команд</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.teams.title}</h1>
+          <p className="text-gray-500 mt-1">{t.teams.subtitle}</p>
         </div>
       </div>
 
@@ -108,14 +110,14 @@ export default function AdminTeamsPage() {
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Мероприятие
+                {t.nav.events}
               </label>
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="">Выберите мероприятие</option>
+                <option value="">{t.applications.selectEvent}</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.name}
@@ -126,7 +128,7 @@ export default function AdminTeamsPage() {
             {selectedEventId && (
               <Button onClick={() => setShowCreateForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Создать команду
+                {t.teams.createTeam}
               </Button>
             )}
           </div>
@@ -136,19 +138,19 @@ export default function AdminTeamsPage() {
       {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Новая команда</CardTitle>
+            <CardTitle>{t.teams.newTeam}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
               <Input
-                placeholder="Название команды"
+                placeholder={t.teams.teamNamePlaceholder}
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 className="flex-1"
               />
-              <Button onClick={createTeam}>Создать</Button>
+              <Button onClick={createTeam}>{t.common.create}</Button>
               <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                Отмена
+                {t.common.cancel}
               </Button>
             </div>
           </CardContent>
@@ -158,7 +160,7 @@ export default function AdminTeamsPage() {
       {!selectedEventId ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            Выберите мероприятие для просмотра команд
+            {t.teams.selectEventToView}
           </CardContent>
         </Card>
       ) : isLoading ? (
@@ -169,8 +171,8 @@ export default function AdminTeamsPage() {
         <Card>
           <CardContent className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Нет команд</h3>
-            <p className="text-gray-500">Создайте первую команду для этого мероприятия</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t.teams.noTeams}</h3>
+            <p className="text-gray-500">{t.teams.createFirstTeam}</p>
           </CardContent>
         </Card>
       ) : (
@@ -189,7 +191,7 @@ export default function AdminTeamsPage() {
               </CardHeader>
               <CardContent>
                 {team.members.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Нет участников</p>
+                  <p className="text-gray-500 text-sm">{t.teams.noMembers}</p>
                 ) : (
                   <ul className="space-y-2">
                     {team.members.map((member) => (
@@ -202,7 +204,7 @@ export default function AdminTeamsPage() {
                           <p className="font-medium">
                             {member.user.lastName} {member.user.firstName}
                             {member.role === "CAPTAIN" && (
-                              <span className="text-yellow-600 ml-1">(капитан)</span>
+                              <span className="text-yellow-600 ml-1">({t.teams.captain})</span>
                             )}
                           </p>
                           {member.user.organization && (
@@ -215,7 +217,7 @@ export default function AdminTeamsPage() {
                 )}
                 <Button variant="outline" size="sm" className="w-full mt-4">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Добавить участника
+                  {t.teams.addMember}
                 </Button>
               </CardContent>
             </Card>

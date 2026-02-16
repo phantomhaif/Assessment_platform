@@ -155,8 +155,10 @@ export const dictionaries = {
     // Teams
     teams: {
       title: "Команды",
+      subtitle: "Формирование и редактирование команд",
       createTeam: "Создать команду",
       teamName: "Название команды",
+      teamNamePlaceholder: "Название команды",
       members: "Участники",
       addMember: "Добавить участника",
       removeMember: "Удалить участника",
@@ -166,6 +168,11 @@ export const dictionaries = {
       files: "Файлы команды",
       uploadFile: "Загрузить файл",
       noTeams: "Нет команд",
+      createFirstTeam: "Создайте первую команду для этого мероприятия",
+      noMembers: "Нет участников",
+      captain: "капитан",
+      newTeam: "Новая команда",
+      selectEventToView: "Выберите мероприятие для просмотра команд",
     },
 
     // Applications
@@ -517,8 +524,10 @@ export const dictionaries = {
     // Teams
     teams: {
       title: "Teams",
+      subtitle: "Team formation and editing",
       createTeam: "Create Team",
       teamName: "Team Name",
+      teamNamePlaceholder: "Team name",
       members: "Members",
       addMember: "Add Member",
       removeMember: "Remove Member",
@@ -528,6 +537,11 @@ export const dictionaries = {
       files: "Team Files",
       uploadFile: "Upload File",
       noTeams: "No teams",
+      createFirstTeam: "Create the first team for this event",
+      noMembers: "No members",
+      captain: "captain",
+      newTeam: "New Team",
+      selectEventToView: "Select an event to view teams",
     },
 
     // Applications
