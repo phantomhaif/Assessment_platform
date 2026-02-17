@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy } from "lucide-react"
+import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Mail } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
@@ -155,6 +155,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               {t.adminEvent.assessmentSchema}
             </Button>
           </Link>
+          <Link href={`/admin/events/${eventId}/send-email`}>
+            <Button variant="outline">
+              <Mail className="h-4 w-4 mr-2" />
+              {t.adminEvent.sendEmail}
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -246,6 +252,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 {t.adminEvent.manageTeams}
               </Button>
             </Link>
+            <a href={`/api/events/${eventId}/participants/export`}>
+              <Button variant="outline" className="w-full mt-2">
+                <Download className="h-4 w-4 mr-2" />
+                {t.adminEvent.exportParticipants}
+              </Button>
+            </a>
           </CardContent>
         </Card>
       </div>

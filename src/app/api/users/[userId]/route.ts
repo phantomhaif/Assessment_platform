@@ -17,11 +17,21 @@ export async function PATCH(
     }
 
     const { userId } = await params
-    const { role } = await req.json()
+    const body = await req.json()
+    const { role, firstName, lastName, middleName, organization, position, phone } = body
+
+    const data: Record<string, unknown> = {}
+    if (role !== undefined) data.role = role
+    if (firstName !== undefined) data.firstName = firstName
+    if (lastName !== undefined) data.lastName = lastName
+    if (middleName !== undefined) data.middleName = middleName
+    if (organization !== undefined) data.organization = organization
+    if (position !== undefined) data.position = position
+    if (phone !== undefined) data.phone = phone
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { role },
+      data,
     })
 
     return NextResponse.json(user)

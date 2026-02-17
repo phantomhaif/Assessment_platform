@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Users, Search, Shield, User, Award } from "lucide-react"
+import { Users, Search, User, Plus, X } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface UserData {
@@ -12,7 +12,10 @@ interface UserData {
   email: string
   firstName: string
   lastName: string
+  middleName?: string | null
   organization: string | null
+  position?: string | null
+  phone?: string | null
   role: string
   createdAt: string
   _count: {
@@ -21,10 +24,39 @@ interface UserData {
   }
 }
 
+interface UserFormData {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  middleName: string
+  organization: string
+  position: string
+  phone: string
+  role: string
+}
+
+const EMPTY_FORM: UserFormData = {
+  email: "",
+  password: "",
+  firstName: "",
+  lastName: "",
+  middleName: "",
+  organization: "",
+  position: "",
+  phone: "",
+  role: "PARTICIPANT",
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [showModal, setShowModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserData | null>(null)
+  const [formData, setFormData] = useState<UserFormData>(EMPTY_FORM)
+  const [formError, setFormError] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
   const { t } = useI18n()
 
   useEffect(() => {
@@ -60,6 +92,79 @@ export default function AdminUsersPage() {
     }
   }
 
+  const openCreateModal = () => {
+    setEditingUser(null)
+    setFormData(EMPTY_FORM)
+    setFormError("")
+    setShowModal(true)
+  }
+
+  const openEditModal = (user: UserData) => {
+    setEditingUser(user)
+    setFormData({
+      email: user.email,
+      password: "",
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleName: user.middleName || "",
+      organization: user.organization || "",
+      position: user.position || "",
+      phone: user.phone || "",
+      role: user.role,
+    })
+    setFormError("")
+    setShowModal(true)
+  }
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSave = async () => {
+    setFormError("")
+    setIsSaving(true)
+    try {
+      if (editingUser) {
+        // Edit existing user profile (no email/password change)
+        const response = await fetch(`/api/users/${editingUser.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            middleName: formData.middleName || null,
+            organization: formData.organization || null,
+            position: formData.position || null,
+            phone: formData.phone || null,
+            role: formData.role,
+          }),
+        })
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || t.admin.userUpdated)
+        }
+      } else {
+        // Create new user
+        const response = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        })
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || t.errors.serverError)
+        }
+      }
+      setShowModal(false)
+      fetchUsers()
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : t.errors.serverError)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,9 +189,15 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.nav.users}</h1>
-        <p className="text-gray-500 mt-1">{t.admin.usersSubtitle}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{t.nav.users}</h1>
+          <p className="text-gray-500 mt-1">{t.admin.usersSubtitle}</p>
+        </div>
+        <Button onClick={openCreateModal}>
+          <Plus className="h-4 w-4 mr-2" />
+          {t.admin.addUser}
+        </Button>
       </div>
 
       <Card>
@@ -157,16 +268,25 @@ export default function AdminUsersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <select
-                      value={user.role}
-                      onChange={(e) => updateRole(user.id, e.target.value)}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
-                    >
-                      <option value="PARTICIPANT">{t.roles.participant}</option>
-                      <option value="EXPERT">{t.roles.expert}</option>
-                      <option value="ORGANIZER">{t.roles.organizer}</option>
-                      <option value="ADMIN">{t.roles.admin}</option>
-                    </select>
+                    <div className="flex items-center justify-end gap-2">
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateRole(user.id, e.target.value)}
+                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="PARTICIPANT">{t.roles.participant}</option>
+                        <option value="EXPERT">{t.roles.expert}</option>
+                        <option value="ORGANIZER">{t.roles.organizer}</option>
+                        <option value="ADMIN">{t.roles.admin}</option>
+                      </select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(user)}
+                      >
+                        {t.common.edit}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               )
@@ -174,6 +294,114 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal: Create / Edit User */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-bold">
+                {editingUser ? t.admin.editUser : t.admin.addUser}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                  {formError}
+                </div>
+              )}
+              {!editingUser && (
+                <>
+                  <Input
+                    label={t.common.email + " *"}
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleFormChange}
+                    required
+                  />
+                  <Input
+                    label={t.common.password + " *"}
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label={t.auth.lastName + " *"}
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleFormChange}
+                  required
+                />
+                <Input
+                  label={t.auth.firstName + " *"}
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleFormChange}
+                  required
+                />
+              </div>
+              <Input
+                label={t.auth.middleName}
+                name="middleName"
+                value={formData.middleName}
+                onChange={handleFormChange}
+              />
+              <Input
+                label={t.common.organization}
+                name="organization"
+                value={formData.organization}
+                onChange={handleFormChange}
+              />
+              <Input
+                label={t.common.position}
+                name="position"
+                value={formData.position}
+                onChange={handleFormChange}
+              />
+              <Input
+                label={t.common.phone}
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleFormChange}
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t.common.role}
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleFormChange}
+                  className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="PARTICIPANT">{t.roles.participant}</option>
+                  <option value="EXPERT">{t.roles.expert}</option>
+                  <option value="ORGANIZER">{t.roles.organizer}</option>
+                  <option value="ADMIN">{t.roles.admin}</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                {t.common.cancel}
+              </Button>
+              <Button onClick={handleSave} isLoading={isSaving}>
+                {t.common.save}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

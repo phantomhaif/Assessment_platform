@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { LogIn } from "lucide-react"
+import { LogIn, Mail } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 
@@ -15,10 +15,62 @@ export default function LoginPage() {
   const { t, locale } = useI18n()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [code, setCode] = useState("")
+  const [step, setStep] = useState<"credentials" | "code">("credentials")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    try {
+      // Try to send verification code
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (res.ok) {
+        // SMTP is configured — go to code step
+        setStep("code")
+      } else if (res.status === 404 || res.status === 405) {
+        // Route doesn't exist (shouldn't happen) — fallback to direct sign-in
+        await directSignIn()
+      } else {
+        const data = await res.json()
+        if (data.error === "invalid_credentials") {
+          setError(t.auth.invalidCredentials)
+        } else {
+          // SMTP not configured or send failed — try direct sign-in
+          await directSignIn()
+        }
+      }
+    } catch {
+      // Network error — try direct sign-in
+      await directSignIn()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const directSignIn = async () => {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    })
+    if (result?.error) {
+      setError(t.auth.invalidCredentials)
+    } else {
+      router.push("/dashboard")
+      router.refresh()
+    }
+  }
+
+  const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
@@ -27,16 +79,17 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
+        code,
         redirect: false,
       })
 
       if (result?.error) {
-        setError(t.auth.invalidCredentials)
+        setError(t.auth.invalidCode)
       } else {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError(t.errors.serverError)
     } finally {
       setIsLoading(false)
@@ -112,57 +165,109 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-[#0f172a] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-                {t.auth.loginTitle}
-              </h2>
-              <p className="text-[#64748b]">
-                {locale === "ru" ? "Введите ваши данные для входа" : "Enter your credentials to sign in"}
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  {error}
+            {step === "credentials" ? (
+              <>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-[#0f172a] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                    {t.auth.loginTitle}
+                  </h2>
+                  <p className="text-[#64748b]">
+                    {locale === "ru" ? "Введите ваши данные для входа" : "Enter your credentials to sign in"}
+                  </p>
                 </div>
-              )}
 
-              <Input
-                label={t.auth.email}
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+                <form onSubmit={handleCredentialsSubmit} className="space-y-5">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      {error}
+                    </div>
+                  )}
 
-              <Input
-                label={t.auth.password}
-                type="password"
-                placeholder={locale === "ru" ? "Введите пароль" : "Enter password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+                  <Input
+                    label={t.auth.email}
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
 
-              <Button type="submit" className="w-full h-11" isLoading={isLoading}>
-                <LogIn className="w-4 h-4 mr-2" />
-                {t.auth.loginButton}
-              </Button>
-            </form>
+                  <Input
+                    label={t.auth.password}
+                    type="password"
+                    placeholder={locale === "ru" ? "Введите пароль" : "Enter password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-[#64748b]">
-                {t.auth.noAccount}{" "}
-                <Link href="/register" className="text-[#C41E3A] font-medium hover:underline">
-                  {t.auth.registerButton}
-                </Link>
-              </p>
-            </div>
+                  <Button type="submit" className="w-full h-11" isLoading={isLoading}>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {t.auth.loginButton}
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-[#64748b]">
+                    {t.auth.noAccount}{" "}
+                    <Link href="/register" className="text-[#C41E3A] font-medium hover:underline">
+                      {t.auth.registerButton}
+                    </Link>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-7 h-7 text-[#C41E3A]" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#0f172a] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                    {t.auth.enterCode}
+                  </h2>
+                  <p className="text-[#64748b] text-sm">
+                    {t.auth.codeSentTo} <strong>{email}</strong>
+                  </p>
+                </div>
+
+                <form onSubmit={handleCodeSubmit} className="space-y-5">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      {error}
+                    </div>
+                  )}
+
+                  <Input
+                    label={t.auth.verificationCode}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    required
+                    className="text-center text-2xl tracking-widest font-mono"
+                  />
+
+                  <Button type="submit" className="w-full h-11" isLoading={isLoading}>
+                    {t.auth.verifyButton}
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setStep("credentials"); setError(""); setCode("") }}
+                    className="w-full text-sm text-[#64748b] hover:text-[#0f172a] transition-colors"
+                  >
+                    {t.auth.backToLogin}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
 
           <p className="text-center text-xs text-[#94a3b8] mt-6">

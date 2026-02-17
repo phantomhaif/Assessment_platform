@@ -78,6 +78,12 @@ export const dictionaries = {
       agreementRequired: "Необходимо согласие с условиями",
       agreeToTerms: "Я согласен с условиями использования",
       agreeToDataProcessing: "Я согласен на обработку персональных данных",
+      enterCode: "Введите код",
+      codeSentTo: "Код подтверждения отправлен на",
+      verificationCode: "Код подтверждения",
+      verifyButton: "Подтвердить",
+      invalidCode: "Неверный или устаревший код",
+      backToLogin: "← Вернуться к входу",
     },
 
     // Events
@@ -414,6 +420,28 @@ export const dictionaries = {
       placeColumn: "Место",
       membersColumn: "Участники",
       scoreColumn: "Баллы",
+      exportParticipants: "Выгрузить участников (CSV)",
+      sendEmail: "Рассылка",
+    },
+
+    // Mass email
+    massEmail: {
+      title: "Рассылка участникам",
+      subtitle: "Отправить письмо всем одобренным участникам мероприятия",
+      compose: "Составить письмо",
+      subject: "Тема письма",
+      subjectPlaceholder: "Тема вашего письма...",
+      bodyRu: "Текст на русском",
+      bodyRuPlaceholder: "Введите текст письма на русском языке...",
+      bodyEn: "Текст на английском (необязательно)",
+      bodyEnPlaceholder: "Enter email body in English (optional)...",
+      sendToAll: "Отправить всем",
+      showPreview: "Предпросмотр",
+      hidePreview: "Скрыть предпросмотр",
+      preview: "Предпросмотр письма",
+      confirmSend: "Отправить письмо всем одобренным участникам мероприятия?",
+      sentSuccess: "Письмо отправлено {count} участникам",
+      fillRequired: "Заполните обязательные поля: тема и текст на русском",
     },
 
     // Schemas admin
@@ -612,6 +640,12 @@ export const dictionaries = {
       agreementRequired: "Agreement is required",
       agreeToTerms: "I agree to the terms of service",
       agreeToDataProcessing: "I agree to the processing of personal data",
+      enterCode: "Enter verification code",
+      codeSentTo: "Verification code sent to",
+      verificationCode: "Verification code",
+      verifyButton: "Verify",
+      invalidCode: "Invalid or expired code",
+      backToLogin: "← Back to login",
     },
 
     // Events
@@ -948,6 +982,28 @@ export const dictionaries = {
       placeColumn: "Place",
       membersColumn: "Members",
       scoreColumn: "Score",
+      exportParticipants: "Export Participants (CSV)",
+      sendEmail: "Send Email",
+    },
+
+    // Mass email
+    massEmail: {
+      title: "Send Email to Participants",
+      subtitle: "Send an email to all approved participants of this event",
+      compose: "Compose Email",
+      subject: "Subject",
+      subjectPlaceholder: "Your email subject...",
+      bodyRu: "Body in Russian",
+      bodyRuPlaceholder: "Enter email body in Russian...",
+      bodyEn: "Body in English (optional)",
+      bodyEnPlaceholder: "Enter email body in English (optional)...",
+      sendToAll: "Send to All",
+      showPreview: "Preview",
+      hidePreview: "Hide Preview",
+      preview: "Email Preview",
+      confirmSend: "Send this email to all approved participants of the event?",
+      sentSuccess: "Email sent to {count} participants",
+      fillRequired: "Please fill in the required fields: subject and Russian body",
     },
 
     // Schemas admin
