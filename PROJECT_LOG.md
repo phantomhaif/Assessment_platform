@@ -37,24 +37,12 @@
 - `src/components/layout/header.tsx`
 - `src/app/(auth)/login/page.tsx`
 
-### ❌ TODO (not yet localized)
-- `src/app/(dashboard)/admin/events/new/page.tsx`
-- `src/app/(dashboard)/admin/events/[eventId]/page.tsx`
-- `src/app/(dashboard)/admin/events/[eventId]/edit/page.tsx`
-- `src/app/(dashboard)/admin/events/[eventId]/schema/page.tsx`
-- `src/app/(dashboard)/admin/events/[eventId]/teams/page.tsx`
-- `src/app/(dashboard)/admin/documents/page.tsx`
-- `src/app/(dashboard)/admin/passports/page.tsx`
-- `src/app/(dashboard)/admin/regulations/page.tsx`
-- `src/app/(dashboard)/admin/regulations/new/page.tsx`
-- `src/app/(dashboard)/admin/regulations/[id]/edit/page.tsx`
-- `src/app/(dashboard)/admin/regulations/[id]/assign/page.tsx`
-- `src/app/(dashboard)/admin/schemas/page.tsx`
-- `src/app/(dashboard)/admin/scoring/page.tsx`
+### ✅ ALL PAGES LOCALIZED — i18n complete
 
 ## Dictionary sections (in dictionaries.ts)
 ru/en sections: common, nav, auth, events, teams, applications, profile,
-passports, documents, scoring, roles, regulations, errors, dashboard, admin
+passports, documents, scoring, roles, regulations, errors, dashboard, admin,
+eventForm, documentsAdmin, passportsAdmin, regulationsAdmin, adminEvent, schemasAdmin
 
 ## Important notes
 - Document/regulation/criteria NAMES are user-entered data stored in DB — cannot be i18n'd
