@@ -50,6 +50,43 @@ eventForm, documentsAdmin, passportsAdmin, regulationsAdmin, adminEvent, schemas
 - DeepStringify type helper used to avoid literal type conflicts
 - Date formatting: `locale === "ru" ? ru : enUS` from date-fns
 
+## Features added (session 2026-02-17)
+
+### 1. CSV Export of Participants
+- API: `GET /api/events/[eventId]/participants/export`
+- Returns semicolon-delimited CSV: `Имя;Фамилия;Email` (UTF-8 BOM for Excel)
+- Only includes users with APPROVED applications
+- Button added to admin event detail page → Participants card
+
+### 2. Admin User Management
+- `POST /api/users` — admin creates new account (email, password, all profile fields, role)
+- `PATCH /api/users/[userId]` — extended to update firstName, lastName, middleName, organization, position, phone (in addition to role)
+- Admin users page: "Add User" button (opens modal), "Edit" button per row
+- Modal works for both create (shows email+password fields) and edit (no email/password fields)
+
+### 3. Email Verification on Login
+- `POST /api/auth/send-code` — validates email+password, generates 6-digit OTP, stores in-memory (10 min TTL), sends via SMTP
+- `src/lib/verification-codes.ts` — in-memory OTP store (Map)
+- `src/lib/email.ts` — nodemailer transport (env vars: SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM)
+- Login page is now two-step: credentials → code input
+- Falls back to direct sign-in when SMTP_HOST not configured (graceful degradation)
+- `src/lib/auth.ts` — authorize() validates OTP when SMTP_HOST is set
+
+### 4. Mass Email to Participants
+- `POST /api/events/[eventId]/send-email` — sends bilingual HTML email to all APPROVED participants
+- Admin page: `/admin/events/[eventId]/send-email`
+- Fields: Subject, Body RU (required), Body EN (optional)
+- Email shows both languages with flag labels, "Send Email" button in event detail header
+- Live preview in admin compose page
+
+### Railway env vars needed (for email features):
+- SMTP_HOST — e.g. smtp.gmail.com
+- SMTP_PORT — e.g. 587
+- SMTP_SECURE — true for port 465, false for others
+- SMTP_USER — SMTP username/email
+- SMTP_PASS — SMTP password or app password
+- SMTP_FROM — sender address (optional, defaults to SMTP_USER)
+
 ## Migration history
 - Added protocol_assignments table: `prisma/migrations/20260212000000_add_protocol_assignments/`
 
