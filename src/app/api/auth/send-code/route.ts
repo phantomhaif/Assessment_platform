@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid_credentials" }, { status: 401 })
     }
 
+    // Check if email service is configured
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ error: "email_not_configured" }, { status: 503 })
+    }
+
     const code = generateCode()
     storeCode(email.toLowerCase(), code)
 

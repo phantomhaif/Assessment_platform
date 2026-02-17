@@ -1,14 +1,10 @@
-import nodemailer from "nodemailer"
+import { Resend } from "resend"
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
+
+const FROM_EMAIL = process.env.EMAIL_FROM || "Industry Skills <onboarding@resend.dev>"
 
 export async function sendEmail({
   to,
@@ -19,8 +15,19 @@ export async function sendEmail({
   subject: string
   html: string
 }) {
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER
-  await transporter.sendMail({ from, to, subject, html })
+  if (!resend) {
+    console.warn("RESEND_API_KEY not set, skipping email send")
+    return
+  }
+
+  const recipients = Array.isArray(to) ? to : [to]
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: recipients,
+    subject,
+    html,
+  })
 }
 
 export async function sendVerificationCode(email: string, code: string) {

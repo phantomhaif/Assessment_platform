@@ -35,8 +35,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // If SMTP is configured, require verification code
-        if (process.env.SMTP_HOST) {
+        // If email service is configured, require verification code
+        if (process.env.RESEND_API_KEY) {
           const code = credentials.code as string | undefined
           if (!code) return null
           const isCodeValid = validateCode((credentials.email as string).toLowerCase(), code)
