@@ -5,8 +5,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { FileSpreadsheet, Upload, Eye } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function AdminSchemasPage() {
+  const { t } = useI18n()
   const [events, setEvents] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -39,15 +41,15 @@ export default function AdminSchemasPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Схемы оценки</h1>
-        <p className="text-gray-500 mt-1">Управление схемами оценивания для мероприятий</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t.schemasAdmin.title}</h1>
+        <p className="text-gray-500 mt-1">{t.schemasAdmin.subtitle}</p>
       </div>
 
       {events.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <FileSpreadsheet className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Сначала создайте мероприятие</p>
+            <p className="text-gray-500">{t.schemasAdmin.noEvents}</p>
           </CardContent>
         </Card>
       ) : (
@@ -63,12 +65,12 @@ export default function AdminSchemasPage() {
                 {event.assessmentSchema ? (
                   <div className="space-y-2">
                     <p className="text-green-600 text-sm font-medium">
-                      Схема загружена
+                      {t.schemasAdmin.schemaLoaded}
                     </p>
                     <Link href={`/admin/events/${event.id}/schema`}>
                       <Button variant="outline" className="w-full">
                         <Eye className="h-4 w-4 mr-2" />
-                        Просмотреть
+                        {t.schemasAdmin.viewSchema}
                       </Button>
                     </Link>
                   </div>
@@ -76,7 +78,7 @@ export default function AdminSchemasPage() {
                   <Link href={`/admin/events/${event.id}/schema`}>
                     <Button className="w-full">
                       <Upload className="h-4 w-4 mr-2" />
-                      Загрузить схему
+                      {t.schemasAdmin.uploadSchema}
                     </Button>
                   </Link>
                 )}

@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function NewEventPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -47,13 +49,13 @@ export default function NewEventPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Ошибка создания мероприятия")
+        throw new Error(data.error || t.eventForm.createError)
       }
 
       const event = await response.json()
       router.push(`/admin/events/${event.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания мероприятия")
+      setError(err instanceof Error ? err.message : t.eventForm.createError)
     } finally {
       setIsLoading(false)
     }
@@ -68,8 +70,8 @@ export default function NewEventPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Создание мероприятия</h1>
-          <p className="text-gray-500 mt-1">Заполните информацию о соревновании</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.eventForm.createTitle}</h1>
+          <p className="text-gray-500 mt-1">{t.eventForm.createSubtitle}</p>
         </div>
       </div>
 
@@ -82,30 +84,30 @@ export default function NewEventPage() {
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Основная информация</CardTitle>
+            <CardTitle>{t.eventForm.mainInfo}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              label="Название мероприятия *"
+              label={`${t.events.eventName} *`}
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Международный Чемпионат Robotics skills 2025"
+              placeholder={t.eventForm.eventNamePlaceholder}
               required
             />
 
             <Input
-              label="Компетенция *"
+              label={`${t.events.competency} *`}
               name="competency"
               value={formData.competency}
               onChange={handleChange}
-              placeholder="Цифровое производство"
+              placeholder={t.eventForm.competencyPlaceholder}
               required
             />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Описание
+                {t.common.description}
               </label>
               <textarea
                 name="description"
@@ -113,7 +115,7 @@ export default function NewEventPage() {
                 onChange={handleChange}
                 rows={4}
                 className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                placeholder="Описание мероприятия..."
+                placeholder={t.eventForm.descriptionPlaceholder}
               />
             </div>
           </CardContent>
@@ -121,12 +123,12 @@ export default function NewEventPage() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Даты</CardTitle>
+            <CardTitle>{t.eventForm.dates}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Начало регистрации *"
+                label={`${t.events.registrationStart} *`}
                 name="registrationStart"
                 type="datetime-local"
                 value={formData.registrationStart}
@@ -134,7 +136,7 @@ export default function NewEventPage() {
                 required
               />
               <Input
-                label="Конец регистрации *"
+                label={`${t.events.registrationEnd} *`}
                 name="registrationEnd"
                 type="datetime-local"
                 value={formData.registrationEnd}
@@ -144,7 +146,7 @@ export default function NewEventPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Начало мероприятия *"
+                label={`${t.events.eventStart} *`}
                 name="eventStart"
                 type="datetime-local"
                 value={formData.eventStart}
@@ -152,7 +154,7 @@ export default function NewEventPage() {
                 required
               />
               <Input
-                label="Конец мероприятия *"
+                label={`${t.events.eventEnd} *`}
                 name="eventEnd"
                 type="datetime-local"
                 value={formData.eventEnd}
@@ -165,12 +167,12 @@ export default function NewEventPage() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Настройки команд</CardTitle>
+            <CardTitle>{t.eventForm.teamSettings}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Мин. размер команды"
+                label={t.eventForm.minTeamSize}
                 name="minTeamSize"
                 type="number"
                 min={1}
@@ -178,7 +180,7 @@ export default function NewEventPage() {
                 onChange={handleChange}
               />
               <Input
-                label="Макс. размер команды"
+                label={t.eventForm.maxTeamSize}
                 name="maxTeamSize"
                 type="number"
                 min={1}
@@ -192,11 +194,11 @@ export default function NewEventPage() {
         <div className="flex justify-end gap-4 mt-6">
           <Link href="/admin/events">
             <Button type="button" variant="outline">
-              Отмена
+              {t.common.cancel}
             </Button>
           </Link>
           <Button type="submit" isLoading={isLoading}>
-            Создать мероприятие
+            {t.events.createEvent}
           </Button>
         </div>
       </form>

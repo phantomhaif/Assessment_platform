@@ -5,9 +5,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Upload, CheckCircle, FileSpreadsheet } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function SchemaUploadPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
+  const { t } = useI18n()
   const [isUploading, setIsUploading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
   const [schema, setSchema] = useState<any>(null)
@@ -49,19 +51,19 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
       if (response.ok) {
         setResult({
           success: true,
-          message: `Схема загружена! Модулей: ${data.modulesCount}, критериев: ${data.criteriaCount}`,
+          message: `${t.schemasAdmin.uploadCard}! ${t.schemasAdmin.modulesCount}: ${data.modulesCount}, ${t.schemasAdmin.criteriaCount}: ${data.criteriaCount}`,
         })
         fetchSchema()
       } else {
         setResult({
           success: false,
-          message: data.error || "Ошибка загрузки",
+          message: data.error || t.documentsAdmin.uploadError,
         })
       }
     } catch (error) {
       setResult({
         success: false,
-        message: "Ошибка загрузки файла",
+        message: t.documentsAdmin.uploadError,
       })
     } finally {
       setIsUploading(false)
@@ -77,20 +79,20 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Схема оценки</h1>
-          <p className="text-gray-500">Загрузка Excel-файла со схемой оценивания</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.schemasAdmin.uploadTitle}</h1>
+          <p className="text-gray-500">{t.schemasAdmin.uploadSubtitle}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Загрузить схему</CardTitle>
+          <CardTitle>{t.schemasAdmin.uploadCard}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
-              Загрузите Excel-файл (.xlsx) со схемой оценки
+              {t.schemasAdmin.uploadDescription}
             </p>
             <label className="cursor-pointer">
               <input
@@ -104,12 +106,12 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 {isUploading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Загрузка...
+                    {t.common.loading}
                   </>
                 ) : (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
-                    Выбрать файл
+                    {t.schemasAdmin.selectFile}
                   </>
                 )}
               </span>
@@ -134,29 +136,29 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
       {schema && (
         <Card>
           <CardHeader>
-            <CardTitle>Текущая схема: {schema.name}</CardTitle>
+            <CardTitle>{t.schemasAdmin.currentSchema}: {schema.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex gap-4 text-sm">
                 <div className="bg-red-50 text-red-700 px-3 py-1 rounded-full">
-                  Модулей: {schema.modules?.length || 0}
+                  {t.schemasAdmin.modulesCount}: {schema.modules?.length || 0}
                 </div>
                 <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                  Групп навыков: {schema.skillGroups?.length || 0}
+                  {t.schemasAdmin.skillGroupsCount}: {schema.skillGroups?.length || 0}
                 </div>
                 <div className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
-                  Макс. балл: {schema.totalMaxScore}
+                  {t.schemasAdmin.maxScoreLabel}: {schema.totalMaxScore}
                 </div>
               </div>
 
               {schema.modules?.map((module: any) => (
                 <div key={module.id} className="border rounded-lg p-4">
                   <h4 className="font-semibold">
-                    Модуль {module.code}: {module.name}
+                    {t.scoring.module} {module.code}: {module.name}
                   </h4>
                   <p className="text-sm text-gray-500">
-                    Макс. балл: {module.maxScore} | Критериев:{" "}
+                    {t.schemasAdmin.maxScoreLabel}: {module.maxScore} | {t.schemasAdmin.criteriaCount}:{" "}
                     {module.subCriteria?.reduce(
                       (sum: number, s: any) => sum + (s.criteria?.length || 0),
                       0

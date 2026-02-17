@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { FileText, Plus, Edit, Trash2, Users, Calendar } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Event {
   id: string
@@ -26,6 +27,7 @@ interface Protocol {
 }
 
 export default function AdminRegulationsPage() {
+  const { t } = useI18n()
   const [events, setEvents] = useState<Event[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [protocols, setProtocols] = useState<Protocol[]>([])
@@ -71,7 +73,7 @@ export default function AdminRegulationsPage() {
   }
 
   const handleDelete = async (protocolId: string) => {
-    if (!confirm("Удалить регламент? Все назначения и подписи будут удалены.")) return
+    if (!confirm(t.regulationsAdmin.deleteConfirmFull)) return
 
     try {
       const response = await fetch(`/api/admin/protocols/${protocolId}`, {
@@ -98,16 +100,16 @@ export default function AdminRegulationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Управление регламентами</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.regulationsAdmin.title}</h1>
           <p className="text-gray-500 mt-1">
-            Создавайте регламенты и назначайте их участникам мероприятий
+            {t.regulationsAdmin.subtitle}
           </p>
         </div>
         {selectedEventId && (
           <Link href={`/admin/regulations/new?eventId=${selectedEventId}`}>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Создать регламент
+              {t.regulationsAdmin.createRegulation}
             </Button>
           </Link>
         )}
@@ -118,7 +120,7 @@ export default function AdminRegulationsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Выберите мероприятие
+            {t.regulationsAdmin.selectEventTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -127,7 +129,7 @@ export default function AdminRegulationsPage() {
             onChange={(e) => setSelectedEventId(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
           >
-            <option value="">Выберите мероприятие</option>
+            <option value="">{t.regulationsAdmin.selectEventTitle}</option>
             {events.map((event) => (
               <option key={event.id} value={event.id}>
                 {event.name}
@@ -143,7 +145,7 @@ export default function AdminRegulationsPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Регламенты мероприятия
+              {t.regulationsAdmin.eventRegulations}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -151,12 +153,12 @@ export default function AdminRegulationsPage() {
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">
-                  Регламенты для этого мероприятия еще не созданы
+                  {t.regulationsAdmin.noRegulations}
                 </p>
                 <Link href={`/admin/regulations/new?eventId=${selectedEventId}`}>
                   <Button className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
-                    Создать первый регламент
+                    {t.regulationsAdmin.createFirst}
                   </Button>
                 </Link>
               </div>
@@ -170,14 +172,14 @@ export default function AdminRegulationsPage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">{protocol.title}</h3>
                       <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                        <span>Версия {protocol.version}</span>
+                        <span>{t.events.version} {protocol.version}</span>
                         <span className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          Назначено: {protocol._count.assignments}
+                          {t.regulationsAdmin.assignedCount}: {protocol._count.assignments}
                         </span>
                         <span className="flex items-center gap-1">
                           <FileText className="h-4 w-4" />
-                          Подписано: {protocol._count.signatures}
+                          {t.regulationsAdmin.signedCount}: {protocol._count.signatures}
                         </span>
                       </div>
                     </div>
@@ -185,7 +187,7 @@ export default function AdminRegulationsPage() {
                       <Link href={`/admin/regulations/${protocol.id}/assign`}>
                         <Button variant="outline" size="sm">
                           <Users className="h-4 w-4 mr-2" />
-                          Назначить
+                          {t.regulationsAdmin.assignTo}
                         </Button>
                       </Link>
                       <Link href={`/admin/regulations/${protocol.id}/edit`}>

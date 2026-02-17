@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Save } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Protocol {
   id: string
@@ -22,6 +23,7 @@ export default function EditRegulationPage({
   params: Promise<{ id: string }>
 }) {
   const { id: protocolId } = use(params)
+  const { t } = useI18n()
   const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -79,10 +81,10 @@ export default function EditRegulationPage({
         router.push("/admin/regulations")
       } else {
         const data = await response.json()
-        setError(data.error || "Ошибка обновления регламента")
+        setError(data.error || t.regulationsAdmin.updateError)
       }
     } catch (error) {
-      setError("Ошибка при сохранении")
+      setError(t.regulationsAdmin.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -99,7 +101,7 @@ export default function EditRegulationPage({
   if (!protocol) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Регламент не найден</p>
+        <p className="text-gray-500">{t.regulations.notFound}</p>
       </div>
     )
   }
@@ -113,8 +115,8 @@ export default function EditRegulationPage({
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Редактировать регламент</h1>
-          <p className="text-gray-500 mt-1">Версия {protocol.version}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.regulationsAdmin.editTitle}</h1>
+          <p className="text-gray-500 mt-1">{t.events.version} {protocol.version}</p>
         </div>
       </div>
 
@@ -127,11 +129,11 @@ export default function EditRegulationPage({
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Содержание регламента</CardTitle>
+            <CardTitle>{t.regulationsAdmin.regulationContent}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              label="Название регламента"
+              label={t.regulationsAdmin.regulationTitle}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -139,7 +141,7 @@ export default function EditRegulationPage({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Текст регламента
+                {t.regulationsAdmin.titleText}
               </label>
               <textarea
                 ref={textareaRef}
@@ -149,19 +151,19 @@ export default function EditRegulationPage({
                 required
               />
               <p className="text-sm text-gray-500 mt-1">
-                При сохранении версия регламента увеличится на 1
+                {t.regulationsAdmin.versionHint}
               </p>
             </div>
 
             <div className="flex justify-end gap-3">
               <Link href="/admin/regulations">
                 <Button type="button" variant="outline">
-                  Отмена
+                  {t.common.cancel}
                 </Button>
               </Link>
               <Button type="submit" isLoading={isSaving}>
                 <Save className="h-4 w-4 mr-2" />
-                Сохранить изменения
+                {t.common.save}
               </Button>
             </div>
           </CardContent>

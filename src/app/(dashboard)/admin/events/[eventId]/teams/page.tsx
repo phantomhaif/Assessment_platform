@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Plus, Users, Trash2, UserPlus, X, FileText, Download, ChevronDown, ChevronUp } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface TeamFile {
   id: string
@@ -47,6 +48,7 @@ interface User {
 
 export default function EventTeamsPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
+  const { t, locale } = useI18n()
   const [teams, setTeams] = useState<Team[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -143,7 +145,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
         setSearchQuery("")
       } else {
         const data = await response.json()
-        alert(data.error || "Ошибка добавления участника")
+        alert(data.error || t.applications.addError)
       }
     } catch (error) {
       console.error("Error adding member:", error)
@@ -153,7 +155,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
   }
 
   const handleRemoveMember = async (teamId: string, memberId: string) => {
-    if (!confirm("Удалить участника из команды?")) return
+    if (!confirm(t.teams.confirmDeleteMember)) return
 
     try {
       const response = await fetch(`/api/teams/${teamId}/members?memberId=${memberId}`, {
@@ -204,7 +206,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
   }
 
   const handleDeleteTeam = async (teamId: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту команду?")) return
+    if (!confirm(t.teams.confirmDeleteTeam)) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/teams?teamId=${teamId}`, {
@@ -220,9 +222,10 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
   }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " Б"
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " КБ"
-    return (bytes / (1024 * 1024)).toFixed(1) + " МБ"
+    const isRu = locale === "ru"
+    if (bytes < 1024) return bytes + (isRu ? " Б" : " B")
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + (isRu ? " КБ" : " KB")
+    return (bytes / (1024 * 1024)).toFixed(1) + (isRu ? " МБ" : " MB")
   }
 
   if (isLoading) {
@@ -243,38 +246,38 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Команды</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t.teams.title}</h1>
             <p className="text-gray-500">{event?.name}</p>
           </div>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Создать команду
+          {t.teams.createTeam}
         </Button>
       </div>
 
       {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Новая команда</CardTitle>
+            <CardTitle>{t.teams.newTeam}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateTeam} className="flex gap-4">
               <Input
-                placeholder="Название команды"
+                placeholder={t.teams.teamNamePlaceholder}
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 className="flex-1"
               />
               <Button type="submit" disabled={isCreating}>
-                {isCreating ? "Создание..." : "Создать"}
+                {isCreating ? t.teams.creating : t.common.create}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowCreateForm(false)}
               >
-                Отмена
+                {t.common.cancel}
               </Button>
             </form>
           </CardContent>
@@ -285,7 +288,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
         <Card>
           <CardContent className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Команды ещё не созданы</p>
+            <p className="text-gray-500">{t.teams.noTeams}</p>
           </CardContent>
         </Card>
       ) : (
@@ -299,7 +302,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                     {team.name}
                   </CardTitle>
                   <p className="text-sm text-gray-500">
-                    {team.members.length} участник(ов)
+                    {team.members.length} {t.teams.membersCount}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -309,7 +312,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                     onClick={() => toggleFiles(team.id)}
                   >
                     <FileText className="h-4 w-4 mr-1" />
-                    Файлы
+                    {t.teams.filesButton}
                     {expandedFilesTeamId === team.id ? (
                       <ChevronUp className="h-4 w-4 ml-1" />
                     ) : (
@@ -322,7 +325,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                     onClick={() => setAddingToTeamId(addingToTeamId === team.id ? null : team.id)}
                   >
                     <UserPlus className="h-4 w-4 mr-1" />
-                    Добавить
+                    {t.teams.addMember}
                   </Button>
                   <Button
                     variant="ghost"
@@ -337,9 +340,9 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                 {/* Files section */}
                 {expandedFilesTeamId === team.id && (
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3">Загруженные файлы</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t.teams.filesSection}</h4>
                     {loadingFilesTeamId === team.id ? (
-                      <p className="text-sm text-gray-500">Загрузка...</p>
+                      <p className="text-sm text-gray-500">{t.common.loading}</p>
                     ) : team.files && team.files.length > 0 ? (
                       <div className="space-y-2">
                         {team.files.map((file) => (
@@ -349,23 +352,23 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                           >
                             <div>
                               <p className="font-medium text-gray-900">
-                                Модуль {file.moduleCode}: {file.fileName}
+                                {t.scoring.module} {file.moduleCode}: {file.fileName}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {formatFileSize(file.fileSize)} • Загрузил: {file.uploadedBy.lastName} {file.uploadedBy.firstName}
+                                {formatFileSize(file.fileSize)} • {t.teams.uploadedBy}: {file.uploadedBy.lastName} {file.uploadedBy.firstName}
                               </p>
                             </div>
                             <a href={file.fileUrl} target="_blank" rel="noopener noreferrer">
                               <Button variant="outline" size="sm">
                                 <Download className="h-4 w-4 mr-1" />
-                                Скачать
+                                {t.common.download}
                               </Button>
                             </a>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">Файлы ещё не загружены</p>
+                      <p className="text-sm text-gray-500">{t.teams.noFilesYet}</p>
                     )}
                   </div>
                 )}
@@ -373,7 +376,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                 {addingToTeamId === team.id && (
                   <div className="mb-4 p-4 bg-red-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-red-900">Добавить участника</h4>
+                      <h4 className="font-medium text-red-900">{t.teams.addMember}</h4>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -386,7 +389,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                       </Button>
                     </div>
                     <Input
-                      placeholder="Поиск по имени или email..."
+                      placeholder={t.applications.searchByNameOrEmail}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="mb-2"
@@ -408,13 +411,13 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                             onClick={() => handleAddMember(team.id, user.id, "MEMBER")}
                             disabled={isAddingMember}
                           >
-                            Добавить
+                            {t.applications.add}
                           </Button>
                         </div>
                       ))}
                       {getAvailableUsers(team).length === 0 && (
                         <p className="text-sm text-gray-500 text-center py-2">
-                          {searchQuery ? "Пользователи не найдены" : "Все пользователи уже в команде"}
+                          {searchQuery ? t.applications.usersNotFound : t.applications.allUsersAdded}
                         </p>
                       )}
                     </div>
@@ -422,7 +425,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                 )}
 
                 {team.members.length === 0 ? (
-                  <p className="text-sm text-gray-500">Нет участников</p>
+                  <p className="text-sm text-gray-500">{t.teams.noMembers}</p>
                 ) : (
                   <div className="space-y-2">
                     {team.members.map((member) => (
@@ -438,7 +441,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                            Участник
+                            {t.teams.member}
                           </span>
                           <Button
                             variant="ghost"

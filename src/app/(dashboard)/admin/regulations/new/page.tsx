@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Save } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function NewRegulationPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const searchParams = useSearchParams()
   const eventId = searchParams.get("eventId")
@@ -54,10 +56,10 @@ export default function NewRegulationPage() {
         router.push(`/admin/regulations/${data.id}/assign`)
       } else {
         const data = await response.json()
-        setError(data.error || "Ошибка создания регламента")
+        setError(data.error || t.regulationsAdmin.createError)
       }
     } catch (error) {
-      setError("Ошибка при сохранении")
+      setError(t.regulationsAdmin.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -74,8 +76,8 @@ export default function NewRegulationPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Новый регламент</h1>
-          <p className="text-gray-500 mt-1">Создайте текст регламента для мероприятия</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.regulationsAdmin.createTitle}</h1>
+          <p className="text-gray-500 mt-1">{t.regulationsAdmin.createSubtitle}</p>
         </div>
       </div>
 
@@ -88,43 +90,43 @@ export default function NewRegulationPage() {
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Содержание регламента</CardTitle>
+            <CardTitle>{t.regulationsAdmin.regulationContent}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              label="Название регламента"
+              label={t.regulationsAdmin.regulationTitle}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Например: Общий регламент соревнований"
+              placeholder={t.regulationsAdmin.titlePlaceholder}
               required
             />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Текст регламента
+                {t.regulationsAdmin.titleText}
               </label>
               <textarea
                 ref={textareaRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="w-full min-h-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent resize-none"
-                placeholder="Введите полный текст регламента..."
+                placeholder={t.regulationsAdmin.contentPlaceholder}
                 required
               />
               <p className="text-sm text-gray-500 mt-1">
-                Текст будет отображаться участникам перед подписанием
+                {t.regulationsAdmin.titleHint}
               </p>
             </div>
 
             <div className="flex justify-end gap-3">
               <Link href="/admin/regulations">
                 <Button type="button" variant="outline">
-                  Отмена
+                  {t.common.cancel}
                 </Button>
               </Link>
               <Button type="submit" isLoading={isSaving}>
                 <Save className="h-4 w-4 mr-2" />
-                Сохранить и назначить участникам
+                {t.regulationsAdmin.saveAndAssign}
               </Button>
             </div>
           </CardContent>

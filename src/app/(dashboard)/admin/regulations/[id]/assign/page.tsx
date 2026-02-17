@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Save, Users, UserCheck } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Protocol {
   id: string
@@ -33,6 +34,7 @@ export default function AssignRegulationPage({
   params: Promise<{ id: string }>
 }) {
   const { id: protocolId } = use(params)
+  const { t } = useI18n()
   const router = useRouter()
 
   const [protocol, setProtocol] = useState<Protocol | null>(null)
@@ -121,16 +123,16 @@ export default function AssignRegulationPage({
       })
 
       if (response.ok) {
-        setSuccess("Назначения успешно сохранены")
+        setSuccess(t.regulationsAdmin.assignedSuccessfully)
         setTimeout(() => {
           router.push("/admin/regulations")
         }, 1500)
       } else {
         const data = await response.json()
-        setError(data.error || "Ошибка сохранения")
+        setError(data.error || t.regulationsAdmin.saveError)
       }
     } catch (error) {
-      setError("Ошибка при сохранении")
+      setError(t.regulationsAdmin.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -138,10 +140,10 @@ export default function AssignRegulationPage({
 
   const getRoleName = (role: string) => {
     const roleNames: Record<string, string> = {
-      ADMIN: "Администраторы",
-      ORGANIZER: "Организаторы",
-      EXPERT: "Эксперты",
-      PARTICIPANT: "Участники",
+      ADMIN: t.roles.adminPlural,
+      ORGANIZER: t.roles.organizerPlural,
+      EXPERT: t.roles.expertPlural,
+      PARTICIPANT: t.roles.participantPlural,
     }
     return roleNames[role] || role
   }
@@ -163,7 +165,7 @@ export default function AssignRegulationPage({
   if (!protocol) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Регламент не найден</p>
+        <p className="text-gray-500">{t.regulations.notFound}</p>
       </div>
     )
   }
@@ -177,7 +179,7 @@ export default function AssignRegulationPage({
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Назначить регламент</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.regulationsAdmin.assignTitle}</h1>
           <p className="text-gray-500 mt-1">{protocol.title}</p>
         </div>
       </div>
@@ -198,7 +200,7 @@ export default function AssignRegulationPage({
         {/* Role selector */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Выбор по ролям</CardTitle>
+            <CardTitle className="text-lg">{t.regulationsAdmin.selectByRoles}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -242,10 +244,10 @@ export default function AssignRegulationPage({
               <CardTitle className="text-lg flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Выбранные пользователи
+                  {t.regulationsAdmin.selectedUsers}
                 </span>
                 <span className="text-sm text-gray-500 font-normal">
-                  {selectedUserIds.size} из {users.length}
+                  {selectedUserIds.size} {t.regulationsAdmin.ofText} {users.length}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -298,11 +300,11 @@ export default function AssignRegulationPage({
 
       <div className="flex justify-end gap-3">
         <Link href="/admin/regulations">
-          <Button variant="outline">Отмена</Button>
+          <Button variant="outline">{t.common.cancel}</Button>
         </Link>
         <Button onClick={handleSave} isLoading={isSaving}>
           <Save className="h-4 w-4 mr-2" />
-          Сохранить назначения
+          {t.regulationsAdmin.saveAssignments}
         </Button>
       </div>
     </div>

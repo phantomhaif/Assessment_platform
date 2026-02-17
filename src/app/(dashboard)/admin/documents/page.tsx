@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { FileText, Upload, Download, Trash2, X } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function AdminDocumentsPage() {
+  const { t } = useI18n()
   const [events, setEvents] = useState<any[]>([])
   const [selectedEventId, setSelectedEventId] = useState("")
   const [documents, setDocuments] = useState<any[]>([])
@@ -89,7 +91,7 @@ export default function AdminDocumentsPage() {
   }
 
   const handleDelete = async (documentId: string) => {
-    if (!confirm("Удалить этот документ?")) return
+    if (!confirm(t.documentsAdmin.deleteConfirm)) return
 
     try {
       const response = await fetch(
@@ -105,40 +107,40 @@ export default function AdminDocumentsPage() {
   }
 
   const documentTypes: Record<string, string> = {
-    REGULATION: "Регламент",
-    SMP: "SMP",
-    INFRASTRUCTURE: "Инфраструктурный лист",
-    SCHEDULE: "Расписание",
-    OTHER: "Другое",
+    REGULATION: t.documents.types.regulation,
+    SMP: t.documents.types.smp,
+    INFRASTRUCTURE: t.documents.types.infrastructure,
+    SCHEDULE: t.documents.types.schedule,
+    OTHER: t.documents.types.other,
   }
 
   const accessTypes: Record<string, string> = {
-    PUBLIC: "Публичный",
-    PARTICIPANTS: "Участники",
-    EXPERTS: "Эксперты",
-    ORGANIZERS: "Организаторы",
+    PUBLIC: t.documents.access.public,
+    PARTICIPANTS: t.documents.access.participants,
+    EXPERTS: t.documents.access.experts,
+    ORGANIZERS: t.documents.access.organizers,
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Документы</h1>
-          <p className="text-gray-500 mt-1">Управление документами мероприятий</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.documentsAdmin.title}</h1>
+          <p className="text-gray-500 mt-1">{t.documentsAdmin.subtitle}</p>
         </div>
       </div>
 
       <Card>
         <CardContent className="p-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Мероприятие
+            {t.nav.events}
           </label>
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
             className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Выберите мероприятие</option>
+            <option value="">{t.documentsAdmin.selectEvent}</option>
             {events.map((event) => (
               <option key={event.id} value={event.id}>
                 {event.name}
@@ -151,7 +153,7 @@ export default function AdminDocumentsPage() {
       {!selectedEventId ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            Выберите мероприятие для управления документами
+            {t.documentsAdmin.selectEventToView}
           </CardContent>
         </Card>
       ) : (
@@ -159,7 +161,7 @@ export default function AdminDocumentsPage() {
           {showUploadForm && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Загрузить документ</CardTitle>
+                <CardTitle>{t.documentsAdmin.uploadDocument}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowUploadForm(false)}>
                   <X className="h-4 w-4" />
                 </Button>
@@ -167,7 +169,7 @@ export default function AdminDocumentsPage() {
               <CardContent>
                 <form onSubmit={handleUpload} className="space-y-4">
                   <Input
-                    label="Название документа"
+                    label={t.documentsAdmin.documentName}
                     value={uploadForm.name}
                     onChange={(e) => setUploadForm({ ...uploadForm, name: e.target.value })}
                     required
@@ -175,7 +177,7 @@ export default function AdminDocumentsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Тип документа
+                        {t.documentsAdmin.documentType}
                       </label>
                       <select
                         value={uploadForm.type}
@@ -191,7 +193,7 @@ export default function AdminDocumentsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Доступ
+                        {t.documentsAdmin.accessLevel}
                       </label>
                       <select
                         value={uploadForm.access}
@@ -208,7 +210,7 @@ export default function AdminDocumentsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Файл
+                      {t.documentsAdmin.file}
                     </label>
                     <input
                       ref={fileInputRef}
@@ -220,10 +222,10 @@ export default function AdminDocumentsPage() {
                   </div>
                   <div className="flex justify-end gap-4">
                     <Button type="button" variant="outline" onClick={() => setShowUploadForm(false)}>
-                      Отмена
+                      {t.common.cancel}
                     </Button>
                     <Button type="submit" disabled={isUploading}>
-                      {isUploading ? "Загрузка..." : "Загрузить"}
+                      {isUploading ? t.documentsAdmin.uploading : t.common.upload}
                     </Button>
                   </div>
                 </form>
@@ -233,11 +235,11 @@ export default function AdminDocumentsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Документы мероприятия</CardTitle>
+              <CardTitle>{t.documentsAdmin.eventDocuments}</CardTitle>
               {!showUploadForm && (
                 <Button onClick={() => setShowUploadForm(true)}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Загрузить документ
+                  {t.documentsAdmin.uploadDocument}
                 </Button>
               )}
             </CardHeader>
@@ -249,7 +251,7 @@ export default function AdminDocumentsPage() {
               ) : documents.length === 0 ? (
                 <div className="text-center py-8">
                   <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Нет загруженных документов</p>
+                  <p className="text-gray-500">{t.documentsAdmin.noDocuments}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -263,7 +265,7 @@ export default function AdminDocumentsPage() {
                         <div>
                           <p className="font-medium">{doc.name}</p>
                           <p className="text-sm text-gray-500">
-                            {documentTypes[doc.type]} • {accessTypes[doc.access]} • Версия {doc.version}
+                            {documentTypes[doc.type]} • {accessTypes[doc.access]} • {t.events.version} {doc.version}
                           </p>
                         </div>
                       </div>

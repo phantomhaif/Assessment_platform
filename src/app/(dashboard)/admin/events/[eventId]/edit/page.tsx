@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function EditEventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
   const router = useRouter()
+  const { t } = useI18n()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
@@ -87,12 +89,12 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
       })
 
       if (!response.ok) {
-        throw new Error("Ошибка сохранения")
+        throw new Error(t.eventForm.saveError)
       }
 
       router.push(`/admin/events/${eventId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка сохранения")
+      setError(err instanceof Error ? err.message : t.eventForm.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -115,7 +117,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Редактирование мероприятия</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.eventForm.editTitle}</h1>
         </div>
       </div>
 
@@ -128,18 +130,18 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Основная информация</CardTitle>
+            <CardTitle>{t.eventForm.mainInfo}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              label="Название мероприятия *"
+              label={`${t.events.eventName} *`}
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
             />
             <Input
-              label="Компетенция *"
+              label={`${t.events.competency} *`}
               name="competency"
               value={formData.competency}
               onChange={handleChange}
@@ -147,7 +149,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Описание
+                {t.common.description}
               </label>
               <textarea
                 name="description"
@@ -162,19 +164,19 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Даты</CardTitle>
+            <CardTitle>{t.eventForm.dates}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Начало регистрации"
+                label={t.events.registrationStart}
                 name="registrationStart"
                 type="datetime-local"
                 value={formData.registrationStart}
                 onChange={handleChange}
               />
               <Input
-                label="Конец регистрации"
+                label={t.events.registrationEnd}
                 name="registrationEnd"
                 type="datetime-local"
                 value={formData.registrationEnd}
@@ -183,14 +185,14 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Начало мероприятия"
+                label={t.events.eventStart}
                 name="eventStart"
                 type="datetime-local"
                 value={formData.eventStart}
                 onChange={handleChange}
               />
               <Input
-                label="Конец мероприятия"
+                label={t.events.eventEnd}
                 name="eventEnd"
                 type="datetime-local"
                 value={formData.eventEnd}
@@ -202,12 +204,12 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Настройки команд</CardTitle>
+            <CardTitle>{t.eventForm.teamSettings}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Мин. размер команды"
+                label={t.eventForm.minTeamSize}
                 name="minTeamSize"
                 type="number"
                 min={1}
@@ -215,7 +217,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
                 onChange={handleChange}
               />
               <Input
-                label="Макс. размер команды"
+                label={t.eventForm.maxTeamSize}
                 name="maxTeamSize"
                 type="number"
                 min={1}
@@ -229,11 +231,11 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
         <div className="flex justify-end gap-4 mt-6">
           <Link href={`/admin/events/${eventId}`}>
             <Button type="button" variant="outline">
-              Отмена
+              {t.common.cancel}
             </Button>
           </Link>
           <Button type="submit" isLoading={isSaving}>
-            Сохранить изменения
+            {t.common.save}
           </Button>
         </div>
       </form>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Check, X, Save, Filter, ChevronDown, ChevronRight } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Criterion {
   id: string
@@ -53,6 +54,7 @@ export default function AdminScoringPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
+  const { t } = useI18n()
 
   useEffect(() => {
     fetchEvents()
@@ -165,13 +167,13 @@ export default function AdminScoringPage() {
       })
 
       if (response.ok) {
-        setSaveStatus("Сохранено")
+        setSaveStatus(t.scoring.saved)
         setTimeout(() => setSaveStatus(""), 3000)
       } else {
         throw new Error("Failed to save")
       }
     } catch (error) {
-      setSaveStatus("Ошибка сохранения")
+      setSaveStatus(t.scoring.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -206,20 +208,20 @@ export default function AdminScoringPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Оценивание</h1>
-          <p className="text-gray-500 mt-1">Выставление оценок командам</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.scoring.title}</h1>
+          <p className="text-gray-500 mt-1">{t.scoring.subtitle}</p>
         </div>
         {selectedTeamId && (
           <Button onClick={saveScores} isLoading={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            Сохранить
+            {t.common.save}
           </Button>
         )}
       </div>
 
       {saveStatus && (
         <div className={`px-4 py-2 rounded-md text-sm ${
-          saveStatus === "Сохранено"
+          saveStatus === t.scoring.saved
             ? "bg-green-50 text-green-700"
             : "bg-red-50 text-red-700"
         }`}>
@@ -233,7 +235,7 @@ export default function AdminScoringPage() {
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Мероприятие
+                {t.nav.events}
               </label>
               <select
                 value={selectedEventId}
@@ -243,7 +245,7 @@ export default function AdminScoringPage() {
                 }}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="">Выберите мероприятие</option>
+                <option value="">{t.applications.selectEvent}</option>
                 {events.map(event => (
                   <option key={event.id} value={event.id}>
                     {event.name}
@@ -253,7 +255,7 @@ export default function AdminScoringPage() {
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Команда
+                {t.scoring.team}
               </label>
               <select
                 value={selectedTeamId}
@@ -261,7 +263,7 @@ export default function AdminScoringPage() {
                 disabled={!selectedEventId}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
               >
-                <option value="">Выберите команду</option>
+                <option value="">{t.scoring.selectTeam}</option>
                 {teams.map(team => (
                   <option key={team.id} value={team.id}>
                     {team.number ? `#${team.number} ` : ""}{team.name}
@@ -281,13 +283,13 @@ export default function AdminScoringPage() {
       ) : !selectedTeamId ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            Выберите мероприятие и команду для начала оценивания
+            {t.scoring.selectEventAndTeam}
           </CardContent>
         </Card>
       ) : modules.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            Схема оценки не загружена для этого мероприятия
+            {t.scoring.schemaNotLoaded}
           </CardContent>
         </Card>
       ) : (
@@ -307,10 +309,10 @@ export default function AdminScoringPage() {
                     )}
                     <div>
                       <CardTitle className="text-lg">
-                        Модуль {module.code}: {module.name}
+                        {t.scoring.module} {module.code}: {module.name}
                       </CardTitle>
                       <p className="text-sm text-gray-500 mt-1">
-                        Набрано: {calculateModuleScore(module).toFixed(1)} / {module.maxScore} баллов
+                        {t.scoring.earned}: {calculateModuleScore(module).toFixed(1)} / {module.maxScore} {t.scoring.points}
                       </p>
                     </div>
                   </div>
