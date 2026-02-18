@@ -34,23 +34,23 @@ export default function LoginPage() {
       })
 
       if (res.ok) {
-        // SMTP is configured — go to code step
+        // Email sent — go to code step
         setStep("code")
-      } else if (res.status === 404 || res.status === 405) {
-        // Route doesn't exist (shouldn't happen) — fallback to direct sign-in
-        await directSignIn()
       } else {
         const data = await res.json()
         if (data.error === "invalid_credentials") {
           setError(t.auth.invalidCredentials)
-        } else {
-          // SMTP not configured or send failed — try direct sign-in
+        } else if (data.error === "email_not_configured" || res.status === 503) {
+          // Email not configured — direct sign-in without code
           await directSignIn()
+        } else {
+          // Email sending failed — show error
+          setError(t.auth.emailSendError)
         }
       }
     } catch {
-      // Network error — try direct sign-in
-      await directSignIn()
+      // Network error — show error
+      setError(t.errors.serverError)
     } finally {
       setIsLoading(false)
     }

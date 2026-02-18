@@ -40,3 +40,43 @@ export async function PATCH(
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { userId } = await params
+
+    // Allow admin to delete any user, or user to delete themselves
+    const isAdmin = session.user.role === "ADMIN"
+    const isSelf = session.user.id === userId
+
+    if (!isAdmin && !isSelf) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Delete related data first (cascade)
+    await prisma.score.deleteMany({ where: { expertId: userId } })
+    await prisma.protocolSignature.deleteMany({ where: { userId } })
+    await prisma.protocolAssignment.deleteMany({ where: { userId } })
+    await prisma.expertAssignment.deleteMany({ where: { expertId: userId } })
+    await prisma.teamMember.deleteMany({ where: { userId } })
+    await prisma.teamFile.deleteMany({ where: { uploadedById: userId } })
+    await prisma.skillPassport.deleteMany({ where: { userId } })
+    await prisma.application.deleteMany({ where: { userId } })
+
+    // Delete the user
+    await prisma.user.delete({ where: { id: userId } })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting user:", error)
+    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+  }
+}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Users, Search, User, Plus, X } from "lucide-react"
+import { Users, Search, User, Plus, X, Trash2 } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface UserData {
@@ -89,6 +89,18 @@ export default function AdminUsersPage() {
       }
     } catch (error) {
       console.error("Error updating role:", error)
+    }
+  }
+
+  const deleteUser = async (userId: string, userName: string) => {
+    if (!window.confirm(t.admin.confirmDelete.replace("{name}", userName))) return
+    try {
+      const response = await fetch(`/api/users/${userId}`, { method: "DELETE" })
+      if (response.ok) {
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error)
     }
   }
 
@@ -285,6 +297,14 @@ export default function AdminUsersPage() {
                         onClick={() => openEditModal(user)}
                       >
                         {t.common.edit}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:bg-red-50"
+                        onClick={() => deleteUser(user.id, `${user.lastName} ${user.firstName}`)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </td>

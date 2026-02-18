@@ -84,6 +84,7 @@ export const dictionaries = {
       verifyButton: "Подтвердить",
       invalidCode: "Неверный или устаревший код",
       backToLogin: "← Вернуться к входу",
+      emailSendError: "Не удалось отправить код подтверждения. Попробуйте позже.",
     },
 
     // Events
@@ -237,6 +238,12 @@ export const dictionaries = {
       organizationPlaceholder: "МИРЭА — Российский технологический университет",
       positionPlaceholder: "Студент / Преподаватель",
       phonePlaceholder: "+7 (999) 123-45-67",
+      dangerZone: "Опасная зона",
+      deleteWarning: "Удаление аккаунта необратимо. Все ваши данные, заявки и результаты будут удалены.",
+      deleteAccount: "Удалить аккаунт",
+      confirmDelete: "Вы уверены, что хотите удалить свой аккаунт? Это действие необратимо.",
+      confirmDeleteFinal: "Это последнее предупреждение. Все ваши данные будут удалены безвозвратно. Продолжить?",
+      deleteError: "Ошибка при удалении аккаунта",
     },
 
     // Passports
@@ -545,7 +552,7 @@ export const dictionaries = {
       addUser: "Добавить пользователя",
       editUser: "Редактировать пользователя",
       deleteUser: "Удалить пользователя",
-      confirmDelete: "Вы уверены, что хотите удалить?",
+      confirmDelete: "Вы уверены, что хотите удалить пользователя {name}? Все его данные будут удалены.",
       userDeleted: "Пользователь удален",
       userUpdated: "Пользователь обновлен",
       selectRole: "Выберите роль",
@@ -646,6 +653,7 @@ export const dictionaries = {
       verifyButton: "Verify",
       invalidCode: "Invalid or expired code",
       backToLogin: "← Back to login",
+      emailSendError: "Failed to send verification code. Please try again later.",
     },
 
     // Events
@@ -799,6 +807,12 @@ export const dictionaries = {
       organizationPlaceholder: "University / Company",
       positionPlaceholder: "Student / Teacher",
       phonePlaceholder: "+1 (999) 123-4567",
+      dangerZone: "Danger Zone",
+      deleteWarning: "Deleting your account is irreversible. All your data, applications and results will be deleted.",
+      deleteAccount: "Delete Account",
+      confirmDelete: "Are you sure you want to delete your account? This action is irreversible.",
+      confirmDeleteFinal: "This is the final warning. All your data will be permanently deleted. Continue?",
+      deleteError: "Error deleting account",
     },
 
     // Passports
@@ -1107,7 +1121,7 @@ export const dictionaries = {
       addUser: "Add User",
       editUser: "Edit User",
       deleteUser: "Delete User",
-      confirmDelete: "Are you sure you want to delete?",
+      confirmDelete: "Are you sure you want to delete user {name}? All their data will be deleted.",
       userDeleted: "User deleted",
       userUpdated: "User updated",
       selectRole: "Select role",

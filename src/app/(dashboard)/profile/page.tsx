@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Camera } from "lucide-react"
+import { Camera, Trash2 } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { useI18n } from "@/lib/i18n/context"
 
 // Profile page component with i18n support
@@ -27,6 +28,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const [profile, setProfile] = useState<UserProfile>({
     firstName: "",
@@ -108,6 +110,29 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error uploading photo:", error)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(t.profile.confirmDelete)
+    if (!confirmed) return
+
+    const doubleConfirm = window.confirm(t.profile.confirmDeleteFinal)
+    if (!doubleConfirm) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/users/${session?.user?.id}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        await signOut({ callbackUrl: "/login" })
+      } else {
+        throw new Error("Failed to delete account")
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: t.profile.deleteError })
+      setIsDeleting(false)
     }
   }
 
@@ -236,6 +261,25 @@ export default function ProfilePage() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="text-red-600">{t.profile.dangerZone}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">{t.profile.deleteWarning}</p>
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-300 hover:bg-red-50"
+            onClick={handleDeleteAccount}
+            isLoading={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {t.profile.deleteAccount}
+          </Button>
         </CardContent>
       </Card>
     </div>
