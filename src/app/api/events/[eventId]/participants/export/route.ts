@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import iconv from "iconv-lite"
 
 export async function GET(
   req: NextRequest,
@@ -52,9 +53,12 @@ export async function GET(
     const fileName = `participants-${event?.name ?? eventId}.csv`
       .replace(/[^\w\-а-яА-ЯёЁ .]/gi, "_")
 
-    return new NextResponse(Buffer.from("\uFEFF" + csv, "utf-8"), {
+    // Encode as Windows-1251 for Excel compatibility
+    const buffer = iconv.encode(csv, "win1251")
+
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Type": "text/csv; charset=windows-1251",
         "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
       },
     })
