@@ -252,12 +252,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 {t.adminEvent.manageTeams}
               </Button>
             </Link>
-            <a href={`/api/events/${eventId}/participants/export`}>
-              <Button variant="outline" className="w-full mt-2">
-                <Download className="h-4 w-4 mr-2" />
-                {t.adminEvent.exportParticipants}
-              </Button>
-            </a>
+            <div className="flex gap-2 mt-2">
+              <a href={`/api/events/${eventId}/participants/export`} className="flex-1">
+                <Button variant="outline" className="w-full" title="CSV">
+                  <Download className="h-4 w-4 mr-2" />
+                  CSV
+                </Button>
+              </a>
+              <a href={`/api/events/${eventId}/participants/export-excel`} className="flex-1">
+                <Button variant="outline" className="w-full" title="Excel">
+                  <Download className="h-4 w-4 mr-2" />
+                  Excel
+                </Button>
+              </a>
+            </div>
           </CardContent>
         </Card>
       </div>

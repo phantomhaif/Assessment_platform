@@ -37,6 +37,12 @@ export async function GET() {
         phone: true,
         photo: true,
         role: true,
+        customFieldValues: {
+          select: {
+            fieldId: true,
+            value: true,
+          }
+        }
       }
     })
 
@@ -44,7 +50,17 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json(user)
+    // Transform customFieldValues array to object
+    const customFields: Record<string, string> = {}
+    user.customFieldValues.forEach(v => {
+      customFields[v.fieldId] = v.value
+    })
+
+    return NextResponse.json({
+      ...user,
+      customFieldValues: undefined,
+      customFields,
+    })
   } catch (error) {
     console.error("Error fetching profile:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
@@ -59,7 +75,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json()
-    const validatedData = profileSchema.parse(body)
+    const { customFields, ...profileData } = body
+    const validatedData = profileSchema.parse(profileData)
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
@@ -83,6 +100,28 @@ export async function PATCH(req: NextRequest) {
         photo: true,
       }
     })
+
+    // Update custom fields if provided
+    if (customFields && typeof customFields === "object") {
+      for (const [fieldId, value] of Object.entries(customFields)) {
+        if (typeof value === "string") {
+          await prisma.profileFieldValue.upsert({
+            where: {
+              userId_fieldId: {
+                userId: session.user.id,
+                fieldId,
+              }
+            },
+            update: { value },
+            create: {
+              userId: session.user.id,
+              fieldId,
+              value,
+            }
+          })
+        }
+      }
+    }
 
     return NextResponse.json(user)
   } catch (error) {

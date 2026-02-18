@@ -2,7 +2,6 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
-import { validateCode } from "./verification-codes"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -11,7 +10,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        code: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -35,12 +33,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // If email service is configured, require verification code
-        if (process.env.RESEND_API_KEY) {
-          const code = credentials.code as string | undefined
-          if (!code) return null
-          const isCodeValid = validateCode((credentials.email as string).toLowerCase(), code)
-          if (!isCodeValid) return null
+        // Check if email is verified (for new registrations)
+        if (!user.emailVerified) {
+          return null
         }
 
         return {

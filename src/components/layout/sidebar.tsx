@@ -16,7 +16,8 @@ import {
   Upload,
   UserCircle,
   Inbox,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from "lucide-react"
 
 interface SidebarProps {
@@ -54,6 +55,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
     { href: "/admin/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/admin/passports", label: t.nav.passports, icon: Award },
     { href: "/admin/users", label: t.nav.users, icon: Users },
+    { href: "/admin/profile-fields", label: locale === "ru" ? "Поля профиля" : "Profile Fields", icon: Settings },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 

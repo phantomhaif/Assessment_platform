@@ -7,11 +7,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { ArrowLeft, Mail } from "lucide-react"
+import { useI18n } from "@/lib/i18n/context"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { t, locale } = useI18n()
+  const [step, setStep] = useState<"form" | "verify">("form")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
 
   const [formData, setFormData] = useState({
     email: "",
@@ -34,17 +39,58 @@ export default function RegisterPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Пароли не совпадают")
+      setError(locale === "ru" ? "Пароли не совпадают" : "Passwords do not match")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError(locale === "ru" ? "Пароль должен быть не менее 6 символов" : "Password must be at least 6 characters")
       return
     }
 
     if (!formData.agreedToTerms || !formData.agreedToDataProcessing) {
-      setError("Необходимо принять условия и дать согласие на обработку данных")
+      setError(locale === "ru" ? "Необходимо принять условия и дать согласие на обработку данных" : "You must accept terms and consent to data processing")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/register/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || (locale === "ru" ? "Ошибка отправки кода" : "Error sending code"))
+      }
+
+      setStep("verify")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (locale === "ru" ? "Ошибка отправки кода" : "Error sending code"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (verificationCode.length !== 6) {
+      setError(locale === "ru" ? "Введите 6-значный код" : "Enter 6-digit code")
       return
     }
 
@@ -54,33 +100,149 @@ export default function RegisterPage() {
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          verificationCode,
+        }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Ошибка регистрации")
+        throw new Error(data.error || (locale === "ru" ? "Ошибка регистрации" : "Registration error"))
       }
 
       router.push("/login?registered=true")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка регистрации")
+      setError(err instanceof Error ? err.message : (locale === "ru" ? "Ошибка регистрации" : "Registration error"))
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleResendCode = async () => {
+    setError("")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/register/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error)
+      }
+
+      setError(locale === "ru" ? "Код отправлен повторно" : "Code resent")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (locale === "ru" ? "Ошибка отправки кода" : "Error sending code"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (step === "verify") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-14 h-14 bg-[#C41E3A] rounded-xl flex items-center justify-center mb-4">
+              <Mail className="h-7 w-7 text-white" />
+            </div>
+            <CardTitle className="text-2xl">
+              {locale === "ru" ? "Подтверждение email" : "Email Verification"}
+            </CardTitle>
+            <CardDescription>
+              {locale === "ru"
+                ? `Мы отправили код подтверждения на ${formData.email}`
+                : `We sent a verification code to ${formData.email}`
+              }
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleVerifyAndRegister}>
+            <CardContent className="space-y-4">
+              {error && (
+                <div className={`px-4 py-3 rounded-md text-sm ${
+                  error.includes("отправлен") || error.includes("resent")
+                    ? "bg-green-50 border border-green-200 text-green-700"
+                    : "bg-red-50 border border-red-200 text-red-700"
+                }`}>
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {locale === "ru" ? "Код подтверждения" : "Verification Code"}
+                </label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                  className="text-center text-2xl tracking-[0.5em] font-mono"
+                  autoFocus
+                />
+              </div>
+
+              <p className="text-sm text-gray-500 text-center">
+                {locale === "ru" ? "Код действителен 10 минут" : "Code is valid for 10 minutes"}
+              </p>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" isLoading={isLoading}>
+                {locale === "ru" ? "Подтвердить и зарегистрироваться" : "Verify and Register"}
+              </Button>
+              <div className="flex items-center justify-between w-full">
+                <button
+                  type="button"
+                  onClick={() => setStep("form")}
+                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {locale === "ru" ? "Назад" : "Back"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  className="text-sm text-[#C41E3A] hover:underline"
+                  disabled={isLoading}
+                >
+                  {locale === "ru" ? "Отправить код повторно" : "Resend code"}
+                </button>
+              </div>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Регистрация</CardTitle>
+          <CardTitle className="text-2xl">
+            {locale === "ru" ? "Регистрация" : "Registration"}
+          </CardTitle>
           <CardDescription>
-            Создайте аккаунт для участия в соревнованиях
+            {locale === "ru"
+              ? "Создайте аккаунт для участия в соревнованиях"
+              : "Create an account to participate in competitions"
+            }
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSendCode}>
           <CardContent className="space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
@@ -90,17 +252,17 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Фамилия *"
+                label={locale === "ru" ? "Фамилия *" : "Last Name *"}
                 name="lastName"
-                placeholder="Иванов"
+                placeholder={locale === "ru" ? "Иванов" : "Smith"}
                 value={formData.lastName}
                 onChange={handleChange}
                 required
               />
               <Input
-                label="Имя *"
+                label={locale === "ru" ? "Имя *" : "First Name *"}
                 name="firstName"
-                placeholder="Иван"
+                placeholder={locale === "ru" ? "Иван" : "John"}
                 value={formData.firstName}
                 onChange={handleChange}
                 required
@@ -108,9 +270,9 @@ export default function RegisterPage() {
             </div>
 
             <Input
-              label="Отчество"
+              label={locale === "ru" ? "Отчество" : "Middle Name"}
               name="middleName"
-              placeholder="Иванович"
+              placeholder={locale === "ru" ? "Иванович" : ""}
               value={formData.middleName}
               onChange={handleChange}
             />
@@ -126,15 +288,15 @@ export default function RegisterPage() {
             />
 
             <Input
-              label="Организация / Учебное заведение"
+              label={locale === "ru" ? "Организация / Учебное заведение" : "Organization / School"}
               name="organization"
-              placeholder="МИРЭА — Российский технологический университет"
+              placeholder={locale === "ru" ? "МИРЭА — Российский технологический университет" : "University name"}
               value={formData.organization}
               onChange={handleChange}
             />
 
             <Input
-              label="Телефон"
+              label={locale === "ru" ? "Телефон" : "Phone"}
               type="tel"
               name="phone"
               placeholder="+7 (999) 123-45-67"
@@ -144,20 +306,20 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Пароль *"
+                label={locale === "ru" ? "Пароль *" : "Password *"}
                 type="password"
                 name="password"
-                placeholder="Минимум 6 символов"
+                placeholder={locale === "ru" ? "Минимум 6 символов" : "Min 6 characters"}
                 value={formData.password}
                 onChange={handleChange}
                 required
                 minLength={6}
               />
               <Input
-                label="Повторите пароль *"
+                label={locale === "ru" ? "Повторите пароль *" : "Confirm Password *"}
                 type="password"
                 name="confirmPassword"
-                placeholder="Повторите пароль"
+                placeholder={locale === "ru" ? "Повторите пароль" : "Repeat password"}
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
@@ -171,9 +333,9 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 label={
                   <span>
-                    Я принимаю{" "}
+                    {locale === "ru" ? "Я принимаю " : "I accept "}
                     <a href="/terms" className="text-red-600 hover:underline">
-                      условия использования
+                      {locale === "ru" ? "условия использования" : "terms of use"}
                     </a>
                   </span>
                 }
@@ -182,18 +344,21 @@ export default function RegisterPage() {
                 name="agreedToDataProcessing"
                 checked={formData.agreedToDataProcessing}
                 onChange={handleChange}
-                label="Я даю согласие на обработку персональных данных"
+                label={locale === "ru"
+                  ? "Я даю согласие на обработку персональных данных"
+                  : "I consent to personal data processing"
+                }
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" isLoading={isLoading}>
-              Зарегистрироваться
+              {locale === "ru" ? "Получить код подтверждения" : "Get Verification Code"}
             </Button>
             <p className="text-sm text-gray-600 text-center">
-              Уже есть аккаунт?{" "}
+              {locale === "ru" ? "Уже есть аккаунт? " : "Already have an account? "}
               <Link href="/login" className="text-red-600 hover:underline">
-                Войти
+                {locale === "ru" ? "Войти" : "Sign in"}
               </Link>
             </p>
           </CardFooter>

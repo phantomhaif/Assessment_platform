@@ -9,7 +9,15 @@ import { Camera, Trash2 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useI18n } from "@/lib/i18n/context"
 
-// Profile page component with i18n support
+interface ProfileField {
+  id: string
+  name: string
+  nameEn: string | null
+  type: "TEXT" | "TEXTAREA" | "SELECT" | "DATE"
+  required: boolean
+  options: string[]
+  order: number
+}
 
 interface UserProfile {
   firstName: string
@@ -20,15 +28,18 @@ interface UserProfile {
   position: string
   phone: string
   photo: string | null
+  customFields?: Record<string, string>
 }
 
 export default function ProfilePage() {
   const { data: session, update } = useSession()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
   const [isDeleting, setIsDeleting] = useState(false)
+  const [profileFields, setProfileFields] = useState<ProfileField[]>([])
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({})
 
   const [profile, setProfile] = useState<UserProfile>({
     firstName: "",
@@ -43,6 +54,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetchProfile()
+    fetchProfileFields()
   }, [])
 
   const fetchProfile = async () => {
@@ -52,11 +64,26 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json()
         setProfile(data)
+        if (data.customFields) {
+          setCustomFieldValues(data.customFields)
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchProfileFields = async () => {
+    try {
+      const response = await fetch("/api/profile-fields")
+      if (response.ok) {
+        const data = await response.json()
+        setProfileFields(data)
+      }
+    } catch (error) {
+      console.error("Error fetching profile fields:", error)
     }
   }
 
@@ -74,7 +101,10 @@ export default function ProfilePage() {
       const response = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        body: JSON.stringify({
+          ...profile,
+          customFields: customFieldValues,
+        }),
       })
 
       if (response.ok) {
@@ -88,6 +118,10 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleCustomFieldChange = (fieldId: string, value: string) => {
+    setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }))
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,6 +288,69 @@ export default function ProfilePage() {
                 placeholder={t.profile.phonePlaceholder}
               />
             </div>
+
+            {/* Custom Fields */}
+            {profileFields.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-medium text-gray-700 mb-4">
+                  {locale === "ru" ? "Дополнительная информация" : "Additional Information"}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {profileFields.map((field) => {
+                    const fieldLabel = (locale === "ru" ? field.name : field.nameEn || field.name) + (field.required ? " *" : "")
+                    const value = customFieldValues[field.id] || ""
+
+                    if (field.type === "SELECT") {
+                      return (
+                        <div key={field.id}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {fieldLabel}
+                          </label>
+                          <select
+                            value={value}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                            required={field.required}
+                          >
+                            <option value="">{locale === "ru" ? "Выберите..." : "Select..."}</option>
+                            {field.options.map((opt, i) => (
+                              <option key={i} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )
+                    }
+
+                    if (field.type === "TEXTAREA") {
+                      return (
+                        <div key={field.id} className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {fieldLabel}
+                          </label>
+                          <textarea
+                            value={value}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            className="w-full min-h-[80px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                            required={field.required}
+                          />
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <Input
+                        key={field.id}
+                        label={fieldLabel}
+                        type={field.type === "DATE" ? "date" : "text"}
+                        value={value}
+                        onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                        required={field.required}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end">
               <Button type="submit" isLoading={isSaving}>
