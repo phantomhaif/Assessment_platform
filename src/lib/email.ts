@@ -22,12 +22,19 @@ export async function sendEmail({
 
   const recipients = Array.isArray(to) ? to : [to]
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: FROM_EMAIL,
     to: recipients,
     subject,
     html,
   })
+
+  if (result.error) {
+    console.error("Resend error:", result.error)
+    throw new Error(result.error.message)
+  }
+
+  console.log("Email sent successfully:", result.data?.id)
 }
 
 export async function sendVerificationCode(email: string, code: string) {
