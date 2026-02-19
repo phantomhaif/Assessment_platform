@@ -82,10 +82,10 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
       {/* Logo section */}
       <div className="p-5 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <Image src="/logo.png" alt="Industry Skills" width={36} height={36} className="flex-shrink-0" />
-          <div className="flex flex-col justify-between h-[36px]">
-            <h1 className="text-[#C41E3A] font-black leading-none tracking-wider uppercase" style={{ fontSize: '11px' }}>INDUSTRY<br />SKILLS</h1>
-            <p className="text-[#64748b] leading-none" style={{ fontSize: '9px' }}>{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
+          <Image src="/logo.png" alt="Industry Skills" width={52} height={52} className="flex-shrink-0" />
+          <div className="flex flex-col justify-between h-[52px]">
+            <h1 className="text-[#C41E3A] font-black leading-tight tracking-wider uppercase" style={{ fontSize: '14px' }}>INDUSTRY<br />SKILLS</h1>
+            <p className="text-[#64748b] text-xs leading-none">{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
           </div>
         </Link>
       </div>
