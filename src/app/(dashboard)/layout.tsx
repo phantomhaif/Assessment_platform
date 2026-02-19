@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
+import { WaveDots } from "@/components/ui/wave-dots"
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
@@ -33,7 +34,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <Sidebar userRole={session.user.role} />
       <div className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 relative overflow-hidden">
+          <WaveDots className="absolute top-0 right-0 w-2/5 h-2/5 pointer-events-none opacity-40" />
+          <WaveDots className="absolute bottom-0 left-0 w-2/5 h-2/5 pointer-events-none opacity-40" />
+          <div className="relative">{children}</div>
+        </main>
       </div>
     </div>
   )
