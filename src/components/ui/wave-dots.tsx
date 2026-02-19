@@ -31,8 +31,8 @@ export function WaveDots({ className = "", color = "#64748b" }: WaveDotsProps) {
 
           const combined = (wave + wave2 + 1.4) / 2.8 // normalize ~0..1
 
-          const size = 0.8 + combined * 2.2   // 0.8..3px
-          const opacity = 0.06 + combined * 0.42 // 0.06..0.48
+          const size = 0.8 + combined * 1.8   // 0.8..2.6px
+          const opacity = 0.05 + combined * 0.28 // 0.05..0.33
 
           return (
             <circle

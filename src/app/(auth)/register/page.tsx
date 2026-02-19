@@ -153,7 +153,8 @@ export default function RegisterPage() {
   if (step === "verify") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <WaveDots className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+        <WaveDots className="absolute top-0 right-0 w-2/5 h-2/5 pointer-events-none opacity-50" />
+        <WaveDots className="absolute bottom-0 left-0 w-2/5 h-2/5 pointer-events-none opacity-50" />
         <Card className="w-full max-w-md relative z-10">
           <CardHeader className="text-center">
             <div className="mx-auto w-14 h-14 bg-[#C41E3A] rounded-xl flex items-center justify-center mb-4">

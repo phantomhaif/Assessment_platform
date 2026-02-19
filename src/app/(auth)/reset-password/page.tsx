@@ -67,7 +67,8 @@ function ResetPasswordForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
-      <WaveDots className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+      <WaveDots className="absolute top-0 right-0 w-2/5 h-2/5 pointer-events-none opacity-50" />
+      <WaveDots className="absolute bottom-0 left-0 w-2/5 h-2/5 pointer-events-none opacity-50" />
 
       <div className="relative z-10 w-full max-w-md px-6">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">

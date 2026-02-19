@@ -48,8 +48,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)' }}>
-        {/* Wave dots decorative background — z-0 */}
-        <WaveDots color="rgba(255,255,255,0.85)" className="absolute inset-0 w-full h-full z-0 pointer-events-none" />
+        {/* Wave dots — bottom-right corner only, decorative */}
+        <WaveDots color="rgba(255,255,255,0.6)" className="absolute bottom-0 right-0 w-2/3 h-2/5 pointer-events-none opacity-60" />
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="mb-8">
@@ -88,8 +88,8 @@ export default function LoginPage() {
 
       {/* Right side - Login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white relative overflow-hidden">
-        {/* Wave dots background — z-0, behind everything */}
-        <WaveDots className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+        {/* Wave dots — top-right corner, unobtrusive */}
+        <WaveDots className="absolute top-0 right-0 w-1/2 h-2/5 pointer-events-none opacity-50" />
         {/* Language switcher */}
         <div className="absolute top-4 right-4 z-10">
           <LanguageSwitcher />
