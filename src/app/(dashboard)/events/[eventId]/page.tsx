@@ -388,9 +388,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   </span>
                 </div>
 
-                <p className="text-sm text-gray-500">
-                  {t.events.submitted}: {format(new Date(application.createdAt), "d MMMM yyyy, HH:mm", { locale: dateLocale })}
-                </p>
+                {application.createdAt && (
+                  <p className="text-sm text-gray-500">
+                    {t.events.submitted}: {format(new Date(application.createdAt), "d MMMM yyyy, HH:mm", { locale: dateLocale })}
+                  </p>
+                )}
 
                 {application.comment && (
                   <div className="bg-gray-50 p-3 rounded-lg">

@@ -205,6 +205,10 @@ export async function GET(
     })
   } catch (error) {
     console.error("Error exporting participants to Excel:", error)
-    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+    // Return more detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const errorStack = error instanceof Error ? error.stack : ""
+    console.error("Stack:", errorStack)
+    return NextResponse.json({ error: "Internal error", details: errorMessage }, { status: 500 })
   }
 }
