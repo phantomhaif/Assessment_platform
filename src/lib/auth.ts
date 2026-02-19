@@ -33,11 +33,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // Check if email is verified (for new registrations)
-        if (!user.emailVerified) {
-          return null
-        }
-
         return {
           id: user.id,
           email: user.email,
