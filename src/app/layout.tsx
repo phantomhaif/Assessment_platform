@@ -16,6 +16,10 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Industry Skills - Assessment Platform",
   description: "International Championships for Professional Skills Competencies",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

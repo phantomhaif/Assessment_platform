@@ -4,6 +4,7 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LogIn } from "lucide-react"
@@ -53,12 +54,12 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="mb-8">
-            <div className="w-16 h-16 rounded-xl bg-[#C41E3A] flex items-center justify-center mb-6">
-              <span className="text-white font-bold text-2xl">IS</span>
+            <div className="flex items-center gap-4 mb-6">
+              <Image src="/logo.png" alt="Industry Skills" width={64} height={64} className="flex-shrink-0" />
+              <h1 className="text-3xl font-black tracking-widest text-white uppercase" style={{ fontFamily: 'var(--font-heading)' }}>
+                INDUSTRY<br />SKILLS
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold mb-4 text-white" style={{ fontFamily: 'var(--font-heading)', color: 'white' }}>
-              Industry Skills
-            </h1>
             <p className="text-xl text-gray-300 mb-2">
               {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
             </p>
@@ -97,12 +98,10 @@ export default function LoginPage() {
 
         <div className="relative z-10 w-full max-w-md">
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-[#C41E3A] flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-xl">IS</span>
-            </div>
-            <h1 className="text-2xl font-bold text-[#0f172a]" style={{ fontFamily: 'var(--font-heading)' }}>
-              Industry Skills
+          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+            <Image src="/logo.png" alt="Industry Skills" width={44} height={44} className="flex-shrink-0" />
+            <h1 className="text-xl font-black tracking-widest text-[#0f172a] uppercase" style={{ fontFamily: 'var(--font-heading)' }}>
+              INDUSTRY SKILLS
             </h1>
           </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle, XCircle } from "lucide-react"
@@ -74,11 +75,9 @@ function ResetPasswordForm() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-[#C41E3A] flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-base">IS</span>
-            </div>
+            <Image src="/logo.png" alt="Industry Skills" width={40} height={40} className="flex-shrink-0" />
             <div>
-              <p className="font-semibold text-gray-900 text-sm leading-tight">Industry Skills</p>
+              <p className="font-black text-gray-900 text-sm tracking-widest uppercase">Industry Skills</p>
               <p className="text-gray-400 text-xs">
                 {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
               </p>

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -81,11 +82,9 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
       {/* Logo section */}
       <div className="p-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#C41E3A] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">IS</span>
-          </div>
+          <Image src="/logo.png" alt="Industry Skills" width={36} height={36} className="flex-shrink-0" />
           <div>
-            <h1 className="text-white font-semibold text-lg leading-tight">Industry Skills</h1>
+            <h1 className="text-white font-bold text-sm leading-tight tracking-wide uppercase">Industry Skills</h1>
             <p className="text-[#64748b] text-xs">{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
           </div>
         </Link>
