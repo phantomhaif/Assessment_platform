@@ -43,8 +43,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
       {/* Wave dots background */}
-      <WaveDots className="absolute bottom-0 left-0 w-full h-64 opacity-70 pointer-events-none" />
-      <WaveDots className="absolute top-0 right-0 w-2/3 h-48 opacity-40 pointer-events-none rotate-180" />
+      <WaveDots className="absolute inset-0 w-full h-full pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md px-6">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">

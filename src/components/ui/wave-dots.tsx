@@ -1,30 +1,41 @@
-export function WaveDots({ className = "" }: { className?: string }) {
+interface WaveDotsProps {
+  className?: string
+  color?: string
+  rows?: number
+  cols?: number
+}
+
+export function WaveDots({
+  className = "",
+  color = "#C41E3A",
+  rows = 14,
+  cols = 28,
+}: WaveDotsProps) {
+  const spacingX = 36
+  const spacingY = 28
+  const width = cols * spacingX
+  const height = rows * spacingY
+
   return (
     <svg
-      viewBox="0 0 800 300"
+      viewBox={`0 0 ${width} ${height}`}
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
+      preserveAspectRatio="xMidYMid slice"
     >
-      {Array.from({ length: 18 }).map((_, row) => {
-        const cols = 40
-        return Array.from({ length: cols }).map((_, col) => {
-          const x = (col / (cols - 1)) * 780 + 10
-          // Two wave layers with different phases
-          const wave1 = Math.sin((col / cols) * Math.PI * 3 - 0.5) * 60
-          const wave2 = Math.sin((col / cols) * Math.PI * 2.5 + 1.2) * 40
-          const baseY = 80 + row * 9
-          const y = baseY + wave1 * 0.3 + wave2 * 0.2
+      {Array.from({ length: rows }).map((_, row) =>
+        Array.from({ length: cols }).map((_, col) => {
+          const x = col * spacingX + spacingX / 2
+          const y = row * spacingY + spacingY / 2
 
-          // Distance from wave peak determines dot size
-          const distFromCenter = Math.abs(row - 9) / 9
-          const waveInfluence = Math.sin((col / cols) * Math.PI * 2.5 + row * 0.3)
-          const size = Math.max(0.8, (1 - distFromCenter * 0.7) * (1 + waveInfluence * 0.4) * 2.8)
+          // Two overlapping sine waves creating a beautiful flowing pattern
+          const wave1 = Math.sin((col / cols) * Math.PI * 5 - (row / rows) * Math.PI * 1.5)
+          const wave2 = Math.sin((col / cols) * Math.PI * 3 + (row / rows) * Math.PI * 2 + 1)
+          const combined = (wave1 * 0.6 + wave2 * 0.4 + 1) / 2 // normalize to 0..1
 
-          // Opacity based on position
-          const opacity = Math.max(0.08, (1 - distFromCenter * 0.6) * 0.22 + waveInfluence * 0.05)
-
-          if (y < 0 || y > 300) return null
+          const size = 1.5 + combined * 4.5  // 1.5..6 px
+          const opacity = 0.12 + combined * 0.55  // 0.12..0.67
 
           return (
             <circle
@@ -32,12 +43,12 @@ export function WaveDots({ className = "" }: { className?: string }) {
               cx={x}
               cy={y}
               r={size}
-              fill="#94a3b8"
+              fill={color}
               opacity={opacity}
             />
           )
         })
-      })}
+      )}
     </svg>
   )
 }
