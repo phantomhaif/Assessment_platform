@@ -22,6 +22,7 @@ const createFieldSchema = z.object({
   type: z.enum(["TEXT", "TEXTAREA", "SELECT", "DATE"]),
   required: z.boolean().default(false),
   options: z.array(z.string()).default([]),
+  optionsEn: z.array(z.string()).default([]),
 })
 
 // POST - create new field (admin only)

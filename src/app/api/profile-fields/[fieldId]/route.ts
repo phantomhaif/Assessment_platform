@@ -13,6 +13,7 @@ const updateFieldSchema = z.object({
   type: z.enum(["TEXT", "TEXTAREA", "SELECT", "DATE"]).optional(),
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(),
+  optionsEn: z.array(z.string()).optional(),
   order: z.number().optional(),
 })
 

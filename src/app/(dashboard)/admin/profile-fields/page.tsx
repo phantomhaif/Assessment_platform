@@ -14,6 +14,7 @@ interface ProfileField {
   type: "TEXT" | "TEXTAREA" | "SELECT" | "DATE"
   required: boolean
   options: string[]
+  optionsEn: string[]
   order: number
 }
 
@@ -39,8 +40,10 @@ export default function ProfileFieldsPage() {
     type: "TEXT" as ProfileField["type"],
     required: false,
     options: [] as string[],
+    optionsEn: [] as string[],
   })
   const [newOption, setNewOption] = useState("")
+  const [newOptionEn, setNewOptionEn] = useState("")
 
   useEffect(() => {
     fetchFields()
@@ -62,8 +65,9 @@ export default function ProfileFieldsPage() {
 
   const openCreateModal = () => {
     setEditingField(null)
-    setFormData({ name: "", nameEn: "", type: "TEXT", required: false, options: [] })
+    setFormData({ name: "", nameEn: "", type: "TEXT", required: false, options: [], optionsEn: [] })
     setNewOption("")
+    setNewOptionEn("")
     setError("")
     setShowModal(true)
   }
@@ -76,8 +80,10 @@ export default function ProfileFieldsPage() {
       type: field.type,
       required: field.required,
       options: field.options || [],
+      optionsEn: field.optionsEn || [],
     })
     setNewOption("")
+    setNewOptionEn("")
     setError("")
     setShowModal(true)
   }
@@ -140,12 +146,14 @@ export default function ProfileFieldsPage() {
   }
 
   const addOption = () => {
-    if (newOption.trim() && !formData.options.includes(newOption.trim())) {
+    if (newOption.trim()) {
       setFormData(prev => ({
         ...prev,
         options: [...prev.options, newOption.trim()],
+        optionsEn: [...prev.optionsEn, newOptionEn.trim() || newOption.trim()],
       }))
       setNewOption("")
+      setNewOptionEn("")
     }
   }
 
@@ -153,6 +161,7 @@ export default function ProfileFieldsPage() {
     setFormData(prev => ({
       ...prev,
       options: prev.options.filter((_, i) => i !== index),
+      optionsEn: prev.optionsEn.filter((_, i) => i !== index),
     }))
   }
 
@@ -303,29 +312,41 @@ export default function ProfileFieldsPage() {
 
               {formData.type === "SELECT" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     {locale === "ru" ? "Варианты ответа" : "Options"}
                   </label>
-                  <div className="flex gap-2 mb-2">
+                  <div className="grid grid-cols-2 gap-2 mb-1">
+                    <span className="text-xs text-gray-500 font-medium">RU</span>
+                    <span className="text-xs text-gray-500 font-medium">EN</span>
+                  </div>
+                  <div className="flex gap-2 mb-3">
                     <Input
                       value={newOption}
                       onChange={(e) => setNewOption(e.target.value)}
-                      placeholder={locale === "ru" ? "Введите вариант" : "Enter option"}
+                      placeholder="Вариант (RU)"
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addOption())}
                     />
-                    <Button type="button" variant="outline" onClick={addOption}>
+                    <Input
+                      value={newOptionEn}
+                      onChange={(e) => setNewOptionEn(e.target.value)}
+                      placeholder="Option (EN)"
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addOption())}
+                    />
+                    <Button type="button" variant="outline" onClick={addOption} className="flex-shrink-0">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   {formData.options.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-1.5">
                       {formData.options.map((opt, i) => (
-                        <span key={i} className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm">
-                          {opt}
-                          <button onClick={() => removeOption(i)} className="text-gray-400 hover:text-red-600">
-                            <X className="h-3 w-3" />
+                        <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                          <span className="flex-1 text-sm">{opt}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="flex-1 text-sm text-gray-500">{formData.optionsEn[i] || opt}</span>
+                          <button onClick={() => removeOption(i)} className="text-gray-400 hover:text-red-600 flex-shrink-0">
+                            <X className="h-3.5 w-3.5" />
                           </button>
-                        </span>
+                        </div>
                       ))}
                     </div>
                   )}

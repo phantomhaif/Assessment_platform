@@ -45,6 +45,7 @@ model ProfileField {
   required    Boolean             @default(false)
   order       Int                 @default(0)
   options     String[]            @default([])
+  optionsEn   String[]            @default([])
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   values      ProfileFieldValue[]

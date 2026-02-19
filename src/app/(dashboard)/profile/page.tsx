@@ -16,6 +16,7 @@ interface ProfileField {
   type: "TEXT" | "TEXTAREA" | "SELECT" | "DATE"
   required: boolean
   options: string[]
+  optionsEn: string[]
   order: number
 }
 
@@ -301,6 +302,11 @@ export default function ProfilePage() {
                     const value = customFieldValues[field.id] || ""
 
                     if (field.type === "SELECT") {
+                      // Use EN options when locale is EN (value is always stored in RU)
+                      const displayOptions = field.options.map((opt, i) => ({
+                        value: opt,
+                        label: locale === "en" && field.optionsEn?.[i] ? field.optionsEn[i] : opt,
+                      }))
                       return (
                         <div key={field.id}>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -313,8 +319,8 @@ export default function ProfilePage() {
                             required={field.required}
                           >
                             <option value="">{locale === "ru" ? "Выберите..." : "Select..."}</option>
-                            {field.options.map((opt, i) => (
-                              <option key={i} value={opt}>{opt}</option>
+                            {displayOptions.map((opt, i) => (
+                              <option key={i} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
                         </div>

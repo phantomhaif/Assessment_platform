@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { LogIn } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import { WaveDots } from "@/components/ui/wave-dots"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -47,15 +48,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)' }}>
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5"/>
-              </pattern>
-            </defs>
-            <rect width="100" height="100" fill="url(#grid)" />
-          </svg>
+        {/* Wave dots decorative background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <WaveDots className="absolute bottom-0 left-0 w-full h-72 opacity-20" />
+          <WaveDots className="absolute top-0 right-0 w-full h-56 opacity-10 rotate-180" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
@@ -94,7 +90,9 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#f8fafc] relative">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white relative overflow-hidden">
+        {/* Subtle wave dots on right side */}
+        <WaveDots className="absolute bottom-0 left-0 w-full h-48 opacity-50 pointer-events-none" />
         {/* Language switcher */}
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
@@ -148,6 +146,15 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+
+              <div className="flex justify-end">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-[#64748b] hover:text-[#C41E3A] transition-colors"
+                >
+                  {locale === "ru" ? "Забыли пароль?" : "Forgot password?"}
+                </Link>
+              </div>
 
               <Button type="submit" className="w-full h-11" isLoading={isLoading}>
                 <LogIn className="w-4 h-4 mr-2" />
