@@ -80,11 +80,11 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   return (
     <aside className="w-64 min-h-screen flex flex-col" style={{ background: 'var(--sidebar-background)' }}>
       {/* Logo section */}
-      <div className="p-5 border-b border-white/10">
+      <div className="p-5 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image src="/logo.png" alt="Industry Skills" width={36} height={36} className="flex-shrink-0" />
           <div>
-            <h1 className="text-white font-bold text-sm leading-tight tracking-wide uppercase">Industry Skills</h1>
+            <h1 className="text-[#0f172a] font-black text-sm leading-tight tracking-wider uppercase">Industry Skills</h1>
             <p className="text-[#64748b] text-xs">{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
           </div>
         </Link>
