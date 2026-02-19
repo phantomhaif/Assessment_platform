@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { ArrowLeft, Mail } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { WaveDots } from "@/components/ui/wave-dots"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -151,8 +152,10 @@ export default function RegisterPage() {
 
   if (step === "verify") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <WaveDots className="absolute top-0 right-0 w-full h-48 opacity-40 pointer-events-none" />
+        <WaveDots className="absolute bottom-0 left-0 w-full h-48 opacity-40 pointer-events-none rotate-180" />
+        <Card className="w-full max-w-md relative z-10">
           <CardHeader className="text-center">
             <div className="mx-auto w-14 h-14 bg-[#C41E3A] rounded-xl flex items-center justify-center mb-4">
               <Mail className="h-7 w-7 text-white" />
@@ -229,8 +232,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-lg">
+    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <WaveDots className="absolute top-0 right-0 w-full h-48 opacity-40 pointer-events-none" />
+      <WaveDots className="absolute bottom-0 left-0 w-full h-48 opacity-40 pointer-events-none rotate-180" />
+      <Card className="w-full max-w-lg relative z-10">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
             {locale === "ru" ? "Регистрация" : "Registration"}
