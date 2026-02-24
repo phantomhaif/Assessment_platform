@@ -10,7 +10,7 @@ import { useI18n } from "@/lib/i18n/context"
 
 export default function SendEmailPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [subject, setSubject] = useState("")
   const [bodyRu, setBodyRu] = useState("")
