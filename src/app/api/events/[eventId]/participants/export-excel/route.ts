@@ -77,6 +77,7 @@ export async function GET(
     const columns: Partial<ExcelJS.Column>[] = [
       { header: "№", key: "num", width: 5 },
       { header: "Фото", key: "photo", width: 15 },
+      { header: "URL фото", key: "photoUrl", width: 40 },
       { header: "Фамилия", key: "lastName", width: 20 },
       { header: "Имя", key: "firstName", width: 20 },
       { header: "Отчество", key: "middleName", width: 20 },
@@ -120,9 +121,17 @@ export async function GET(
         customFieldsMap[v.fieldId] = v.value
       })
 
+      // Prepare photo URL
+      const photoUrl = user.photo
+        ? user.photo.startsWith("http")
+          ? user.photo
+          : `${process.env.NEXTAUTH_URL || ""}${user.photo}`
+        : ""
+
       const rowData: Record<string, string | number> = {
         num: i + 1,
         photo: "", // We'll add image separately
+        photoUrl: photoUrl,
         lastName: user.lastName,
         firstName: user.firstName,
         middleName: user.middleName || "",
@@ -142,17 +151,13 @@ export async function GET(
       row.alignment = { vertical: "middle", wrapText: true }
 
       // Add photo if exists
-      if (user.photo) {
+      if (photoUrl) {
         try {
           // Fetch image
-          const imageUrl = user.photo.startsWith("http")
-            ? user.photo
-            : `${process.env.NEXTAUTH_URL || ""}${user.photo}`
-
-          const imageResponse = await fetch(imageUrl)
+          const imageResponse = await fetch(photoUrl)
           if (imageResponse.ok) {
             const imageBuffer = await imageResponse.arrayBuffer()
-            const extension = user.photo.toLowerCase().includes(".png") ? "png" : "jpeg"
+            const extension = photoUrl.toLowerCase().includes(".png") ? "png" : "jpeg"
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const imageId = workbook.addImage({
@@ -166,6 +171,14 @@ export async function GET(
               ext: { width: 50, height: 50 },
             })
           }
+
+          // Add hyperlink to photo URL column (column C = 2)
+          const photoUrlCell = worksheet.getCell(rowNum, 3)
+          photoUrlCell.value = {
+            text: "Скачать фото",
+            hyperlink: photoUrl,
+          }
+          photoUrlCell.font = { color: { argb: "FF0000FF" }, underline: true }
         } catch (error) {
           console.error(`Error adding image for user ${user.id}:`, error)
           // Continue without image

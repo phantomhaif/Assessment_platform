@@ -33,6 +33,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   const participantLinks = [
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { href: "/events", label: t.nav.events, icon: Calendar },
+    { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/my-passports", label: t.nav.myPassports, icon: Award },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
@@ -41,6 +42,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   const expertLinks = [
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { href: "/scoring", label: t.nav.scoring, icon: ClipboardList },
+    { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
@@ -50,6 +52,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
     { href: "/admin/events", label: t.nav.events, icon: Calendar },
     { href: "/admin/applications", label: t.nav.applications, icon: Inbox },
     { href: "/admin/teams", label: t.nav.teams, icon: Users },
+    { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/admin/scoring", label: t.nav.scoring, icon: ClipboardList },
     { href: "/admin/schemas", label: t.nav.schemas, icon: Upload },
     { href: "/admin/documents", label: t.nav.documents, icon: FileText },

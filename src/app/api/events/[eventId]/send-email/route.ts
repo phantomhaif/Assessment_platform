@@ -17,11 +17,13 @@ export async function POST(
     }
 
     const { eventId } = await params
-    const { subject, bodyRu, bodyEn } = await req.json()
+    const { subject, bodyRu, bodyEn, roles } = await req.json()
 
     if (!subject || !bodyRu) {
       return NextResponse.json({ error: "subject and bodyRu are required" }, { status: 400 })
     }
+
+    const selectedRoles = roles || ["ALL"]
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -31,24 +33,47 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // Get all approved participants
-    const applications = await prisma.application.findMany({
-      where: {
-        eventId,
-        status: "APPROVED",
-      },
-      include: {
-        user: {
-          select: { email: true, firstName: true, lastName: true },
-        },
-      },
-    })
+    // Get recipients based on role filter
+    let recipients: string[] = []
 
-    if (applications.length === 0) {
-      return NextResponse.json({ sent: 0 })
+    if (selectedRoles.includes("ALL")) {
+      // Send to all approved participants (default behavior)
+      const applications = await prisma.application.findMany({
+        where: {
+          eventId,
+          status: "APPROVED",
+        },
+        include: {
+          user: {
+            select: { email: true },
+          },
+        },
+      })
+      recipients = applications.map((a) => a.user.email)
+    } else {
+      // Send to specific roles
+      const applications = await prisma.application.findMany({
+        where: {
+          eventId,
+          status: "APPROVED",
+          user: {
+            role: {
+              in: selectedRoles,
+            },
+          },
+        },
+        include: {
+          user: {
+            select: { email: true },
+          },
+        },
+      })
+      recipients = applications.map((a) => a.user.email)
     }
 
-    const recipients = applications.map((a) => a.user.email)
+    if (recipients.length === 0) {
+      return NextResponse.json({ sent: 0 })
+    }
 
     const html = buildBilingualEmail({
       eventName: event.name,

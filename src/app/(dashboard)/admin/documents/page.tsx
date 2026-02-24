@@ -18,7 +18,7 @@ export default function AdminDocumentsPage() {
   const [uploadForm, setUploadForm] = useState({
     name: "",
     type: "OTHER",
-    access: "PARTICIPANTS",
+    access: ["PARTICIPANTS"] as string[],
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -70,7 +70,7 @@ export default function AdminDocumentsPage() {
       formData.append("file", selectedFile)
       formData.append("name", uploadForm.name)
       formData.append("type", uploadForm.type)
-      formData.append("access", uploadForm.access)
+      formData.append("access", JSON.stringify(uploadForm.access))
 
       const response = await fetch(`/api/events/${selectedEventId}/documents`, {
         method: "POST",
@@ -79,7 +79,7 @@ export default function AdminDocumentsPage() {
 
       if (response.ok) {
         setShowUploadForm(false)
-        setUploadForm({ name: "", type: "OTHER", access: "PARTICIPANTS" })
+        setUploadForm({ name: "", type: "OTHER", access: ["PARTICIPANTS"] })
         setSelectedFile(null)
         fetchDocuments()
       }
@@ -192,20 +192,31 @@ export default function AdminDocumentsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t.documentsAdmin.accessLevel}
                       </label>
-                      <select
-                        value={uploadForm.access}
-                        onChange={(e) => setUploadForm({ ...uploadForm, access: e.target.value })}
-                        className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm"
-                      >
+                      <div className="space-y-2">
                         {Object.entries(accessTypes).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
+                          <div key={value} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`access-${value}`}
+                              checked={uploadForm.access.includes(value)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setUploadForm({ ...uploadForm, access: [...uploadForm.access, value] })
+                                } else {
+                                  setUploadForm({ ...uploadForm, access: uploadForm.access.filter(a => a !== value) })
+                                }
+                              }}
+                              className="h-4 w-4 text-red-600 rounded focus:ring-red-500"
+                            />
+                            <label htmlFor={`access-${value}`} className="ml-2 text-sm text-gray-700">
+                              {label}
+                            </label>
+                          </div>
                         ))}
-                      </select>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -265,7 +276,7 @@ export default function AdminDocumentsPage() {
                         <div>
                           <p className="font-medium">{doc.name}</p>
                           <p className="text-sm text-gray-500">
-                            {documentTypes[doc.type]} • {accessTypes[doc.access]} • {t.events.version} {doc.version}
+                            {documentTypes[doc.type]} • {Array.isArray(doc.access) ? doc.access.map((a: string) => accessTypes[a]).join(", ") : accessTypes[doc.access]} • {t.events.version} {doc.version}
                           </p>
                         </div>
                       </div>

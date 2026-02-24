@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Send, Eye } from "lucide-react"
+import { ArrowLeft, Send, Eye, Users } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 export default function SendEmailPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -18,6 +18,8 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
   const [preview, setPreview] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [result, setResult] = useState<{ sent?: number; error?: string } | null>(null)
+  const [sendToAll, setSendToAll] = useState(true)
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
 
   const handleSend = async () => {
     if (!subject.trim() || !bodyRu.trim()) {
@@ -35,7 +37,12 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
       const res = await fetch(`/api/events/${eventId}/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, bodyRu, bodyEn }),
+        body: JSON.stringify({
+          subject,
+          bodyRu,
+          bodyEn,
+          roles: sendToAll ? ["ALL"] : selectedRoles
+        }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -75,6 +82,65 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
             : result.error}
         </div>
       )}
+
+      {/* Recipients */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {locale === "ru" ? "Получатели" : "Recipients"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="sendToAll"
+              checked={sendToAll}
+              onChange={(e) => {
+                setSendToAll(e.target.checked)
+                if (e.target.checked) setSelectedRoles([])
+              }}
+              className="h-4 w-4 text-red-600 rounded focus:ring-red-500"
+            />
+            <label htmlFor="sendToAll" className="text-sm font-medium text-gray-900">
+              {locale === "ru" ? "Отправить всем одобренным участникам" : "Send to all approved participants"}
+            </label>
+          </div>
+
+          {!sendToAll && (
+            <div className="ml-6 space-y-2">
+              <p className="text-sm text-gray-600 mb-2">
+                {locale === "ru" ? "Выберите роли получателей:" : "Select recipient roles:"}
+              </p>
+              {[
+                { value: "PARTICIPANT", label: t.roles.participant },
+                { value: "EXPERT", label: t.roles.expert },
+                { value: "ORGANIZER", label: t.roles.organizer },
+              ].map((role) => (
+                <div key={role.value} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`role-${role.value}`}
+                    checked={selectedRoles.includes(role.value)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRoles([...selectedRoles, role.value])
+                      } else {
+                        setSelectedRoles(selectedRoles.filter(r => r !== role.value))
+                      }
+                    }}
+                    className="h-4 w-4 text-red-600 rounded focus:ring-red-500"
+                  />
+                  <label htmlFor={`role-${role.value}`} className="text-sm text-gray-700">
+                    {role.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

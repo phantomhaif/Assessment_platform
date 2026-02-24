@@ -100,16 +100,16 @@ model Event {
 }
 
 model EventDocument {
-  id        String         @id @default(cuid())
+  id        String       @id @default(cuid())
   eventId   String
   name      String
   type      DocumentType
-  access    DocumentAccess @default(PARTICIPANTS)
+  access    String[]     @default(["PARTICIPANTS"])
   fileUrl   String
-  version   Int            @default(1)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  version   Int          @default(1)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@map("event_documents")
 }
@@ -365,12 +365,6 @@ enum DocumentType {
   OTHER
 }
 
-enum DocumentAccess {
-  PUBLIC
-  PARTICIPANTS
-  EXPERTS
-  ORGANIZERS
-}
 
 enum ApplicationStatus {
   PENDING

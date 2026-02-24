@@ -2,6 +2,57 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const { userId } = await params
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        customFieldValues: {
+          include: {
+            field: {
+              select: {
+                id: true,
+                name: true,
+                nameEn: true,
+                type: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            applications: true,
+            skillPassports: true,
+          },
+        },
+      },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(user)
+  } catch (error) {
+    console.error("Error fetching user:", error)
+    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
@@ -18,7 +69,7 @@ export async function PATCH(
 
     const { userId } = await params
     const body = await req.json()
-    const { role, firstName, lastName, middleName, organization, position, phone } = body
+    const { role, firstName, lastName, middleName, organization, position, phone, customFields } = body
 
     const data: Record<string, unknown> = {}
     if (role !== undefined) data.role = role
@@ -33,6 +84,27 @@ export async function PATCH(
       where: { id: userId },
       data,
     })
+
+    // Update custom fields if provided
+    if (customFields && typeof customFields === "object") {
+      // Delete existing custom field values
+      await prisma.profileFieldValue.deleteMany({
+        where: { userId },
+      })
+
+      // Create new custom field values
+      const customFieldEntries = Object.entries(customFields).filter(([_, value]) => value !== "")
+      if (customFieldEntries.length > 0) {
+        await prisma.profileFieldValue.createMany({
+          data: customFieldEntries.map(([fieldId, value]) => ({
+            userId,
+            fieldId,
+            value: String(value),
+          })),
+          skipDuplicates: true,
+        })
+      }
+    }
 
     return NextResponse.json(user)
   } catch (error) {

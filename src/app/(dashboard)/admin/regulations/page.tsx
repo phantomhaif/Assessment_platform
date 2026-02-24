@@ -27,7 +27,7 @@ interface Protocol {
 }
 
 export default function AdminRegulationsPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [events, setEvents] = useState<Event[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [protocols, setProtocols] = useState<Protocol[]>([])
@@ -184,6 +184,12 @@ export default function AdminRegulationsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Link href={`/admin/regulations/${protocol.id}/signatures`}>
+                        <Button variant="outline" size="sm">
+                          <FileText className="h-4 w-4 mr-2" />
+                          {locale === "ru" ? "Подписи" : "Signatures"}
+                        </Button>
+                      </Link>
                       <Link href={`/admin/regulations/${protocol.id}/assign`}>
                         <Button variant="outline" size="sm">
                           <Users className="h-4 w-4 mr-2" />

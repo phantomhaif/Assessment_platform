@@ -141,13 +141,40 @@ export default function AdminScoringPage() {
   }
 
   const handleScoreChange = (criterionId: string, value: number, maxScore: number) => {
+    // Allow half scores (0.5 increments)
     if (value < 0 || value > maxScore) return
 
     const key = `${criterionId}-${selectedTeamId}`
     setScores(prev => new Map(prev).set(key, value))
   }
 
-  const saveScores = async () => {
+  // Check for missing criteria
+  const checkMissingCriteria = () => {
+    const missingCriteria: string[] = []
+    modules.forEach(module => {
+      module.subCriteria.forEach(sub => {
+        sub.criteria.forEach(criterion => {
+          const key = getScoreKey(criterion.id)
+          const score = scores.get(key)
+          if (score === undefined || score === null) {
+            missingCriteria.push(`${module.code}.${sub.code}: ${criterion.description}`)
+          }
+        })
+      })
+    })
+    return missingCriteria
+  }
+
+  const saveScores = async (force: boolean = false) => {
+    // Check for missing criteria
+    const missing = checkMissingCriteria()
+    if (missing.length > 0 && !force) {
+      const message = `${t.scoring.missingCriteria || "Не все критерии заполнены"}:\n\n${missing.slice(0, 10).join("\n")}${missing.length > 10 ? `\n\n...и еще ${missing.length - 10}` : ""}\n\n${t.scoring.saveAnyway || "Сохранить частично заполненные оценки?"}`
+      if (!window.confirm(message)) {
+        return
+      }
+    }
+
     setIsSaving(true)
     setSaveStatus("")
 
@@ -167,7 +194,7 @@ export default function AdminScoringPage() {
       })
 
       if (response.ok) {
-        setSaveStatus(t.scoring.saved)
+        setSaveStatus(missing.length === 0 ? t.scoring.saved : (t.scoring.savedPartial || "Оценки сохранены частично"))
         setTimeout(() => setSaveStatus(""), 3000)
       } else {
         throw new Error("Failed to save")
@@ -354,53 +381,53 @@ export default function AdminScoringPage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {criterion.type === "M" ? (
-                                    // Measurement type - binary
-                                    <div className="flex gap-1">
-                                      <button
-                                        onClick={() => handleScoreChange(criterion.id, 0, criterion.maxScore)}
-                                        className={`p-2 rounded-md transition-colors ${
-                                          currentScore === 0
-                                            ? "bg-red-100 text-red-700"
-                                            : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                                        }`}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleScoreChange(criterion.id, criterion.maxScore, criterion.maxScore)}
-                                        className={`p-2 rounded-md transition-colors ${
-                                          currentScore === criterion.maxScore
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                                        }`}
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    // Judgement type - scale
-                                    <select
+                                    // Measurement type - numeric input with 0.5 step
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={criterion.maxScore}
+                                      step={0.5}
                                       value={currentScore}
                                       onChange={(e) => handleScoreChange(
                                         criterion.id,
-                                        parseFloat(e.target.value),
+                                        parseFloat(e.target.value) || 0,
                                         criterion.maxScore
                                       )}
-                                      className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                                    >
-                                      {criterion.judgementOptions?.map(option => (
-                                        <option key={option.score} value={option.score}>
-                                          {option.score} - {option.label.slice(0, 30)}
-                                        </option>
-                                      )) || (
-                                        <>
-                                          <option value={0}>0</option>
-                                          <option value={1}>1</option>
-                                          <option value={2}>2</option>
-                                          <option value={3}>3</option>
-                                        </>
-                                      )}
-                                    </select>
+                                      className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    />
+                                  ) : (
+                                    // Judgement type - scale or numeric input
+                                    criterion.judgementOptions && criterion.judgementOptions.length > 0 ? (
+                                      <select
+                                        value={currentScore}
+                                        onChange={(e) => handleScoreChange(
+                                          criterion.id,
+                                          parseFloat(e.target.value),
+                                          criterion.maxScore
+                                        )}
+                                        className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                      >
+                                        {criterion.judgementOptions.map(option => (
+                                          <option key={option.score} value={option.score}>
+                                            {option.score} - {option.label.slice(0, 30)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={criterion.maxScore}
+                                        step={0.5}
+                                        value={currentScore}
+                                        onChange={(e) => handleScoreChange(
+                                          criterion.id,
+                                          parseFloat(e.target.value) || 0,
+                                          criterion.maxScore
+                                        )}
+                                        className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                      />
+                                    )
                                   )}
                                   <span className="text-sm text-gray-500 w-16 text-right">
                                     {currentScore} / {criterion.maxScore}

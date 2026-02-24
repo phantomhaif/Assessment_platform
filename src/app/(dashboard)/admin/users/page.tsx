@@ -24,6 +24,17 @@ interface UserData {
   }
 }
 
+interface ProfileField {
+  id: string
+  name: string
+  nameEn: string
+  type: "TEXT" | "TEXTAREA" | "SELECT" | "DATE"
+  required: boolean
+  options: string[]
+  optionsEn: string[]
+  order: number
+}
+
 interface UserFormData {
   email: string
   password: string
@@ -34,6 +45,7 @@ interface UserFormData {
   position: string
   phone: string
   role: string
+  customFields: Record<string, string>
 }
 
 const EMPTY_FORM: UserFormData = {
@@ -46,22 +58,38 @@ const EMPTY_FORM: UserFormData = {
   position: "",
   phone: "",
   role: "PARTICIPANT",
+  customFields: {},
 }
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [selectedRole, setSelectedRole] = useState<string>("ALL")
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserData | null>(null)
   const [formData, setFormData] = useState<UserFormData>(EMPTY_FORM)
   const [formError, setFormError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
-  const { t } = useI18n()
+  const [profileFields, setProfileFields] = useState<ProfileField[]>([])
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     fetchUsers()
+    fetchProfileFields()
   }, [])
+
+  const fetchProfileFields = async () => {
+    try {
+      const response = await fetch("/api/profile-fields")
+      if (response.ok) {
+        const data = await response.json()
+        setProfileFields(data)
+      }
+    } catch (error) {
+      console.error("Error fetching profile fields:", error)
+    }
+  }
 
   const fetchUsers = async () => {
     try {
@@ -111,8 +139,23 @@ export default function AdminUsersPage() {
     setShowModal(true)
   }
 
-  const openEditModal = (user: UserData) => {
+  const openEditModal = async (user: UserData) => {
     setEditingUser(user)
+
+    // Fetch user's custom field values
+    const customFields: Record<string, string> = {}
+    try {
+      const response = await fetch(`/api/users/${user.id}`)
+      if (response.ok) {
+        const userData = await response.json()
+        userData.customFieldValues?.forEach((cfv: any) => {
+          customFields[cfv.fieldId] = cfv.value
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching custom fields:", error)
+    }
+
     setFormData({
       email: user.email,
       password: "",
@@ -123,14 +166,22 @@ export default function AdminUsersPage() {
       position: user.position || "",
       phone: user.phone || "",
       role: user.role,
+      customFields,
     })
     setFormError("")
     setShowModal(true)
   }
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleCustomFieldChange = (fieldId: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      customFields: { ...prev.customFields, [fieldId]: value }
+    }))
   }
 
   const handleSave = async () => {
@@ -150,6 +201,7 @@ export default function AdminUsersPage() {
             position: formData.position || null,
             phone: formData.phone || null,
             role: formData.role,
+            customFields: formData.customFields,
           }),
         })
         if (!response.ok) {
@@ -178,10 +230,13 @@ export default function AdminUsersPage() {
   }
 
   const filteredUsers = users.filter(
-    (user) =>
-      user.email.toLowerCase().includes(search.toLowerCase()) ||
-      user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(search.toLowerCase())
+    (user) => {
+      const matchesSearch = user.email.toLowerCase().includes(search.toLowerCase()) ||
+        user.firstName.toLowerCase().includes(search.toLowerCase()) ||
+        user.lastName.toLowerCase().includes(search.toLowerCase())
+      const matchesRole = selectedRole === "ALL" || user.role === selectedRole
+      return matchesSearch && matchesRole
+    }
   )
 
   const roleLabels: Record<string, { label: string; color: string }> = {
@@ -214,14 +269,27 @@ export default function AdminUsersPage() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={t.admin.searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={t.admin.searchPlaceholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="w-48 h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              <option value="ALL">{t.common.all} {t.nav.users.toLowerCase()}</option>
+              <option value="PARTICIPANT">{t.roles.participant}</option>
+              <option value="EXPERT">{t.roles.expert}</option>
+              <option value="ORGANIZER">{t.roles.organizer}</option>
+              <option value="ADMIN">{t.roles.admin}</option>
+            </select>
           </div>
         </CardContent>
       </Card>
@@ -410,6 +478,65 @@ export default function AdminUsersPage() {
                   <option value="ADMIN">{t.roles.admin}</option>
                 </select>
               </div>
+
+              {/* Custom Fields */}
+              {editingUser && profileFields.length > 0 && (
+                <>
+                  <div className="col-span-2 border-t pt-4 mt-2">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">
+                      {locale === "ru" ? "Дополнительные поля" : "Additional Fields"}
+                    </h3>
+                  </div>
+                  {profileFields.map((field) => {
+                    const fieldName = locale === "ru" ? field.name : field.nameEn
+                    const fieldValue = formData.customFields[field.id] || ""
+
+                    return (
+                      <div key={field.id} className={field.type === "TEXTAREA" ? "col-span-2" : ""}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {fieldName}{field.required ? " *" : ""}
+                        </label>
+                        {field.type === "TEXT" && (
+                          <input
+                            type="text"
+                            value={fieldValue}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                          />
+                        )}
+                        {field.type === "TEXTAREA" && (
+                          <textarea
+                            value={fieldValue}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            rows={3}
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                          />
+                        )}
+                        {field.type === "SELECT" && (
+                          <select
+                            value={fieldValue}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                          >
+                            <option value="">{locale === "ru" ? "Выберите..." : "Select..."}</option>
+                            {(locale === "ru" ? field.options : field.optionsEn).map((option, idx) => (
+                              <option key={idx} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        )}
+                        {field.type === "DATE" && (
+                          <input
+                            type="date"
+                            value={fieldValue}
+                            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                            className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </>
+              )}
             </div>
             <div className="flex justify-end gap-3 p-6 border-t">
               <Button variant="outline" onClick={() => setShowModal(false)}>

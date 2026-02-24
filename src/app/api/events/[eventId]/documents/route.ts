@@ -47,7 +47,8 @@ export async function POST(
     const file = formData.get("file") as File
     const name = formData.get("name") as string
     const type = formData.get("type") as string
-    const access = formData.get("access") as string || "PARTICIPANTS"
+    const accessString = formData.get("access") as string
+    const access = accessString ? JSON.parse(accessString) : ["PARTICIPANTS"]
 
     if (!file) {
       return NextResponse.json({ error: "Файл не загружен" }, { status: 400 })
@@ -84,7 +85,7 @@ export async function POST(
         eventId,
         name,
         type: type as any,
-        access: access as any,
+        access: Array.isArray(access) ? access : [access],
         fileUrl: `/api/files/documents/${eventId}/${filename}`,
         version: newVersion,
       },
