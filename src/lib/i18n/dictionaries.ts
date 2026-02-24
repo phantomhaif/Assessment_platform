@@ -335,6 +335,8 @@ export const dictionaries = {
       points: "баллов",
       team: "Команда",
       selectTeam: "Выберите команду",
+      missingCriteria: "Не все критерии заполнены",
+      saveAnyway: "Сохранить частично заполненные оценки?",
     },
 
     // Event form (create/edit)
@@ -935,6 +937,8 @@ export const dictionaries = {
       points: "points",
       team: "Team",
       selectTeam: "Select team",
+      missingCriteria: "Not all criteria are filled",
+      saveAnyway: "Save partially filled scores?",
     },
 
     // Event form (create/edit)
