@@ -169,9 +169,6 @@ export default function Home() {
 
             {/* IITB Contacts */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-4">
-                {locale === "ru" ? "Контакты ИИТБ" : "IITB Contacts"}
-              </h3>
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-start gap-2">
                   <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Calendar, Users, Award, ClipboardList, ArrowRight } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
@@ -289,6 +290,87 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Footer with IITB Contacts */}
+      <footer className="mt-12 py-8 border-t border-gray-200 bg-gray-50 rounded-lg">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+            {/* About Platform */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Assessment Platform</h3>
+              <p className="text-gray-600 text-sm">
+                {locale === "ru"
+                  ? "Assessment Platform - Платформа оценки соревнований профессионального мастерства"
+                  : "Assessment Platform - Professional Skills Competition Assessment Platform"}
+              </p>
+            </div>
+
+            {/* IITB Contacts */}
+            <div>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-700">
+                      {locale === "ru" ? "197046, Россия" : "197046, Russia"}
+                    </p>
+                    <p>
+                      {locale === "ru"
+                        ? "Санкт-Петербург, Петроградская набережная, д. 36A"
+                        : "St. Petersburg, Petrogradskaya Embankment, 36A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <a href="tel:+78126440126" className="hover:text-[#C41E3A] transition-colors">
+                    +7 (812) 644-01-26
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <a href="tel:+79812015823" className="hover:text-[#C41E3A] transition-colors">
+                    +7 (981) 201-58-23
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <a href="mailto:info@iitb.ru" className="hover:text-[#C41E3A] transition-colors">
+                    info@iitb.ru
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* IITB Logo */}
+            <div className="flex items-center justify-center md:justify-end">
+              <Image
+                src={locale === "ru" ? "/iitb-logo-ru.png" : "/iitb-logo-en.png"}
+                alt="ИИТБ"
+                width={200}
+                height={60}
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-300 pt-4 text-center text-gray-500 text-sm">
+            <p>© 2026 Assessment Platform. {locale === "ru" ? "Все права защищены." : "All rights reserved."}</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
