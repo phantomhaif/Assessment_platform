@@ -239,7 +239,7 @@ export default function AdminScoringPage() {
           <p className="text-gray-500 mt-1">{t.scoring.subtitle}</p>
         </div>
         {selectedTeamId && (
-          <Button onClick={saveScores} isLoading={isSaving}>
+          <Button onClick={() => saveScores()} isLoading={isSaving}>
             <Save className="h-4 w-4 mr-2" />
             {t.common.save}
           </Button>
