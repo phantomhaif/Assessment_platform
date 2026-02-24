@@ -169,33 +169,62 @@ export default function Home() {
 
             {/* IITB Contacts */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">
+              <h3 className="font-bold text-gray-900 mb-4">
                 {locale === "ru" ? "Контакты ИИТБ" : "IITB Contacts"}
               </h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <p>
-                  {locale === "ru"
-                    ? "Санкт-Петербург, пр. Обуховской Обороны, д. 199, лит. Ж"
-                    : "St. Petersburg, Obukhovsky Oborony Ave., 199, lit. Zh"}
-                </p>
-                <p>
-                  <a href="tel:+78126776890" className="hover:text-red-600">
-                    +7 (812) 677-68-90
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <svg className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-700">
+                      {locale === "ru" ? "197046, Россия" : "197046, Russia"}
+                    </p>
+                    <p>
+                      {locale === "ru"
+                        ? "Санкт-Петербург, Петроградская набережная, д. 36A"
+                        : "St. Petersburg, Petrogradskaya Embankment, 36A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <a href="tel:+78126440126" className="hover:text-red-600 transition-colors">
+                    +7 (812) 644-01-26
                   </a>
-                </p>
-                <p>
-                  <a href="mailto:info@iitb.ru" className="hover:text-red-600">
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <a href="tel:+79812015823" className="hover:text-red-600 transition-colors">
+                    +7 (981) 201-58-23
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <a href="mailto:info@iitb.ru" className="hover:text-red-600 transition-colors">
                     info@iitb.ru
                   </a>
-                </p>
-                <div className="flex gap-3 mt-3">
-                  <a href="https://vk.com/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600">
+                </div>
+
+                <div className="flex gap-4 mt-4 pt-3 border-t border-gray-200">
+                  <a href="https://vk.com/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
                     VK
                   </a>
-                  <a href="https://t.me/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600">
+                  <a href="https://t.me/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
                     Telegram
                   </a>
-                  <a href="https://youtube.com/@iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600">
+                  <a href="https://youtube.com/@iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
                     YouTube
                   </a>
                 </div>
