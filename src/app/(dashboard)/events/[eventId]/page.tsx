@@ -414,6 +414,30 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   {t.events.applyDescription}
                 </p>
 
+                {/* Уведомление об отмене заявки */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm font-medium text-amber-900 mb-2">
+                    {locale === "ru" ? "⚠️ Важная информация:" : "⚠️ Important Information:"}
+                  </p>
+                  <div className="text-sm text-amber-800 space-y-2">
+                    <p>
+                      {locale === "ru"
+                        ? "Университеты и колледжи, заявившие своих студентов в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения – дисквалифицируются на участие в соревнованиях сроком на 1 год. Бан распространяется на ту компетенцию, в которой заявились участники, и все соревнования, проводимые организаторами."
+                        : "Universities and colleges that have registered their students as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, will be disqualified from participation for 1 year. The ban applies to the competency in which participants were registered and all competitions conducted by the organizers."}
+                    </p>
+                    <p>
+                      {locale === "ru"
+                        ? "Корпоративным командам, заявившим своих сотрудников в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения – регистрационный взнос не возмещается."
+                        : "For corporate teams that have registered their employees as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, the registration fee is non-refundable."}
+                    </p>
+                    <p className="font-medium">
+                      {locale === "ru"
+                        ? "Замена участников в команде не считается снятием заявки и не попадает под действие пунктов выше."
+                        : "Replacing team members is not considered withdrawal and is not subject to the above provisions."}
+                    </p>
+                  </div>
+                </div>
+
                 <Checkbox
                   name="agreedToRegulation"
                   checked={agreedToRegulation}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -202,7 +203,12 @@ export default function AdminTeamsPage() {
                         </div>
                         <div>
                           <p className="font-medium">
-                            {member.user.lastName} {member.user.firstName}
+                            <Link
+                              href={`/admin/users/${member.user.id}/profile`}
+                              className="text-[#C41E3A] hover:underline"
+                            >
+                              {member.user.lastName} {member.user.firstName}
+                            </Link>
                             {member.role === "CAPTAIN" && (
                               <span className="text-yellow-600 ml-1">({t.teams.captain})</span>
                             )}

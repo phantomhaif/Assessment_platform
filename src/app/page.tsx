@@ -216,18 +216,6 @@ export default function Home() {
                     info@iitb.ru
                   </a>
                 </div>
-
-                <div className="flex gap-4 mt-4 pt-3 border-t border-gray-200">
-                  <a href="https://vk.com/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
-                    VK
-                  </a>
-                  <a href="https://t.me/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
-                    Telegram
-                  </a>
-                  <a href="https://youtube.com/@iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
-                    YouTube
-                  </a>
-                </div>
               </div>
             </div>
 

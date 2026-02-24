@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -310,9 +311,12 @@ export default function AdminApplicationsPage() {
                         <tr key={app.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div>
-                              <p className="font-medium">
+                              <Link
+                                href={`/admin/users/${app.user.id}/profile`}
+                                className="font-medium text-[#C41E3A] hover:underline"
+                              >
                                 {app.user.lastName} {app.user.firstName}
-                              </p>
+                              </Link>
                               <p className="text-sm text-gray-500">{app.user.email}</p>
                             </div>
                           </td>

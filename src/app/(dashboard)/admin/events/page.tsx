@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Calendar, Users, Edit, Trash2, Eye, Upload } from "lucide-react"
+import { Plus, Calendar, Users, Edit, Trash2, Eye, Upload, Filter } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
@@ -27,6 +27,10 @@ export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [selectedCompetency, setSelectedCompetency] = useState<string>("ALL")
+  const [startDate, setStartDate] = useState<string>("")
+  const [endDate, setEndDate] = useState<string>("")
+  const [sortBy, setSortBy] = useState<string>("date-desc")
   const { t, locale } = useI18n()
   const dateLocale = locale === "ru" ? ru : enUS
 
@@ -87,6 +91,26 @@ export default function AdminEventsPage() {
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700" }
   }
 
+  // Get unique competencies for filter
+  const competencies = Array.from(new Set(events.map(e => e.competency)))
+
+  // Filter and sort events
+  const filteredEvents = events
+    .filter((event) => {
+      const matchesCompetency = selectedCompetency === "ALL" || event.competency === selectedCompetency
+      const matchesStartDate = !startDate || new Date(event.eventStart) >= new Date(startDate)
+      const matchesEndDate = !endDate || new Date(event.eventEnd) <= new Date(endDate)
+      return matchesCompetency && matchesStartDate && matchesEndDate
+    })
+    .sort((a, b) => {
+      if (sortBy === "date-asc") {
+        return new Date(a.eventStart).getTime() - new Date(b.eventStart).getTime()
+      } else if (sortBy === "date-desc") {
+        return new Date(b.eventStart).getTime() - new Date(a.eventStart).getTime()
+      }
+      return 0
+    })
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -102,11 +126,71 @@ export default function AdminEventsPage() {
         </Link>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">{t.common.filter}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t.events.competency}
+              </label>
+              <select
+                value={selectedCompetency}
+                onChange={(e) => setSelectedCompetency(e.target.value)}
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="ALL">{t.common.all}</option>
+                {competencies.map((comp) => (
+                  <option key={comp} value={comp}>{comp}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {locale === "ru" ? "Дата начала" : "Start date"}
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {locale === "ru" ? "Дата окончания" : "End date"}
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {locale === "ru" ? "Сортировка" : "Sort by"}
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="date-desc">{locale === "ru" ? "Сначала новые" : "Newest first"}</option>
+                <option value="date-asc">{locale === "ru" ? "Сначала старые" : "Oldest first"}</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
-      ) : events.length === 0 ? (
+      ) : filteredEvents.length === 0 && events.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -122,6 +206,20 @@ export default function AdminEventsPage() {
                 {t.events.createEvent}
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+      ) : filteredEvents.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {t.events.noEvents}
+            </h3>
+            <p className="text-gray-500">
+              {locale === "ru"
+                ? "Не найдено событий, соответствующих выбранным фильтрам"
+                : "No events found matching the selected filters"}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -150,7 +248,7 @@ export default function AdminEventsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {events.map((event) => {
+              {filteredEvents.map((event) => {
                 const badge = getStatusBadge(event.status)
                 return (
                   <tr key={event.id} className="hover:bg-gray-50">

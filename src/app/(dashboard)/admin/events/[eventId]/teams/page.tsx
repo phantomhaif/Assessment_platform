@@ -435,7 +435,12 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                       >
                         <div>
                           <p className="font-medium">
-                            {member.user.lastName} {member.user.firstName}
+                            <Link
+                              href={`/admin/users/${member.user.id}/profile`}
+                              className="text-[#C41E3A] hover:underline"
+                            >
+                              {member.user.lastName} {member.user.firstName}
+                            </Link>
                           </p>
                           <p className="text-sm text-gray-500">{member.user.email}</p>
                         </div>

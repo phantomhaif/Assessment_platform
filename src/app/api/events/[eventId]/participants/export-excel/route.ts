@@ -77,7 +77,6 @@ export async function GET(
     const columns: Partial<ExcelJS.Column>[] = [
       { header: "№", key: "num", width: 5 },
       { header: "Фото", key: "photo", width: 15 },
-      { header: "URL фото", key: "photoUrl", width: 40 },
       { header: "Фамилия", key: "lastName", width: 20 },
       { header: "Имя", key: "firstName", width: 20 },
       { header: "Отчество", key: "middleName", width: 20 },
@@ -131,7 +130,6 @@ export async function GET(
       const rowData: Record<string, string | number> = {
         num: i + 1,
         photo: "", // We'll add image separately
-        photoUrl: photoUrl,
         lastName: user.lastName,
         firstName: user.firstName,
         middleName: user.middleName || "",
@@ -171,14 +169,6 @@ export async function GET(
               ext: { width: 50, height: 50 },
             })
           }
-
-          // Add hyperlink to photo URL column (column C = 2)
-          const photoUrlCell = worksheet.getCell(rowNum, 3)
-          photoUrlCell.value = {
-            text: "Скачать фото",
-            hyperlink: photoUrl,
-          }
-          photoUrlCell.font = { color: { argb: "FF0000FF" }, underline: true }
         } catch (error) {
           console.error(`Error adding image for user ${user.id}:`, error)
           // Continue without image

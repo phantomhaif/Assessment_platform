@@ -236,6 +236,35 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Требования к фотографии */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="font-medium text-gray-900 mb-2">
+                {locale === "ru" ? "Требования к фотографии:" : "Photo Requirements:"}
+              </p>
+              <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                <li>
+                  {locale === "ru"
+                    ? "Портрет крупным планом по плечи. Фотография 3 на 4."
+                    : "Close-up portrait from shoulders up. Photo size 3x4."}
+                </li>
+                <li>
+                  {locale === "ru"
+                    ? "Настоятельно рекомендуем использовать фото с символикой организации, например, с флагом или в брендированных футболках."
+                    : "We strongly recommend using photos with organization symbols, such as a flag or branded t-shirts."}
+                </li>
+                <li>
+                  {locale === "ru"
+                    ? "При отсутствии брендированной одежды организации необходима фотография в одежде официально-делового стиля."
+                    : "If organization branded clothing is unavailable, a photo in formal business attire is required."}
+                </li>
+                <li className="text-red-600 font-medium">
+                  {locale === "ru"
+                    ? "Не допускаются фотографии в головных уборах и верхней одежде."
+                    : "Photos with headwear and outerwear are not allowed."}
+                </li>
+              </ol>
+            </div>
+
             {/* Основные данные */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
