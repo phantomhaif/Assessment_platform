@@ -8,6 +8,8 @@ const createEventSchema = z.object({
   name: z.string().min(1, "Название обязательно"),
   description: z.string().optional(),
   competency: z.string().min(1, "Компетенция обязательна"),
+  eventFormat: z.enum(["ONLINE", "OFFLINE"]).default("OFFLINE"),
+  location: z.string().optional(),
   registrationStart: z.string(),
   registrationEnd: z.string(),
   eventStart: z.string(),

@@ -21,6 +21,8 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
     name: "",
     description: "",
     competency: "",
+    eventFormat: "OFFLINE" as "ONLINE" | "OFFLINE",
+    location: "",
     registrationStart: "",
     registrationEnd: "",
     eventStart: "",
@@ -42,6 +44,8 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
           name: event.name,
           description: event.description || "",
           competency: event.competency,
+          eventFormat: event.eventFormat || "OFFLINE",
+          location: event.location || "",
           registrationStart: formatDateForInput(event.registrationStart),
           registrationEnd: formatDateForInput(event.registrationEnd),
           eventStart: formatDateForInput(event.eventStart),
@@ -62,7 +66,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
     return date.toISOString().slice(0, 16)
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -159,6 +163,39 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
                 className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>{t.eventForm.formatAndLocation || "Формат и место проведения"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t.eventForm.eventFormat || "Формат мероприятия"} *
+              </label>
+              <select
+                name="eventFormat"
+                value={formData.eventFormat}
+                onChange={handleChange}
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C41E3A]"
+                required
+              >
+                <option value="OFFLINE">{t.eventForm.offline || "Очное"}</option>
+                <option value="ONLINE">{t.eventForm.online || "Онлайн"}</option>
+              </select>
+            </div>
+
+            {formData.eventFormat === "OFFLINE" && (
+              <Input
+                label={t.eventForm.location || "Место проведения"}
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder={t.eventForm.locationPlaceholder || "Санкт-Петербург, ул. Примерная, д. 1"}
+              />
+            )}
           </CardContent>
         </Card>
 

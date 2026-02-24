@@ -80,6 +80,8 @@ model Event {
   description       String?
   competency        String
   logo              String?
+  eventFormat       EventFormat       @default(OFFLINE)
+  location          String?
   registrationStart DateTime
   registrationEnd   DateTime
   eventStart        DateTime
@@ -380,4 +382,9 @@ enum TeamMemberRole {
 enum CriterionType {
   M
   J
+}
+
+enum EventFormat {
+  ONLINE
+  OFFLINE
 }

@@ -32,7 +32,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="bg-[#C41E3A] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#a01830] transition-colors"
               >
                 {locale === "ru" ? "Регистрация" : "Sign up"}
               </Link>
@@ -53,7 +53,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/register"
-              className="bg-red-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors text-lg"
+              className="bg-[#C41E3A] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#a01830] transition-colors text-lg"
             >
               {t.home.startButton}
             </Link>
@@ -75,22 +75,22 @@ export default function Home() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FeatureCard
-              icon={<Users className="h-8 w-8 text-red-600" />}
+              icon={<Users className="h-8 w-8 text-[#C41E3A]" />}
               title={t.home.featureRegistration}
               description={t.home.featureRegistrationDesc}
             />
             <FeatureCard
-              icon={<ClipboardList className="h-8 w-8 text-red-600" />}
+              icon={<ClipboardList className="h-8 w-8 text-[#C41E3A]" />}
               title={t.home.featureImport}
               description={t.home.featureImportDesc}
             />
             <FeatureCard
-              icon={<FileCheck className="h-8 w-8 text-red-600" />}
+              icon={<FileCheck className="h-8 w-8 text-[#C41E3A]" />}
               title={t.home.featureScoring}
               description={t.home.featureScoringDesc}
             />
             <FeatureCard
-              icon={<Award className="h-8 w-8 text-red-600" />}
+              icon={<Award className="h-8 w-8 text-[#C41E3A]" />}
               title={t.home.featurePassport}
               description={t.home.featurePassportDesc}
             />
@@ -130,7 +130,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-4 bg-red-600">
+      <section className="py-16 px-4 bg-[#C41E3A]">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             {t.home.ctaTitle}
@@ -141,7 +141,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/register"
-              className="bg-white text-red-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors text-lg inline-block"
+              className="bg-white text-[#C41E3A] px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors text-lg inline-block"
             >
               {t.home.createAccount}
             </Link>
@@ -174,7 +174,7 @@ export default function Home() {
               </h3>
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-start gap-2">
-                  <svg className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -191,40 +191,40 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  <a href="tel:+78126440126" className="hover:text-red-600 transition-colors">
+                  <a href="tel:+78126440126" className="hover:text-[#C41E3A] transition-colors">
                     +7 (812) 644-01-26
                   </a>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <a href="tel:+79812015823" className="hover:text-red-600 transition-colors">
+                  <a href="tel:+79812015823" className="hover:text-[#C41E3A] transition-colors">
                     +7 (981) 201-58-23
                   </a>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <svg className="h-5 w-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-[#C41E3A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <a href="mailto:info@iitb.ru" className="hover:text-red-600 transition-colors">
+                  <a href="mailto:info@iitb.ru" className="hover:text-[#C41E3A] transition-colors">
                     info@iitb.ru
                   </a>
                 </div>
 
                 <div className="flex gap-4 mt-4 pt-3 border-t border-gray-200">
-                  <a href="https://vk.com/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
+                  <a href="https://vk.com/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
                     VK
                   </a>
-                  <a href="https://t.me/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
+                  <a href="https://t.me/iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
                     Telegram
                   </a>
-                  <a href="https://youtube.com/@iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-red-600 transition-colors font-medium">
+                  <a href="https://youtube.com/@iitb_official" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#C41E3A] transition-colors font-medium">
                     YouTube
                   </a>
                 </div>
@@ -263,7 +263,7 @@ function FeatureCard({
 }) {
   return (
     <div className="text-center p-6">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-red-50 rounded-xl mb-4">
+      <div className="inline-flex items-center justify-center w-16 h-16 bg-[#C41E3A]/10 rounded-xl mb-4">
         {icon}
       </div>
       <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
@@ -283,7 +283,7 @@ function Step({
 }) {
   return (
     <div className="flex gap-6">
-      <div className="flex-shrink-0 w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold">
+      <div className="flex-shrink-0 w-10 h-10 bg-[#C41E3A] text-white rounded-full flex items-center justify-center font-bold">
         {number}
       </div>
       <div>
