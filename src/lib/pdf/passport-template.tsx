@@ -103,26 +103,23 @@ const styles = StyleSheet.create({
   },
   topLogoRow: {
     position: "absolute",
-    top: 34,
+    top: 35,
     left: 34,
     flexDirection: "row",
     alignItems: "center",
   },
-  logoPill: {
-    borderWidth: 1,
-    borderColor: colors.chipBorder,
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 8,
-    backgroundColor: "#FFFFFF",
+  topLogoItem: {
+    marginRight: 18,
   },
-  logoPillText: {
+  topLogoText: {
     fontFamily: "Montserrat",
     fontWeight: 600,
-    fontSize: 8,
+    fontSize: 9,
     color: colors.gray,
-    letterSpacing: 0.35,
+    letterSpacing: 0.15,
+  },
+  topLogoTextSmall: {
+    fontSize: 8.4,
   },
   leftColumn: {
     position: "absolute",
@@ -175,7 +172,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.25,
   },
   eventBlock: {
-    marginTop: 24,
+    marginTop: 50,
     width: 280,
   },
   eventName: {
@@ -188,37 +185,37 @@ const styles = StyleSheet.create({
   competencyLabel: {
     marginTop: 8,
     fontFamily: "Montserrat",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 500,
     color: colors.ink,
   },
   competencyBadge: {
     marginTop: 8,
     width: 280,
-    minHeight: 32,
+    minHeight: 34,
     borderRadius: 3,
     backgroundColor: colors.red,
     justifyContent: "center",
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
   competencyText: {
     fontFamily: "Montserrat",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 600,
     color: "#FFFFFF",
     lineHeight: 1.1,
   },
   dateText: {
-    marginTop: 10,
+    marginTop: 12,
     fontFamily: "Montserrat",
     fontSize: 11,
     fontWeight: "normal",
     color: colors.ink,
   },
   signatureBlock: {
-    marginTop: 54,
-    width: 340,
+    marginTop: 40,
+    width: 310,
   },
   signatureName: {
     fontFamily: "Montserrat",
@@ -236,8 +233,8 @@ const styles = StyleSheet.create({
     lineHeight: 1.2,
   },
   signatureLine: {
-    marginTop: 10,
-    width: 180,
+    marginTop: 12,
+    width: 116.5,
     borderBottomWidth: 1,
     borderBottomColor: colors.graySoft,
   },
@@ -273,8 +270,8 @@ const styles = StyleSheet.create({
     color: colors.nearBlack,
   },
   sectionTitle: {
-    marginTop: 15,
-    marginBottom: 8,
+    marginTop: 10,
+    marginBottom: 6,
     fontFamily: "Roboto",
     fontWeight: "bold",
     fontSize: 9,
@@ -282,7 +279,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.25,
   },
   moduleSectionTitle: {
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 8,
     fontFamily: "Roboto",
     fontWeight: "bold",
@@ -301,15 +298,15 @@ const styles = StyleSheet.create({
     color: colors.nearBlack,
   },
   rowLabel: {
-    width: 185,
+    width: 206,
     fontFamily: "Roboto",
     fontSize: 8.5,
     color: colors.nearBlack,
-    lineHeight: 1.2,
+    lineHeight: 1.18,
   },
   rowDotsWrap: {
     flex: 1,
-    marginHorizontal: 3,
+    marginHorizontal: 4,
     overflow: "hidden",
   },
   rowDots: {
@@ -319,7 +316,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   rowScoreWrap: {
-    width: 52,
+    width: 47,
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "baseline",
@@ -337,7 +334,7 @@ const styles = StyleSheet.create({
   },
   bottomLogoRow: {
     position: "absolute",
-    bottom: 28,
+    bottom: 51,
     left: 196,
     width: 430,
     flexDirection: "row",
@@ -347,7 +344,7 @@ const styles = StyleSheet.create({
   bottomLogoText: {
     fontFamily: "Montserrat",
     fontWeight: 600,
-    fontSize: 9,
+    fontSize: 8.4,
     color: colors.gray,
     letterSpacing: 0.2,
   },
@@ -476,12 +473,12 @@ export function SkillPassportDocument({ data }: { data: PassportData }) {
   )
 
   const skillRowHeight = Math.max(
-    15,
-    Math.min(22, 186 / Math.max(1, sortedSkillGroups.length))
+    16,
+    Math.min(21, 188 / Math.max(1, sortedSkillGroups.length))
   )
   const moduleRowHeight = Math.max(
-    14,
-    Math.min(21, 84 / Math.max(1, sortedModules.length))
+    15,
+    Math.min(22, 88 / Math.max(1, sortedModules.length))
   )
 
   return (
@@ -491,9 +488,11 @@ export function SkillPassportDocument({ data }: { data: PassportData }) {
         <RightDecoration />
 
         <View style={styles.topLogoRow}>
-          {TOP_LOGOS.map((logo) => (
-            <View key={logo} style={styles.logoPill}>
-              <Text style={styles.logoPillText}>{logo}</Text>
+          {TOP_LOGOS.map((logo, index) => (
+            <View key={logo} style={styles.topLogoItem}>
+              <Text style={[styles.topLogoText, index === 1 && styles.topLogoTextSmall]}>
+                {logo}
+              </Text>
             </View>
           ))}
         </View>
