@@ -490,7 +490,13 @@ export function SkillPassportDocument({ data }: { data: PassportData }) {
         <View style={styles.topLogoRow}>
           {TOP_LOGOS.map((logo, index) => (
             <View key={logo} style={styles.topLogoItem}>
-              <Text style={[styles.topLogoText, index === 1 && styles.topLogoTextSmall]}>
+              <Text
+                style={
+                  index === 1
+                    ? [styles.topLogoText, styles.topLogoTextSmall]
+                    : styles.topLogoText
+                }
+              >
                 {logo}
               </Text>
             </View>
