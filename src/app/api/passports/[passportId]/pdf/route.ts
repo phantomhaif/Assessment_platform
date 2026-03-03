@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { renderToBuffer } from "@react-pdf/renderer"
-import { SkillPassportDocument } from "@/lib/pdf/passport-template"
-import React from "react"
+import { renderSkillPassportPdf } from "@/lib/pdf/render-skill-passport"
 
 export async function GET(
   req: NextRequest,
@@ -30,7 +28,6 @@ export async function GET(
       return NextResponse.json({ error: "Passport not found" }, { status: 404 })
     }
 
-    // Check access
     if (
       passport.userId !== session.user.id &&
       session.user.role !== "ADMIN" &&
@@ -39,12 +36,10 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Format date range
     const startDate = new Date(passport.event.eventStart)
     const endDate = new Date(passport.event.eventEnd)
     const dateRange = formatDateRange(startDate, endDate)
 
-    // Prepare skill groups data
     const skillGroups = (passport.skillGroupScores as any[]) || []
     const formattedSkillGroups = skillGroups.map((group: any) => ({
       number: group.number,
@@ -53,7 +48,6 @@ export async function GET(
       maxScore: group.maxScore,
     }))
 
-    // Prepare modules data
     const modules = (passport.moduleScores as any[]) || []
     const formattedModules = modules.map((module: any) => ({
       code: module.code,
@@ -62,7 +56,6 @@ export async function GET(
       maxScore: module.maxScore,
     }))
 
-    // Prepare passport data
     const passportData = {
       participantName: `${passport.user.lastName} ${passport.user.firstName}`,
       participantMiddleName: passport.user.middleName || undefined,
@@ -75,10 +68,7 @@ export async function GET(
       modules: formattedModules,
     }
 
-    // Generate PDF
-    const pdfBuffer = await renderToBuffer(
-      React.createElement(SkillPassportDocument, { data: passportData }) as any
-    )
+    const pdfBuffer = await renderSkillPassportPdf(passportData)
 
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
@@ -94,8 +84,18 @@ export async function GET(
 
 function formatDateRange(start: Date, end: Date): string {
   const months = [
-    "января", "февраля", "марта", "апреля", "мая", "июня",
-    "июля", "августа", "сентября", "октября", "ноября", "декабря"
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
   ]
 
   if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
