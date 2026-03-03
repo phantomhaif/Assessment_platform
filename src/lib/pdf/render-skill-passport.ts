@@ -34,7 +34,7 @@ const FONT_PATHS = {
 }
 
 const colors = {
-  red: rgb(190 / 255, 22 / 255, 34 / 255),
+  red: rgb(189 / 255, 22 / 255, 33 / 255),
   black: rgb(0, 0, 0),
   nearBlack: rgb(30 / 255, 30 / 255, 30 / 255),
   gray: rgb(126 / 255, 135 / 255, 143 / 255),
@@ -218,6 +218,49 @@ function drawRectFromTop(params: {
   })
 }
 
+function drawPillFromTop(params: {
+  page: any
+  pageHeight: number
+  x: number
+  top: number
+  width: number
+  height: number
+  color: ReturnType<typeof rgb>
+}) {
+  const { page, pageHeight, x, top, width, height, color } = params
+  const y = pageHeight - top - height
+  const radius = height / 2
+  const centerY = y + radius
+
+  page.drawRectangle({
+    x: x + radius,
+    y,
+    width: Math.max(0, width - radius * 2),
+    height,
+    color,
+    opacity: 1,
+    borderOpacity: 1,
+  })
+
+  page.drawCircle({
+    x: x + radius,
+    y: centerY,
+    size: radius,
+    color,
+    opacity: 1,
+    borderOpacity: 1,
+  })
+
+  page.drawCircle({
+    x: x + width - radius,
+    y: centerY,
+    size: radius,
+    color,
+    opacity: 1,
+    borderOpacity: 1,
+  })
+}
+
 function drawScoreRow(params: {
   page: any
   pageHeight: number
@@ -316,7 +359,10 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
       fontBytesPromises.robotoRegular,
     ])
 
-  const pdfDoc = await PDFDocument.load(templateBytes)
+  const templateDoc = await PDFDocument.load(templateBytes)
+  const pdfDoc = await PDFDocument.create()
+  const [firstPage] = await pdfDoc.copyPages(templateDoc, [0])
+  pdfDoc.addPage(firstPage)
   pdfDoc.registerFontkit(fontkit)
 
   const montserratMedium = await pdfDoc.embedFont(montserratMediumBytes, { subset: true })
@@ -337,7 +383,8 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
   // Clean sample values from template (only dynamic fields).
   drawRectFromTop({ page, pageHeight, x: 57, top: 168, width: 330, height: 105, color: maskGray })
   drawRectFromTop({ page, pageHeight, x: 57, top: 328, width: 260, height: 46, color: maskGray })
-  drawRectFromTop({ page, pageHeight, x: 72, top: 393, width: 250, height: 24, color: colors.red })
+  drawRectFromTop({ page, pageHeight, x: 57, top: 390, width: 290, height: 30, color: maskWhite })
+  drawPillFromTop({ page, pageHeight, x: 60, top: 392, width: 280, height: 26, color: colors.red })
   drawRectFromTop({ page, pageHeight, x: 57, top: 443, width: 170, height: 20, color: maskGray })
   drawRectFromTop({ page, pageHeight, x: 703, top: 85, width: 102, height: 44, color: maskWhite })
 
