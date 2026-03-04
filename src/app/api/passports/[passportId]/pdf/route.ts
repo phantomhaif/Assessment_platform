@@ -3,6 +3,11 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { renderSkillPassportPdf } from "@/lib/pdf/render-skill-passport"
 
+interface PartnerLogo {
+  url: string
+  name?: string
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ passportId: string }> }
@@ -66,6 +71,7 @@ export async function GET(
       totalScore: passport.totalScore,
       skillGroups: formattedSkillGroups,
       modules: formattedModules,
+      partnerLogos: parsePartnerLogos(passport.event.logo),
     }
 
     const pdfBuffer = await renderSkillPassportPdf(passportData)
@@ -103,4 +109,27 @@ function formatDateRange(start: Date, end: Date): string {
   }
 
   return `${start.getDate()} ${months[start.getMonth()]} - ${end.getDate()} ${months[end.getMonth()]} ${end.getFullYear()} г.`
+}
+
+function parsePartnerLogos(raw: string | null | undefined): PartnerLogo[] {
+  if (!raw) return []
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .map((item) => ({
+        url: typeof item?.url === "string" ? item.url.trim() : "",
+        name: typeof item?.name === "string" ? item.name.trim() : undefined,
+      }))
+      .filter((item) => item.url.length > 0)
+      .slice(0, 12)
+  } catch {
+    const trimmed = raw.trim()
+    if (trimmed.startsWith("/api/files/") || /^https?:\/\//.test(trimmed)) {
+      return [{ url: trimmed }]
+    }
+    return []
+  }
 }

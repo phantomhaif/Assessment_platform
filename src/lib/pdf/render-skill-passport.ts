@@ -1,7 +1,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import fontkit from "@pdf-lib/fontkit"
-import { PDFDocument, PDFFont, rgb } from "pdf-lib"
+import { PDFDocument, PDFFont, PDFImage, rgb } from "pdf-lib"
 
 export interface SkillPassportData {
   participantName: string
@@ -23,9 +23,16 @@ export interface SkillPassportData {
     score: number
     maxScore: number
   }>
+  partnerLogos?: Array<{
+    url: string
+    name?: string
+  }>
 }
 
 const TEMPLATE_PATH = path.join(process.cwd(), "public/templates/passport-template.pdf")
+const UPLOADS_BASE = process.env.NODE_ENV === "production"
+  ? "/app/uploads"
+  : path.join(process.cwd(), "public", "uploads")
 const FONT_PATHS = {
   montserratMedium: path.join(process.cwd(), "public/fonts/Montserrat-Medium.ttf"),
   montserratSemiBold: path.join(process.cwd(), "public/fonts/Montserrat-SemiBold.ttf"),
@@ -261,6 +268,116 @@ function drawPillFromTop(params: {
   })
 }
 
+async function readPartnerLogoBytes(url: string): Promise<Uint8Array | null> {
+  const safeUrl = (url || "").trim()
+  if (!safeUrl) return null
+
+  if (safeUrl.startsWith("/api/files/")) {
+    const relativePath = safeUrl
+      .replace(/^\/api\/files\//, "")
+      .split("/")
+      .map((segment) => segment.replace(/\.\./g, "").replace(/[<>:"|?*]/g, ""))
+      .filter(Boolean)
+      .join(path.sep)
+
+    if (!relativePath) return null
+
+    try {
+      return await fs.readFile(path.join(UPLOADS_BASE, relativePath))
+    } catch {
+      return null
+    }
+  }
+
+  if (safeUrl.startsWith("http://") || safeUrl.startsWith("https://")) {
+    try {
+      const response = await fetch(safeUrl)
+      if (!response.ok) return null
+      return new Uint8Array(await response.arrayBuffer())
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+async function embedPartnerLogo(pdfDoc: PDFDocument, bytes: Uint8Array, url: string): Promise<PDFImage | null> {
+  const normalized = url.toLowerCase()
+
+  if (normalized.endsWith(".png")) {
+    try {
+      return await pdfDoc.embedPng(bytes)
+    } catch {}
+  }
+  if (normalized.endsWith(".jpg") || normalized.endsWith(".jpeg")) {
+    try {
+      return await pdfDoc.embedJpg(bytes)
+    } catch {}
+  }
+
+  try {
+    return await pdfDoc.embedPng(bytes)
+  } catch {
+    try {
+      return await pdfDoc.embedJpg(bytes)
+    } catch {
+      return null
+    }
+  }
+}
+
+async function drawPartnerLogos(params: {
+  page: any
+  pageHeight: number
+  pdfDoc: PDFDocument
+  logos: Array<{ url: string; name?: string }>
+  maskColor: ReturnType<typeof rgb>
+}) {
+  const { page, pageHeight, pdfDoc, logos, maskColor } = params
+  const rawLogos = (logos || []).filter((logo) => logo?.url).slice(0, 10)
+  if (rawLogos.length === 0) return
+
+  const prepared = await Promise.all(
+    rawLogos.map(async (logo) => {
+      const bytes = await readPartnerLogoBytes(logo.url)
+      if (!bytes) return null
+      const image = await embedPartnerLogo(pdfDoc, bytes, logo.url)
+      if (!image) return null
+      return image
+    })
+  )
+
+  const images = prepared.filter((image): image is PDFImage => image !== null)
+  if (images.length === 0) return
+
+  // Replace default sponsor strip with logos linked to this event.
+  const area = { x: 24, top: 14, width: 522, height: 62, gap: 8 }
+  drawRectFromTop({
+    page,
+    pageHeight,
+    x: area.x,
+    top: area.top,
+    width: area.width,
+    height: area.height,
+    color: maskColor,
+  })
+
+  const slots = images.length
+  const slotWidth = (area.width - area.gap * Math.max(0, slots - 1)) / slots
+  const maxLogoHeight = area.height - 4
+
+  images.forEach((image, index) => {
+    const scale = Math.min(slotWidth / image.width, maxLogoHeight / image.height)
+    const width = image.width * scale
+    const height = image.height * scale
+    const x = area.x + index * (slotWidth + area.gap) + (slotWidth - width) / 2
+    const y = pageHeight - area.top - area.height + (area.height - height) / 2
+
+    page.drawImage(image, { x, y, width, height })
+  })
+}
+
 function drawScoreRow(params: {
   page: any
   pageHeight: number
@@ -387,6 +504,13 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
   drawPillFromTop({ page, pageHeight, x: 60, top: 392, width: 280, height: 26, color: colors.red })
   drawRectFromTop({ page, pageHeight, x: 57, top: 443, width: 170, height: 20, color: maskGray })
   drawRectFromTop({ page, pageHeight, x: 703, top: 85, width: 102, height: 44, color: maskWhite })
+  await drawPartnerLogos({
+    page,
+    pageHeight,
+    pdfDoc,
+    logos: data.partnerLogos || [],
+    maskColor: maskWhite,
+  })
 
   drawWrappedText({
     page,

@@ -1,21 +1,52 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowUp, ImagePlus, Trash2 } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+
+interface PartnerLogo {
+  url: string
+  name?: string
+}
+
+function parsePartnerLogos(raw: string | null | undefined): PartnerLogo[] {
+  if (!raw) return []
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .map((item) => ({
+        url: typeof item?.url === "string" ? item.url.trim() : "",
+        name: typeof item?.name === "string" ? item.name.trim() : "",
+      }))
+      .filter((item) => item.url.length > 0)
+      .slice(0, 12)
+  } catch {
+    const trimmed = raw.trim()
+    if (trimmed.startsWith("/api/files/") || /^https?:\/\//.test(trimmed)) {
+      return [{ url: trimmed, name: "" }]
+    }
+    return []
+  }
+}
 
 export default function EditEventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
   const router = useRouter()
   const { t } = useI18n()
+  const logoInputRef = useRef<HTMLInputElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [error, setError] = useState("")
+  const [partnerLogos, setPartnerLogos] = useState<PartnerLogo[]>([])
 
   const [formData, setFormData] = useState({
     name: "",
@@ -53,6 +84,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
           maxTeamSize: event.maxTeamSize,
           minTeamSize: event.minTeamSize,
         })
+        setPartnerLogos(parsePartnerLogos(event.logo))
       }
     } catch (error) {
       console.error("Error fetching event:", error)
@@ -85,6 +117,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          logo: partnerLogos.length > 0 ? JSON.stringify(partnerLogos) : null,
           registrationStart: new Date(formData.registrationStart).toISOString(),
           registrationEnd: new Date(formData.registrationEnd).toISOString(),
           eventStart: new Date(formData.eventStart).toISOString(),
@@ -102,6 +135,61 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handlePartnerLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setError("")
+    setIsUploadingLogo(true)
+
+    try {
+      const payload = new FormData()
+      payload.append("file", file)
+      payload.append("type", "partner-logo")
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: payload,
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || "Не удалось загрузить логотип")
+      }
+
+      const data = await response.json()
+      const defaultName = file.name.replace(/\.[^.]+$/, "")
+      setPartnerLogos((prev) => [...prev, { url: data.url, name: defaultName }])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось загрузить логотип")
+    } finally {
+      setIsUploadingLogo(false)
+      if (e.target) e.target.value = ""
+    }
+  }
+
+  const handlePartnerLogoNameChange = (index: number, name: string) => {
+    setPartnerLogos((prev) =>
+      prev.map((logo, i) => (i === index ? { ...logo, name } : logo))
+    )
+  }
+
+  const movePartnerLogo = (index: number, direction: -1 | 1) => {
+    const target = index + direction
+    if (target < 0 || target >= partnerLogos.length) return
+
+    setPartnerLogos((prev) => {
+      const next = [...prev]
+      const [item] = next.splice(index, 1)
+      next.splice(target, 0, item)
+      return next
+    })
+  }
+
+  const removePartnerLogo = (index: number) => {
+    setPartnerLogos((prev) => prev.filter((_, i) => i !== index))
   }
 
   if (isLoading) {
@@ -262,6 +350,92 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
                 onChange={handleChange}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Логотипы партнеров для паспорта</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Загрузите логотипы спонсоров для конкретного мероприятия. Они будут использованы в верхней полосе PDF-паспорта.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => logoInputRef.current?.click()}
+                isLoading={isUploadingLogo}
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Добавить логотип
+              </Button>
+              <span className="text-sm text-gray-500">Всего: {partnerLogos.length}</span>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                className="hidden"
+                onChange={handlePartnerLogoUpload}
+              />
+            </div>
+
+            {partnerLogos.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Логотипы не добавлены. Будут использованы значения шаблона по умолчанию.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {partnerLogos.map((logo, index) => (
+                  <div
+                    key={`${logo.url}-${index}`}
+                    className="flex items-center gap-3 rounded-lg border border-gray-200 p-3"
+                  >
+                    <img
+                      src={logo.url}
+                      alt={logo.name || `Логотип ${index + 1}`}
+                      className="h-12 w-20 rounded border border-gray-200 object-contain bg-white"
+                    />
+                    <Input
+                      value={logo.name || ""}
+                      onChange={(e) => handlePartnerLogoNameChange(index, e.target.value)}
+                      placeholder="Название партнера (опционально)"
+                    />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => movePartnerLogo(index, -1)}
+                        disabled={index === 0}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => movePartnerLogo(index, 1)}
+                        disabled={index === partnerLogos.length - 1}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removePartnerLogo(index)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

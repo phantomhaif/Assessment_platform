@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Validate file type for avatars
-    if (type === "avatar") {
+    // Validate file type for image uploads
+    if (type === "avatar" || type === "partner-logo") {
       const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
       if (!allowedTypes.includes(file.type)) {
         return NextResponse.json(
@@ -56,6 +56,9 @@ export async function POST(req: NextRequest) {
     if (type === "avatar") {
       subPath = "avatars"
       uploadDir = path.join(UPLOADS_BASE, "avatars")
+    } else if (type === "partner-logo") {
+      subPath = "partner-logos"
+      uploadDir = path.join(UPLOADS_BASE, "partner-logos")
     } else if (type === "document") {
       subPath = "documents"
       uploadDir = path.join(UPLOADS_BASE, "documents")
