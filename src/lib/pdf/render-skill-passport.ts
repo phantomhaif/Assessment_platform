@@ -505,9 +505,9 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
     drawRectFromTop({
       page,
       pageHeight,
-      x: 760,
+      x: 748,
       top: slot.top - 1,
-      width: 50,
+      width: 62,
       height: slot.height + 2,
       color: maskGray,
     })
@@ -549,9 +549,9 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
     drawRectFromTop({
       page,
       pageHeight,
-      x: 760,
+      x: 748,
       top: slot.top - 1,
-      width: 50,
+      width: 62,
       height: slot.height + 2,
       color: maskGray,
     })
