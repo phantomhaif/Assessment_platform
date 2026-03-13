@@ -380,7 +380,7 @@ export default function AdminScoringPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.nav.events}
@@ -489,7 +489,7 @@ export default function AdminScoringPage() {
                             return (
                               <div
                                 key={criterion.id}
-                                className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg"
+                                className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg md:flex-row md:items-start md:gap-4"
                               >
                                 <div className="flex-1">
                                   <p className="text-sm text-gray-700">
@@ -506,7 +506,7 @@ export default function AdminScoringPage() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 md:shrink-0">
                                   {criterion.type === "M" ? (
                                     // Measurement type - numeric input with 0.5 step
                                     <input
@@ -523,7 +523,7 @@ export default function AdminScoringPage() {
                                       className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                                     />
                                   ) : (
-                                    <div className="flex flex-col items-end gap-2">
+                                    <div className="flex flex-col items-start gap-2 md:items-end">
                                       <div className="flex items-center gap-1">
                                         {[0, 1, 2].map(judgeIndex => {
                                           const value = currentJudgeValues[judgeIndex] ?? 0

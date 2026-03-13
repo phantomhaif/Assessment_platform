@@ -25,12 +25,31 @@ function normalizeAspectType(value: unknown): "M" | "J" | "" {
   const raw = value?.toString()?.trim()?.toUpperCase() || ""
   if (!raw) return ""
 
-  // Some files use Cyrillic letters (e.g. "М") instead of Latin ("M")
+  // Some files use Cyrillic look-alike letters (e.g. "М", "Ј")
   const compact = raw.replace(/\s+/g, "")
-  if (compact === "M" || compact === "М") return "M"
-  if (compact === "J" || compact === "Ј") return "J"
+  const latinized = compact
+    .replaceAll("М", "M")
+    .replaceAll("Ј", "J")
+
+  if (latinized.startsWith("M")) return "M"
+  if (latinized.startsWith("J")) return "J"
 
   return ""
+}
+
+function normalizeCodeToken(value: unknown): string {
+  const raw = value?.toString()?.trim()?.toUpperCase() || ""
+  if (!raw) return ""
+
+  // Normalize Cyrillic single-letter codes that look like Latin letters.
+  if (raw.length === 1) {
+    if (raw === "А") return "A"
+    if (raw === "В") return "B"
+    if (raw === "С") return "C"
+    if (raw === "Д") return "D"
+  }
+
+  return raw
 }
 
 function parseAssessmentSchema(workbook: XLSX.WorkBook) {
@@ -84,7 +103,7 @@ function parseAssessmentSchema(workbook: XLSX.WorkBook) {
     const row = data[i]
     if (!row || row.length === 0) continue
 
-    const code = row[0]?.toString()?.trim()
+    const code = normalizeCodeToken(row[0])
     const subCriteria = row[1]?.toString()?.trim()
     const type = normalizeAspectType(row[2])
     const aspect = row[3]?.toString()?.trim()
@@ -232,18 +251,27 @@ export async function POST(
       })
 
       // Group criteria by sub-criterion
-      const subCriteriaMap = new Map<string, typeof module.criteria>()
+      const subCriteriaMap = new Map<string, {
+        code: string
+        name: string
+        criteria: typeof module.criteria
+      }>()
+
       for (const criterion of module.criteria) {
-        const key = `${criterion.subCriterionCode}-${criterion.subCriterionName}`
+        const key = `${criterion.subCriterionCode}\u0000${criterion.subCriterionName}`
         if (!subCriteriaMap.has(key)) {
-          subCriteriaMap.set(key, [])
+          subCriteriaMap.set(key, {
+            code: criterion.subCriterionCode,
+            name: criterion.subCriterionName,
+            criteria: [],
+          })
         }
-        subCriteriaMap.get(key)!.push(criterion)
+        subCriteriaMap.get(key)!.criteria.push(criterion)
       }
 
       let subOrder = 0
-      for (const [key, criteria] of subCriteriaMap) {
-        const [code, name] = key.split("-")
+      for (const subGroup of subCriteriaMap.values()) {
+        const { code, name, criteria } = subGroup
 
         const createdSubCriterion = await prisma.subCriterion.create({
           data: {
