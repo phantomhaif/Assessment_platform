@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Check, X, Save, Filter, ChevronDown, ChevronRight } from "lucide-react"
+import { Save, ChevronDown, ChevronRight } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface Criterion {
   id: string
   type: "M" | "J"
   description: string
+  verificationMethod: string | null
   maxScore: number
   judgementOptions: { score: number; label: string }[] | null
   skillGroup: { name: string; number: number } | null
@@ -41,6 +41,14 @@ interface Score {
   criterionId: string
   teamId: string
   value: number
+  comment?: string | null
+}
+
+interface ScorePayload {
+  criterionId: string
+  teamId: string
+  value: number
+  judgeScores?: number[]
 }
 
 export default function AdminScoringPage() {
@@ -49,6 +57,7 @@ export default function AdminScoringPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [scores, setScores] = useState<Map<string, number>>(new Map())
+  const [judgeScores, setJudgeScores] = useState<Map<string, number[]>>(new Map())
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
   const [selectedTeamId, setSelectedTeamId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
@@ -130,10 +139,35 @@ export default function AdminScoringPage() {
       if (response.ok) {
         const data = await response.json()
         const scoresMap = new Map<string, number>()
+        const judgeScoresMap = new Map<string, number[]>()
         data.forEach((score: Score) => {
-          scoresMap.set(`${score.criterionId}-${score.teamId}`, score.value)
+          const key = `${score.criterionId}-${score.teamId}`
+          scoresMap.set(key, score.value)
+
+          if (score.comment) {
+            try {
+              const parsed = JSON.parse(score.comment)
+              const parsedJudgeScores = Array.isArray(parsed)
+                ? parsed
+                : Array.isArray(parsed?.judgeScores)
+                  ? parsed.judgeScores
+                  : null
+
+              if (parsedJudgeScores) {
+                const normalized = parsedJudgeScores
+                  .slice(0, 3)
+                  .map((value: unknown) => Number(value))
+                  .map((value: number) => (Number.isFinite(value) ? value : 0))
+                while (normalized.length < 3) normalized.push(0)
+                judgeScoresMap.set(key, normalized)
+              }
+            } catch {
+              // Ignore malformed score comments and continue
+            }
+          }
         })
         setScores(scoresMap)
+        setJudgeScores(judgeScoresMap)
       }
     } catch (error) {
       console.error("Error fetching scores:", error)
@@ -146,6 +180,85 @@ export default function AdminScoringPage() {
 
     const key = `${criterionId}-${selectedTeamId}`
     setScores(prev => new Map(prev).set(key, value))
+  }
+
+  const getScoreKey = (criterionId: string) => `${criterionId}-${selectedTeamId}`
+
+  const findCriterionById = (criterionId: string): Criterion | null => {
+    for (const assessmentModule of modules) {
+      for (const subCriterion of assessmentModule.subCriteria) {
+        const found = subCriterion.criteria.find(c => c.id === criterionId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const getJudgeScaleMax = (criterion: Criterion) => {
+    if (!criterion.judgementOptions || criterion.judgementOptions.length === 0) {
+      return 3
+    }
+    const max = Math.max(...criterion.judgementOptions.map(option => option.score))
+    return Number.isFinite(max) && max > 0 ? max : 3
+  }
+
+  const normalizeJScore = (judgeValues: number[], criterion: Criterion) => {
+    const judgesCount = 3
+    const maxJudgeScore = getJudgeScaleMax(criterion)
+    const maxRawScore = judgesCount * maxJudgeScore
+    if (maxRawScore <= 0 || criterion.maxScore <= 0) return 0
+
+    const rawSum = judgeValues
+      .slice(0, judgesCount)
+      .reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0)
+
+    const normalized = (rawSum / maxRawScore) * criterion.maxScore
+    return Math.round(normalized * 100) / 100
+  }
+
+  const getJudgeValues = (criterion: Criterion) => {
+    const key = getScoreKey(criterion.id)
+    const saved = judgeScores.get(key)
+    if (saved && saved.length === 3) return saved
+
+    // Fallback for previously saved aggregated J-scores
+    const currentScore = scores.get(key) || 0
+    const maxJudgeScore = getJudgeScaleMax(criterion)
+    if (currentScore > 0 && criterion.maxScore > 0) {
+      let derived = Math.min(
+        maxJudgeScore,
+        Math.max(0, Math.round(((currentScore / criterion.maxScore) * maxJudgeScore) * 100) / 100)
+      )
+
+      if (criterion.judgementOptions && criterion.judgementOptions.length > 0) {
+        const availableScores = criterion.judgementOptions.map(option => option.score)
+        derived = availableScores.reduce((best, candidate) =>
+          Math.abs(candidate - derived) < Math.abs(best - derived) ? candidate : best,
+          availableScores[0]
+        )
+      }
+
+      return [derived, derived, derived]
+    }
+
+    return [0, 0, 0]
+  }
+
+  const handleJudgeScoreChange = (criterion: Criterion, judgeIndex: number, rawValue: number) => {
+    const key = getScoreKey(criterion.id)
+    const current = getJudgeValues(criterion)
+    const next = [...current]
+    const maxJudgeScore = getJudgeScaleMax(criterion)
+
+    const safeValue = Number.isFinite(rawValue)
+      ? Math.min(maxJudgeScore, Math.max(0, rawValue))
+      : 0
+
+    next[judgeIndex] = safeValue
+    const normalized = normalizeJScore(next, criterion)
+
+    setJudgeScores(prev => new Map(prev).set(key, next))
+    setScores(prev => new Map(prev).set(key, normalized))
   }
 
   // Check for missing criteria
@@ -179,13 +292,23 @@ export default function AdminScoringPage() {
     setSaveStatus("")
 
     try {
-      const scoresToSave = Array.from(scores.entries())
+      const scoresToSave: ScorePayload[] = Array.from(scores.entries())
         .filter(([key]) => key.endsWith(`-${selectedTeamId}`))
-        .map(([key, value]) => ({
-          criterionId: key.split("-")[0],
-          teamId: selectedTeamId,
-          value,
-        }))
+        .map(([key, value]) => {
+          const criterionId = key.split("-")[0]
+          const criterion = findCriterionById(criterionId)
+          const payload: ScorePayload = {
+            criterionId,
+            teamId: selectedTeamId,
+            value,
+          }
+
+          if (criterion?.type === "J") {
+            payload.judgeScores = getJudgeValues(criterion)
+          }
+
+          return payload
+        })
 
       const response = await fetch(`/api/events/${selectedEventId}/scores`, {
         method: "POST",
@@ -217,8 +340,6 @@ export default function AdminScoringPage() {
       return next
     })
   }
-
-  const getScoreKey = (criterionId: string) => `${criterionId}-${selectedTeamId}`
 
   const calculateModuleScore = (module: Module) => {
     let score = 0
@@ -363,6 +484,7 @@ export default function AdminScoringPage() {
                           {subCriterion.criteria.map(criterion => {
                             const key = getScoreKey(criterion.id)
                             const currentScore = scores.get(key) ?? 0
+                            const currentJudgeValues = getJudgeValues(criterion)
 
                             return (
                               <div
@@ -373,6 +495,11 @@ export default function AdminScoringPage() {
                                   <p className="text-sm text-gray-700">
                                     {criterion.description}
                                   </p>
+                                  {criterion.verificationMethod && (
+                                    <p className="text-xs text-gray-500 mt-1 whitespace-pre-line">
+                                      {criterion.verificationMethod}
+                                    </p>
+                                  )}
                                   {criterion.skillGroup && (
                                     <p className="text-xs text-gray-400 mt-1">
                                       WSSS: {criterion.skillGroup.number}. {criterion.skillGroup.name}
@@ -396,38 +523,52 @@ export default function AdminScoringPage() {
                                       className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                                     />
                                   ) : (
-                                    // Judgement type - scale or numeric input
-                                    criterion.judgementOptions && criterion.judgementOptions.length > 0 ? (
-                                      <select
-                                        value={currentScore}
-                                        onChange={(e) => handleScoreChange(
-                                          criterion.id,
-                                          parseFloat(e.target.value),
-                                          criterion.maxScore
-                                        )}
-                                        className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                                      >
-                                        {criterion.judgementOptions.map(option => (
-                                          <option key={option.score} value={option.score}>
-                                            {option.score} - {option.label.slice(0, 30)}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        max={criterion.maxScore}
-                                        step={0.5}
-                                        value={currentScore}
-                                        onChange={(e) => handleScoreChange(
-                                          criterion.id,
-                                          parseFloat(e.target.value) || 0,
-                                          criterion.maxScore
-                                        )}
-                                        className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
-                                      />
-                                    )
+                                    <div className="flex flex-col items-end gap-2">
+                                      <div className="flex items-center gap-1">
+                                        {[0, 1, 2].map(judgeIndex => {
+                                          const value = currentJudgeValues[judgeIndex] ?? 0
+
+                                          return criterion.judgementOptions && criterion.judgementOptions.length > 0 ? (
+                                            <select
+                                              key={judgeIndex}
+                                              value={value}
+                                              onChange={(e) => handleJudgeScoreChange(
+                                                criterion,
+                                                judgeIndex,
+                                                parseFloat(e.target.value) || 0
+                                              )}
+                                              className="h-9 w-16 rounded-md border border-gray-300 bg-white px-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              title={`Judge ${judgeIndex + 1}`}
+                                            >
+                                              {criterion.judgementOptions.map(option => (
+                                                <option key={option.score} value={option.score}>
+                                                  {option.score}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          ) : (
+                                            <input
+                                              key={judgeIndex}
+                                              type="number"
+                                              min={0}
+                                              max={getJudgeScaleMax(criterion)}
+                                              step={0.5}
+                                              value={value}
+                                              onChange={(e) => handleJudgeScoreChange(
+                                                criterion,
+                                                judgeIndex,
+                                                parseFloat(e.target.value) || 0
+                                              )}
+                                              className="w-16 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              title={`Judge ${judgeIndex + 1}`}
+                                            />
+                                          )
+                                        })}
+                                      </div>
+                                      <p className="text-[11px] text-gray-500">
+                                        {"J1 + J2 + J3 -> "}{currentScore.toFixed(2)}
+                                      </p>
+                                    </div>
                                   )}
                                   <span className="text-sm text-gray-500 w-16 text-right">
                                     {currentScore} / {criterion.maxScore}

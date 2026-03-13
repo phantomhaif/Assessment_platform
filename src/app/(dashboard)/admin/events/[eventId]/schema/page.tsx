@@ -493,6 +493,11 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                                     )}
                                   </div>
                                   <p className="text-gray-700 mt-1">{crit.description}</p>
+                                  {crit.verificationMethod && (
+                                    <p className="text-xs text-gray-500 mt-1 whitespace-pre-line">
+                                      {crit.verificationMethod}
+                                    </p>
+                                  )}
                                   {crit.type === "J" && crit.judgementOptions.length > 0 && (
                                     <div className="flex gap-1 mt-1 flex-wrap">
                                       {crit.judgementOptions.map((opt, i) => (

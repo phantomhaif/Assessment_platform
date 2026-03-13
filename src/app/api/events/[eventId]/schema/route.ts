@@ -21,6 +21,18 @@ interface ParsedModule {
   criteria: ParsedCriterion[]
 }
 
+function normalizeAspectType(value: unknown): "M" | "J" | "" {
+  const raw = value?.toString()?.trim()?.toUpperCase() || ""
+  if (!raw) return ""
+
+  // Some files use Cyrillic letters (e.g. "М") instead of Latin ("M")
+  const compact = raw.replace(/\s+/g, "")
+  if (compact === "M" || compact === "М") return "M"
+  if (compact === "J" || compact === "Ј") return "J"
+
+  return ""
+}
+
 function parseAssessmentSchema(workbook: XLSX.WorkBook) {
   const sheetName = workbook.SheetNames.find(name =>
     name.toLowerCase().includes("assessment") || name.toLowerCase().includes("aspect")
@@ -74,9 +86,8 @@ function parseAssessmentSchema(workbook: XLSX.WorkBook) {
 
     const code = row[0]?.toString()?.trim()
     const subCriteria = row[1]?.toString()?.trim()
-    const type = row[2]?.toString()?.trim()?.toUpperCase()
+    const type = normalizeAspectType(row[2])
     const aspect = row[3]?.toString()?.trim()
-    const judgesScore = row[4]
     const verificationMethod = row[5]?.toString()?.trim() || ""
     const skillGroupNum = parseInt(row[7]?.toString()) || 0
     const maxScore = parseFloat(row[8]?.toString()) || 0

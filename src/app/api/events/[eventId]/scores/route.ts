@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+interface ScorePayload {
+  criterionId: string
+  teamId: string
+  value: number
+  judgeScores?: number[]
+}
+
+function serializeJudgeScores(judgeScores?: number[]): string | undefined {
+  if (!Array.isArray(judgeScores)) return undefined
+
+  const normalized = judgeScores
+    .map(v => Number(v))
+    .filter(v => Number.isFinite(v))
+
+  if (normalized.length === 0) return undefined
+
+  return JSON.stringify({ judgeScores: normalized })
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
@@ -55,6 +74,7 @@ export async function GET(
         teamId: true,
         value: true,
         expertId: true,
+        comment: true,
         updatedAt: true,
       },
     })
@@ -81,7 +101,8 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { scores } = await req.json()
+    const body = await req.json()
+    const scores = body?.scores as ScorePayload[] | undefined
 
     if (!Array.isArray(scores) || scores.length === 0) {
       return NextResponse.json({ error: "Invalid scores data" }, { status: 400 })
@@ -89,7 +110,9 @@ export async function POST(
 
     // Upsert all scores
     const results = await Promise.all(
-      scores.map(async (score: { criterionId: string; teamId: string; value: number }) => {
+      scores.map(async (score) => {
+        const serializedJudgeScores = serializeJudgeScores(score.judgeScores)
+
         return prisma.score.upsert({
           where: {
             criterionId_teamId: {
@@ -100,12 +123,14 @@ export async function POST(
           update: {
             value: score.value,
             expertId: session.user.id,
+            ...(serializedJudgeScores !== undefined ? { comment: serializedJudgeScores } : {}),
           },
           create: {
             criterionId: score.criterionId,
             teamId: score.teamId,
             value: score.value,
             expertId: session.user.id,
+            comment: serializedJudgeScores,
           },
         })
       })
