@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     await sendEmail({
       to: user.email,
-      subject: "Сброс пароля / Password Reset — Industry Skills",
+      subject: "Сброс пароля / Password Reset - Industry Skills",
       html,
     })
 

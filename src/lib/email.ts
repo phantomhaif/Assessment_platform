@@ -127,19 +127,24 @@ export async function sendVerificationCode(email: string, code: string) {
         <h2 style="margin: 0; color: #0f172a; font-size: 22px;">Industry Skills Platform</h2>
       </div>
       <div style="background: #f8fafc; border-radius: 12px; padding: 24px; text-align: center;">
-        <p style="color: #64748b; margin-top: 0;">Р’Р°С€ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РІС…РѕРґР° / Your login verification code:</p>
+        <p style="color: #64748b; margin-top: 0;">Ваш код подтверждения входа / Your login verification code:</p>
         <div style="font-size: 40px; font-weight: bold; letter-spacing: 8px; color: #C41E3A; margin: 16px 0;">${code}</div>
         <p style="color: #64748b; margin-bottom: 0; font-size: 14px;">
-          РљРѕРґ РґРµР№СЃС‚РІРёС‚РµР»РµРЅ 10 РјРёРЅСѓС‚ / Code is valid for 10 minutes
+          Код действителен 10 минут / Code is valid for 10 minutes
         </p>
       </div>
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 24px;">
-        Р•СЃР»Рё РІС‹ РЅРµ Р·Р°РїСЂР°С€РёРІР°Р»Рё РєРѕРґ, РїСЂРѕРёРіРЅРѕСЂРёСЂСѓР№С‚Рµ СЌС‚Рѕ РїРёСЃСЊРјРѕ.<br/>
+        Если вы не запрашивали код, проигнорируйте это письмо.<br/>
         If you did not request this code, ignore this email.
       </p>
     </div>
   `
-  await sendEmail({ to: email, subject: "РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ / Verification Code вЂ” Industry Skills", html })
+
+  await sendEmail({
+    to: email,
+    subject: "Код подтверждения / Verification Code - Industry Skills",
+    html,
+  })
 }
 
 export async function sendRegistrationCode(email: string, code: string, firstName: string) {
@@ -152,23 +157,28 @@ export async function sendRegistrationCode(email: string, code: string, firstNam
         <h2 style="margin: 0; color: #0f172a; font-size: 22px;">Industry Skills Platform</h2>
       </div>
       <p style="color: #334155; margin-bottom: 16px;">
-        Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ, ${firstName}! / Hello, ${firstName}!
+        Здравствуйте, ${firstName}! / Hello, ${firstName}!
       </p>
       <p style="color: #64748b; margin-bottom: 24px;">
-        Р”Р»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ СЂРµРіРёСЃС‚СЂР°С†РёРё РІРІРµРґРёС‚Рµ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ:<br/>
+        Для завершения регистрации введите код подтверждения:<br/>
         To complete registration, enter the verification code:
       </p>
       <div style="background: #f8fafc; border-radius: 12px; padding: 24px; text-align: center;">
         <div style="font-size: 40px; font-weight: bold; letter-spacing: 8px; color: #C41E3A; margin: 16px 0;">${code}</div>
         <p style="color: #64748b; margin-bottom: 0; font-size: 14px;">
-          РљРѕРґ РґРµР№СЃС‚РІРёС‚РµР»РµРЅ 10 РјРёРЅСѓС‚ / Code is valid for 10 minutes
+          Код действителен 10 минут / Code is valid for 10 minutes
         </p>
       </div>
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 24px;">
-        Р•СЃР»Рё РІС‹ РЅРµ СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°Р»РёСЃСЊ, РїСЂРѕРёРіРЅРѕСЂРёСЂСѓР№С‚Рµ СЌС‚Рѕ РїРёСЃСЊРјРѕ.<br/>
+        Если вы не регистрировались, проигнорируйте это письмо.<br/>
         If you did not register, ignore this email.
       </p>
     </div>
   `
-  await sendEmail({ to: email, subject: "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СЂРµРіРёСЃС‚СЂР°С†РёРё / Registration Verification вЂ” Industry Skills", html })
+
+  await sendEmail({
+    to: email,
+    subject: "Подтверждение регистрации / Registration Verification - Industry Skills",
+    html,
+  })
 }
