@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { generateCode, storeCode } from "@/lib/verification-codes"
-import { sendRegistrationCode } from "@/lib/email"
+import { isEmailConfigured, sendRegistrationCode } from "@/lib/email"
 
 const emailSchema = z.object({
   email: z.string().email("Некорректный email"),
@@ -13,7 +13,7 @@ const emailSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, firstName, lastName } = emailSchema.parse(body)
+    const { email, firstName } = emailSchema.parse(body)
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -24,6 +24,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Пользователь с таким email уже существует" },
         { status: 400 }
+      )
+    }
+
+    if (!isEmailConfigured()) {
+      return NextResponse.json(
+        { error: "email_not_configured" },
+        { status: 503 }
       )
     }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { generateCode, storeCode } from "@/lib/verification-codes"
-import { sendVerificationCode } from "@/lib/email"
+import { isEmailConfigured, sendVerificationCode } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if email service is configured
-    if (!process.env.RESEND_API_KEY) {
+    if (!isEmailConfigured()) {
       return NextResponse.json({ error: "email_not_configured" }, { status: 503 })
     }
 
