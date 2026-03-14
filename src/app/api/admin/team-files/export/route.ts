@@ -81,12 +81,15 @@ export async function GET(req: NextRequest) {
       const teamFolder = eventFolder.folder(teamFolderName)
       if (!teamFolder) continue
 
-      const moduleFolders = new Map<string, ReturnType<typeof teamFolder.folder>>()
+      const moduleFolders = new Map<string, JSZip>()
       schemaModules.forEach((module) => {
-        moduleFolders.set(
-          module.code,
-          teamFolder.folder(sanitizePathSegment(`${module.code}_${module.name || module.code}`))
+        const moduleFolder = teamFolder.folder(
+          sanitizePathSegment(`${module.code}_${module.name || module.code}`)
         )
+
+        if (moduleFolder) {
+          moduleFolders.set(module.code, moduleFolder)
+        }
       })
 
       for (const file of team.files) {
@@ -105,7 +108,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const archive = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" })
+    const archive = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" })
     const filename = `${sanitizePathSegment(event.name)}-team-submissions.zip`
     const asciiFilename = filename.normalize("NFKD").replace(/[^\x20-\x7E]/g, "_")
 
