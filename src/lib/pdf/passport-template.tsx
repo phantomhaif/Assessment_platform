@@ -408,7 +408,6 @@ function LogoStrip({
         <Image
           key={item.key}
           src={item.src}
-          alt=""
           style={{ width: item.width, height: item.height, objectFit: "contain" }}
         />
       ))}
@@ -484,7 +483,6 @@ export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
           <Text style={styles.industryBrandText}>Industry{"\n"}Skills</Text>
           <Image
             src={industryLogoSrc}
-            alt=""
             style={{ width: 34, height: 34, objectFit: "contain" }}
           />
         </View>
