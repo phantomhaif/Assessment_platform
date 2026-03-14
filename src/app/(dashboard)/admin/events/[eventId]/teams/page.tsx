@@ -238,8 +238,8 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <Link href={`/admin/events/${eventId}`}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
@@ -250,7 +250,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
             <p className="text-gray-500">{event?.name}</p>
           </div>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
+        <Button onClick={() => setShowCreateForm(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           {t.teams.createTeam}
         </Button>
@@ -262,20 +262,21 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
             <CardTitle>{t.teams.newTeam}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreateTeam} className="flex gap-4">
+            <form onSubmit={handleCreateTeam} className="flex flex-col gap-3 sm:flex-row">
               <Input
                 placeholder={t.teams.teamNamePlaceholder}
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 className="flex-1"
               />
-              <Button type="submit" disabled={isCreating}>
+              <Button type="submit" disabled={isCreating} className="w-full sm:w-auto">
                 {isCreating ? t.teams.creating : t.common.create}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowCreateForm(false)}
+                className="w-full sm:w-auto"
               >
                 {t.common.cancel}
               </Button>
@@ -295,7 +296,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
         <div className="space-y-4">
           {teams.map((team) => (
             <Card key={team.id}>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="text-lg">
                     {team.number && `#${team.number} `}
@@ -305,7 +306,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                     {team.members.length} {t.teams.membersCount}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -348,7 +349,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                         {team.files.map((file) => (
                           <div
                             key={file.id}
-                            className="flex items-center justify-between p-3 bg-white rounded border"
+                            className="flex flex-col gap-3 rounded border bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div>
                               <p className="font-medium text-gray-900">
@@ -375,7 +376,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
 
                 {addingToTeamId === team.id && (
                   <div className="mb-4 p-4 bg-red-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <h4 className="font-medium text-red-900">{t.teams.addMember}</h4>
                       <Button
                         variant="ghost"
@@ -398,7 +399,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                       {getAvailableUsers(team).slice(0, 10).map((user) => (
                         <div
                           key={user.id}
-                          className="flex items-center justify-between p-2 bg-white rounded hover:bg-gray-50"
+                          className="flex flex-col gap-2 rounded bg-white p-2 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div>
                             <p className="text-sm font-medium">
@@ -431,7 +432,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                     {team.members.map((member) => (
                       <div
                         key={member.id}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        className="flex flex-col gap-2 rounded bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div>
                           <p className="font-medium">

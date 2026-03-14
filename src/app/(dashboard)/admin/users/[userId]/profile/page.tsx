@@ -94,8 +94,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <Link href="/admin/users">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
@@ -110,8 +110,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
             </p>
           </div>
         </div>
-        <Link href="/admin/users">
-          <Button>
+        <Link href="/admin/users" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             {t.common.edit}
           </Button>
         </Link>
@@ -197,7 +197,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-3xl font-bold text-red-600">{user._count.applications}</p>
               <p className="text-sm text-gray-600 mt-1">{t.admin.applications}</p>

@@ -59,7 +59,7 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Link href={`/admin/events/${eventId}`}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -109,7 +109,7 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
           </div>
 
           {!sendToAll && (
-            <div className="ml-6 space-y-2">
+            <div className="space-y-2 sm:ml-6">
               <p className="text-sm text-gray-600 mb-2">
                 {locale === "ru" ? "Выберите роли получателей:" : "Select recipient roles:"}
               </p>
@@ -192,7 +192,7 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
-              <div style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)", padding: "24px 32px" }}>
+              <div style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)", padding: "20px 20px" }}>
                 <div className="flex items-center gap-3">
                   <div style={{ width: 40, height: 40, background: "#C41E3A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span className="text-white font-bold text-sm">IS</span>
@@ -200,7 +200,7 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
                   <span className="text-white font-bold">Industry Skills</span>
                 </div>
               </div>
-              <div className="bg-white p-8 space-y-6">
+              <div className="bg-white p-5 space-y-6 sm:p-8">
                 {bodyRu && (
                   <div>
                     <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">🇷🇺 РУССКИЙ</span>
@@ -222,16 +222,17 @@ export default function SendEmailPage({ params }: { params: Promise<{ eventId: s
         </Card>
       )}
 
-      <div className="flex justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={() => setPreview((p) => !p)}
         >
           <Eye className="h-4 w-4 mr-2" />
           {preview ? t.massEmail.hidePreview : t.massEmail.showPreview}
         </Button>
 
-        <Button onClick={handleSend} isLoading={isSending}>
+        <Button onClick={handleSend} isLoading={isSending} className="w-full sm:w-auto">
           <Send className="h-4 w-4 mr-2" />
           {t.massEmail.sendToAll}
         </Button>

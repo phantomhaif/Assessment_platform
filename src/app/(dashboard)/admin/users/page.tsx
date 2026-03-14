@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Users, Search, User, Plus, X, Trash2 } from "lucide-react"
+import { Search, User, Plus, X, Trash2 } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface UserData {
@@ -33,6 +33,11 @@ interface ProfileField {
   options: string[]
   optionsEn: string[]
   order: number
+}
+
+interface CustomFieldValue {
+  fieldId: string
+  value: string
 }
 
 interface UserFormData {
@@ -148,7 +153,7 @@ export default function AdminUsersPage() {
       const response = await fetch(`/api/users/${user.id}`)
       if (response.ok) {
         const userData = await response.json()
-        userData.customFieldValues?.forEach((cfv: any) => {
+        userData.customFieldValues?.forEach((cfv: CustomFieldValue) => {
           customFields[cfv.fieldId] = cfv.value
         })
       }
@@ -255,13 +260,13 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.nav.users}</h1>
           <p className="text-gray-500 mt-1">{t.admin.usersSubtitle}</p>
         </div>
-        <Button onClick={openCreateModal}>
+        <Button onClick={openCreateModal} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           {t.admin.addUser}
         </Button>
@@ -269,7 +274,7 @@ export default function AdminUsersPage() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -282,7 +287,7 @@ export default function AdminUsersPage() {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-48 h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 md:w-48"
             >
               <option value="ALL">{t.common.all} {t.nav.users.toLowerCase()}</option>
               <option value="PARTICIPANT">{t.roles.participant}</option>
@@ -294,8 +299,97 @@ export default function AdminUsersPage() {
         </CardContent>
       </Card>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
+      <div className="space-y-3 md:hidden">
+        {filteredUsers.map((user) => {
+          const roleInfo = roleLabels[user.role] || roleLabels.PARTICIPANT
+          return (
+            <Card key={user.id}>
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                    <User className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900">
+                      {user.lastName} {user.firstName}
+                    </p>
+                    <p className="break-all text-sm text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {t.common.organization}
+                    </p>
+                    <p className="mt-1 break-words text-sm text-gray-600">
+                      {user.organization || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {t.common.role}
+                    </p>
+                    <div className="mt-1">
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${roleInfo.color}`}>
+                        {roleInfo.label}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 rounded-xl bg-gray-50 p-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {t.admin.applications}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-gray-700">{user._count.applications}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {t.admin.passportsCount}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-gray-700">{user._count.skillPassports}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <select
+                    value={user.role}
+                    onChange={(e) => updateRole(user.id, e.target.value)}
+                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="PARTICIPANT">{t.roles.participant}</option>
+                    <option value="EXPERT">{t.roles.expert}</option>
+                    <option value="ORGANIZER">{t.roles.organizer}</option>
+                    <option value="ADMIN">{t.roles.admin}</option>
+                  </select>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => openEditModal(user)}
+                    >
+                      {t.common.edit}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="px-3 text-red-600 hover:bg-red-50"
+                      onClick={() => deleteUser(user.id, `${user.lastName} ${user.firstName}`)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white md:block">
+        <table className="w-full min-w-[960px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -385,9 +479,9 @@ export default function AdminUsersPage() {
 
       {/* Modal: Create / Edit User */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-start justify-between gap-3 border-b p-6">
               <h2 className="text-lg font-bold">
                 {editingUser ? t.admin.editUser : t.admin.addUser}
               </h2>
@@ -421,7 +515,7 @@ export default function AdminUsersPage() {
                   />
                 </>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label={t.auth.lastName + " *"}
                   name="lastName"
@@ -482,7 +576,7 @@ export default function AdminUsersPage() {
               {/* Custom Fields */}
               {editingUser && profileFields.length > 0 && (
                 <>
-                  <div className="col-span-2 border-t pt-4 mt-2">
+                  <div className="mt-2 border-t pt-4 sm:col-span-2">
                     <h3 className="text-sm font-medium text-gray-900 mb-3">
                       {locale === "ru" ? "Дополнительные поля" : "Additional Fields"}
                     </h3>
@@ -492,7 +586,7 @@ export default function AdminUsersPage() {
                     const fieldValue = formData.customFields[field.id] || ""
 
                     return (
-                      <div key={field.id} className={field.type === "TEXTAREA" ? "col-span-2" : ""}>
+                      <div key={field.id} className={field.type === "TEXTAREA" ? "sm:col-span-2" : ""}>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           {fieldName}{field.required ? " *" : ""}
                         </label>
@@ -538,11 +632,11 @@ export default function AdminUsersPage() {
                 </>
               )}
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t">
-              <Button variant="outline" onClick={() => setShowModal(false)}>
+            <div className="flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setShowModal(false)} className="w-full sm:w-auto">
                 {t.common.cancel}
               </Button>
-              <Button onClick={handleSave} isLoading={isSaving}>
+              <Button onClick={handleSave} isLoading={isSaving} className="w-full sm:w-auto">
                 {t.common.save}
               </Button>
             </div>

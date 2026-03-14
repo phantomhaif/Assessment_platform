@@ -173,14 +173,14 @@ export default function RankingsPage() {
               {rankings.map((ranking, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between p-4 border rounded-lg transition-colors hover:shadow-md ${getMedalColor(ranking.rank)}`}
+                  className={`flex flex-col gap-4 rounded-lg border p-4 transition-colors hover:shadow-md sm:flex-row sm:items-center sm:justify-between ${getMedalColor(ranking.rank)}`}
                 >
-                  <div className="flex items-center gap-4 flex-1">
+                  <div className="flex flex-1 items-start gap-4">
                     <div className="flex items-center justify-center w-12">
                       {getMedalIcon(ranking.rank)}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <span className="text-2xl font-bold text-gray-400 w-8">
                           #{ranking.rank}
                         </span>
@@ -203,7 +203,7 @@ export default function RankingsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="text-2xl font-bold text-red-600">
                       {ranking.totalScore.toFixed(1)}
                     </p>

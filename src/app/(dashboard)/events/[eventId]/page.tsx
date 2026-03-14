@@ -300,7 +300,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:items-center sm:gap-4">
         <Link href="/events">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -375,7 +375,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           <CardContent>
             {application ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {application.status === "APPROVED" ? (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : application.status === "REJECTED" ? (
@@ -477,9 +477,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               {documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex flex-col gap-3 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     <File className="h-5 w-5 text-gray-500" />
                     <div>
                       <p className="font-medium text-gray-900">{doc.name}</p>
@@ -534,7 +534,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                         key={module.id}
                         className="p-4 border rounded-lg"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
                               {t.events.module} {module.code}: {module.name}
@@ -545,7 +545,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                               </p>
                             )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             {existingFile && (
                               <>
                                 <a href={existingFile.fileUrl} target="_blank" rel="noopener noreferrer">

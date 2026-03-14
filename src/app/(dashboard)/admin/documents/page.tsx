@@ -122,8 +122,8 @@ export default function AdminDocumentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.documentsAdmin.title}</h1>
           <p className="text-gray-500 mt-1">{t.documentsAdmin.subtitle}</p>
@@ -160,7 +160,7 @@ export default function AdminDocumentsPage() {
         <>
           {showUploadForm && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle>{t.documentsAdmin.uploadDocument}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowUploadForm(false)}>
                   <X className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default function AdminDocumentsPage() {
                     onChange={(e) => setUploadForm({ ...uploadForm, name: e.target.value })}
                     required
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.documentsAdmin.documentType}
@@ -231,11 +231,11 @@ export default function AdminDocumentsPage() {
                       required
                     />
                   </div>
-                  <div className="flex justify-end gap-4">
-                    <Button type="button" variant="outline" onClick={() => setShowUploadForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button type="button" variant="outline" onClick={() => setShowUploadForm(false)} className="w-full sm:w-auto">
                       {t.common.cancel}
                     </Button>
-                    <Button type="submit" disabled={isUploading}>
+                    <Button type="submit" disabled={isUploading} className="w-full sm:w-auto">
                       {isUploading ? t.documentsAdmin.uploading : t.common.upload}
                     </Button>
                   </div>
@@ -245,10 +245,10 @@ export default function AdminDocumentsPage() {
           )}
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>{t.documentsAdmin.eventDocuments}</CardTitle>
               {!showUploadForm && (
-                <Button onClick={() => setShowUploadForm(true)}>
+                <Button onClick={() => setShowUploadForm(true)} className="w-full sm:w-auto">
                   <Upload className="h-4 w-4 mr-2" />
                   {t.documentsAdmin.uploadDocument}
                 </Button>
@@ -269,9 +269,9 @@ export default function AdminDocumentsPage() {
                   {documents.map((doc: any) => (
                     <div
                       key={doc.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
+                    className="flex flex-col gap-3 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                      <div className="flex items-start gap-3">
                         <FileText className="h-5 w-5 text-gray-400" />
                         <div>
                           <p className="font-medium">{doc.name}</p>
@@ -280,7 +280,7 @@ export default function AdminDocumentsPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 self-end sm:self-auto">
                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                           <Button variant="ghost" size="sm">
                             <Download className="h-4 w-4" />

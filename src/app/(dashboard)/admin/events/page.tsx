@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Calendar, Users, Edit, Trash2, Eye, Upload, Filter } from "lucide-react"
+import { Plus, Calendar, Edit, Trash2, Eye, Upload, Filter } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
@@ -112,14 +112,14 @@ export default function AdminEventsPage() {
     })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.events.manageEvents}</h1>
           <p className="text-gray-500 mt-1">{t.events.manageEventsSubtitle}</p>
         </div>
-        <Link href="/admin/events/new">
-          <Button>
+        <Link href="/admin/events/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             {t.events.createEvent}
           </Button>
@@ -223,8 +223,84 @@ export default function AdminEventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
+        <>
+          <div className="space-y-3 md:hidden">
+            {filteredEvents.map((event) => {
+              const badge = getStatusBadge(event.status)
+
+              return (
+                <Card key={event.id}>
+                  <CardContent className="space-y-4 p-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{event.name}</p>
+                      <p className="mt-1 break-words text-sm text-gray-500">{event.competency}</p>
+                    </div>
+
+                    <div>
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        {t.events.dates}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-700">
+                        {format(new Date(event.eventStart), "d MMM", { locale: dateLocale })} —{" "}
+                        {format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          {t.nav.teams}
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-gray-700">{event._count.teams}</p>
+                      </div>
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          {t.nav.applications}
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-gray-700">{event._count.applications}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link href={`/admin/events/${event.id}`}>
+                        <Button variant="ghost" className="w-full justify-center">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/admin/events/${event.id}/edit`}>
+                        <Button variant="ghost" className="w-full justify-center">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/admin/events/${event.id}/schema`}>
+                        <Button variant="ghost" className="w-full justify-center" title={t.nav.schemas}>
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-center"
+                        onClick={() => handleDeleteEvent(event.id, event.name)}
+                        disabled={deletingId === event.id}
+                        title={t.common.delete}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white md:block">
+            <table className="w-full min-w-[860px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -305,8 +381,9 @@ export default function AdminEventsPage() {
                 )
               })}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

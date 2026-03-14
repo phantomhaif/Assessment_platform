@@ -87,14 +87,14 @@ export default function ProtocolSignaturesPage({ params }: { params: Promise<{ i
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-4">
           <Link href="/admin/regulations">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-gray-900">
               {locale === "ru" ? "Подписи протокола" : "Protocol Signatures"}
             </h1>
@@ -102,7 +102,7 @@ export default function ProtocolSignaturesPage({ params }: { params: Promise<{ i
           </div>
         </div>
         {unsigned.length > 0 && (
-          <Button onClick={sendReminder} isLoading={isSending}>
+          <Button onClick={sendReminder} isLoading={isSending} className="w-full sm:w-auto">
             <Send className="h-4 w-4 mr-2" />
             {locale === "ru" ? "Напомнить неподписавшим" : "Remind unsigned"}
           </Button>
@@ -124,7 +124,7 @@ export default function ProtocolSignaturesPage({ params }: { params: Promise<{ i
       )}
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -169,12 +169,12 @@ export default function ProtocolSignaturesPage({ params }: { params: Promise<{ i
           <CardContent>
             <div className="space-y-2">
               {unsigned.map((sig) => (
-                <div key={sig.userId} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
+                <div key={sig.userId} className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-medium text-gray-900">{sig.userName}</p>
                     <p className="text-sm text-gray-500">{sig.email} • {t.roles[sig.role.toLowerCase() as keyof typeof t.roles]}</p>
                   </div>
-                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                  <span className="w-fit px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
                     {locale === "ru" ? "Ожидает" : "Pending"}
                   </span>
                 </div>
@@ -196,12 +196,12 @@ export default function ProtocolSignaturesPage({ params }: { params: Promise<{ i
           <CardContent>
             <div className="space-y-2">
               {signed.map((sig) => (
-                <div key={sig.userId} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
+                <div key={sig.userId} className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-medium text-gray-900">{sig.userName}</p>
                     <p className="text-sm text-gray-500">{sig.email} • {t.roles[sig.role.toLowerCase() as keyof typeof t.roles]}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                       {locale === "ru" ? "Подписано" : "Signed"}
                     </span>

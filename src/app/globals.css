@@ -453,14 +453,8 @@ tr:hover {
 
   th,
   td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.625rem;
     font-size: 0.8125rem;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  table {
-    table-layout: fixed;
   }
 
   .wrapper {

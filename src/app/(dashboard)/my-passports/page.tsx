@@ -109,7 +109,7 @@ export default function MyPassportsPage() {
           {passports.map((passport) => (
             <Card key={passport.id} className="overflow-hidden">
               <div className="bg-gradient-to-r from-red-600 to-red-700 p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="text-white font-bold text-lg">SKILL PASSPORT</h3>
                     <p className="text-red-100 text-sm">{t.passports.skillPassportLabel}</p>
@@ -165,7 +165,7 @@ export default function MyPassportsPage() {
                 {/* Module scores preview */}
                 <div className="space-y-2 mb-4">
                   {passport.moduleScores.slice(0, 3).map((module) => (
-                    <div key={module.code} className="flex items-center justify-between text-sm">
+                    <div key={module.code} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-gray-600">
                         {module.code}. {module.name.slice(0, 25)}...
                       </span>

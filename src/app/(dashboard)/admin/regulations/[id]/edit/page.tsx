@@ -108,7 +108,7 @@ export default function EditRegulationPage({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Link href="/admin/regulations">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -155,13 +155,13 @@ export default function EditRegulationPage({
               </p>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Link href="/admin/regulations">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" className="w-full sm:w-auto">
                   {t.common.cancel}
                 </Button>
               </Link>
-              <Button type="submit" isLoading={isSaving}>
+              <Button type="submit" isLoading={isSaving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {t.common.save}
               </Button>

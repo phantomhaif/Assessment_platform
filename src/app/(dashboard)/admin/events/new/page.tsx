@@ -65,7 +65,7 @@ export default function NewEventPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:items-center sm:gap-4">
         <Link href="/admin/events">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -161,7 +161,7 @@ export default function NewEventPage() {
             <CardTitle>{t.eventForm.dates}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label={`${t.events.registrationStart} *`}
                 name="registrationStart"
@@ -179,7 +179,7 @@ export default function NewEventPage() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label={`${t.events.eventStart} *`}
                 name="eventStart"
@@ -205,7 +205,7 @@ export default function NewEventPage() {
             <CardTitle>{t.eventForm.teamSettings}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label={t.eventForm.minTeamSize}
                 name="minTeamSize"
@@ -226,13 +226,13 @@ export default function NewEventPage() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4 mt-6">
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Link href="/admin/events">
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" className="w-full sm:w-auto">
               {t.common.cancel}
             </Button>
           </Link>
-          <Button type="submit" isLoading={isLoading}>
+          <Button type="submit" isLoading={isLoading} className="w-full sm:w-auto">
             {t.events.createEvent}
           </Button>
         </div>

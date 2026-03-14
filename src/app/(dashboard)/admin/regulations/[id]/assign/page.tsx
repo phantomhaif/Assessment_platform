@@ -172,7 +172,7 @@ export default function AssignRegulationPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Link href="/admin/regulations">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -222,7 +222,7 @@ export default function AssignRegulationPage({
                         : "border-gray-200 hover:border-red-300"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <span className="font-medium text-gray-900">
                         {getRoleName(role)}
                       </span>
@@ -241,7 +241,7 @@ export default function AssignRegulationPage({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
+              <CardTitle className="flex flex-col gap-2 text-lg sm:flex-row sm:items-center sm:justify-between">
                 <span className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   {t.regulationsAdmin.selectedUsers}
@@ -298,11 +298,11 @@ export default function AssignRegulationPage({
         </div>
       </div>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Link href="/admin/regulations">
-          <Button variant="outline">{t.common.cancel}</Button>
+          <Button variant="outline" className="w-full sm:w-auto">{t.common.cancel}</Button>
         </Link>
-        <Button onClick={handleSave} isLoading={isSaving}>
+        <Button onClick={handleSave} isLoading={isSaving} className="w-full sm:w-auto">
           <Save className="h-4 w-4 mr-2" />
           {t.regulationsAdmin.saveAssignments}
         </Button>

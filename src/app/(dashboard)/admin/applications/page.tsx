@@ -156,8 +156,8 @@ export default function AdminApplicationsPage() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.applications.title}</h1>
           <p className="text-gray-500 mt-1">{t.applications.subtitle}</p>
@@ -166,7 +166,7 @@ export default function AdminApplicationsPage() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4 items-end">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.nav.events}
@@ -185,7 +185,7 @@ export default function AdminApplicationsPage() {
               </select>
             </div>
             {selectedEventId && (
-              <Button onClick={() => setShowAddParticipant(!showAddParticipant)}>
+              <Button onClick={() => setShowAddParticipant(!showAddParticipant)} className="w-full md:w-auto">
                 <UserPlus className="h-4 w-4 mr-2" />
                 {t.applications.addParticipant}
               </Button>
@@ -214,7 +214,7 @@ export default function AdminApplicationsPage() {
                 {filteredUsers.slice(0, 20).map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
+                    className="flex flex-col gap-3 rounded-lg bg-gray-50 p-3 hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <p className="font-medium">
@@ -253,7 +253,7 @@ export default function AdminApplicationsPage() {
         </div>
       ) : (
         <>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card className="flex-1">
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
@@ -283,8 +283,64 @@ export default function AdminApplicationsPage() {
             </Card>
           ) : (
             <Card>
-              <CardContent className="p-0">
-                <table className="w-full">
+              <CardContent className="p-4 md:hidden">
+                <div className="space-y-3">
+                  {applications.map((app) => {
+                    const badge = getStatusBadge(app.status)
+                    return (
+                      <div key={app.id} className="space-y-3 rounded-xl border border-gray-200 p-4">
+                        <div>
+                          <Link
+                            href={`/admin/users/${app.user.id}/profile`}
+                            className="font-medium text-[#C41E3A] hover:underline"
+                          >
+                            {app.user.lastName} {app.user.firstName}
+                          </Link>
+                          <p className="break-all text-sm text-gray-500">{app.user.email}</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t.common.organization}</p>
+                            <p className="mt-1 break-words text-sm text-gray-600">{app.user.organization || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t.applications.submissionDate}</p>
+                            <p className="mt-1 text-sm text-gray-600">{new Date(app.createdAt).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}</p>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.className}`}>
+                          <badge.icon className="h-3 w-3" />
+                          {badge.label}
+                        </span>
+                        {app.status === "PENDING" && (
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateStatus(app.id, "APPROVED")}
+                              disabled={processingId === app.id}
+                            >
+                              <Check className="mr-1 h-4 w-4" />
+                              {t.applications.approve}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(app.id, "REJECTED")}
+                              disabled={processingId === app.id}
+                            >
+                              <X className="mr-1 h-4 w-4" />
+                              {t.applications.reject}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+              <CardContent className="hidden p-0 md:block">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[860px]">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -360,6 +416,7 @@ export default function AdminApplicationsPage() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </CardContent>
             </Card>
           )}

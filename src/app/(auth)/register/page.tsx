@@ -206,11 +206,11 @@ export default function RegisterPage() {
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {locale === "ru" ? "Подтвердить и зарегистрироваться" : "Verify and Register"}
               </Button>
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full flex-col gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
                 <button
                   type="button"
                   onClick={() => setStep("form")}
-                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                  className="flex items-center justify-center gap-1 text-sm text-gray-600 hover:text-gray-900 sm:justify-start"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {locale === "ru" ? "Назад" : "Back"}
@@ -254,7 +254,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label={locale === "ru" ? "Фамилия *" : "Last Name *"}
                 name="lastName"
@@ -308,7 +308,7 @@ export default function RegisterPage() {
               onChange={handleChange}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label={locale === "ru" ? "Пароль *" : "Password *"}
                 type="password"

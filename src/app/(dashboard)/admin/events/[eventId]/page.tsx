@@ -129,9 +129,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <Link href="/admin/events">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
@@ -142,7 +142,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             <p className="text-gray-500">{event.competency}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link href={`/admin/events/${eventId}/edit`}>
             <Button variant="outline">
               <Edit className="h-4 w-4 mr-2" />
@@ -233,15 +233,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-gray-500">{t.adminEvent.teamsCount}</span>
                 <span className="font-bold">{event._count.teams}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-gray-500">{t.adminEvent.applicationsCount}</span>
                 <span className="font-bold">{event._count.applications}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-gray-500">{t.adminEvent.teamSize}</span>
                 <span className="font-medium">{event.minTeamSize}-{event.maxTeamSize}</span>
               </div>
@@ -252,7 +252,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 {t.adminEvent.manageTeams}
               </Button>
             </Link>
-            <div className="flex gap-2 mt-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <a href={`/api/events/${eventId}/participants/export`} className="flex-1">
                 <Button variant="outline" className="w-full" title="CSV">
                   <Download className="h-4 w-4 mr-2" />

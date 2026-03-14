@@ -194,7 +194,7 @@ export default function DashboardPage() {
                       href={`/events/${app.event.id}`}
                       className="block p-3 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="font-medium text-gray-900">{app.event.name}</p>
                           <p className="text-sm text-gray-500">{app.event.competency}</p>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                       href="/my-passports"
                       className="block p-3 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="font-medium text-gray-900">{passport.event.name}</p>
                           <p className="text-sm text-gray-500">{passport.event.competency}</p>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg">{t.dashboard.upcomingEvents}</CardTitle>
           <Link href="/events" className="text-sm text-red-600 hover:underline flex items-center gap-1">
             {t.common.all} <ArrowRight className="h-4 w-4" />
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                   href={`/events/${event.id}`}
                   className="block p-3 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-medium text-gray-900">{event.name}</p>
                       <p className="text-sm text-gray-500">{event.competency}</p>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
 
       {/* Footer with IITB Contacts */}
       <footer className="mt-12 py-8 border-t border-gray-200 bg-gray-50 rounded-lg">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
             {/* About Platform */}
             <div>

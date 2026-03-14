@@ -330,8 +330,8 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
           <Link href={`/admin/events/${eventId}`}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
@@ -347,7 +347,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
           </div>
         </div>
         {schema && (
-          <Button onClick={openAddModule} className="bg-[#C41E3A] hover:bg-[#a01830]">
+          <Button onClick={openAddModule} className="w-full bg-[#C41E3A] hover:bg-[#a01830] sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             {locale === "ru" ? "Добавить модуль" : "Add Module"}
           </Button>
@@ -408,9 +408,9 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
       {schema && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>{schema.name}</CardTitle>
-              <div className="flex gap-2 text-sm">
+              <div className="flex flex-wrap gap-2 text-sm">
                 <span className="bg-red-50 text-red-700 px-3 py-1 rounded-full">
                   {locale === "ru" ? "Модулей" : "Modules"}: {schema.modules.length}
                 </span>
@@ -425,10 +425,10 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
               <div key={module.id} className="border rounded-lg">
                 {/* Module header */}
                 <div
-                  className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                  className="flex flex-col gap-3 bg-gray-50 p-3 hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                   onClick={() => toggleModule(module.id)}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     {expandedModules.has(module.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     <span className="font-semibold">{module.code}: {module.name}</span>
                     <span className="text-sm text-gray-500">({module.maxScore} {locale === "ru" ? "баллов" : "pts"})</span>
@@ -455,10 +455,10 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                       <div key={sub.id} className="border-l-2 border-gray-200 ml-4 pl-3">
                         {/* Sub-criterion header */}
                         <div
-                          className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50"
+                          className="flex flex-col gap-2 py-2 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                           onClick={() => toggleSub(sub.id)}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-start gap-2">
                             {expandedSubs.has(sub.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                             <span className="font-medium text-sm">{sub.code}. {sub.name}</span>
                           </div>
@@ -481,7 +481,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                             </Button>
 
                             {sub.criteria.map((crit) => (
-                              <div key={crit.id} className="flex items-start justify-between p-2 bg-gray-50 rounded text-sm">
+                              <div key={crit.id} className="flex flex-col gap-2 rounded bg-gray-50 p-2 text-sm sm:flex-row sm:items-start sm:justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
                                     <span className={`px-1.5 py-0.5 rounded text-xs font-mono ${crit.type === "M" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
@@ -532,8 +532,8 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
       {/* Module Modal */}
       {showModuleModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingModule ? (locale === "ru" ? "Редактировать модуль" : "Edit Module") : (locale === "ru" ? "Новый модуль" : "New Module")}
             </h3>
@@ -551,7 +551,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 <Input value={moduleForm.nameEn} onChange={(e) => setModuleForm({ ...moduleForm, nameEn: e.target.value })} />
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setShowModuleModal(false)}>{locale === "ru" ? "Отмена" : "Cancel"}</Button>
               <Button onClick={saveModule} className="bg-[#C41E3A] hover:bg-[#a01830]">{locale === "ru" ? "Сохранить" : "Save"}</Button>
             </div>
@@ -561,8 +561,8 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
       {/* Sub-criterion Modal */}
       {showSubModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingSub ? (locale === "ru" ? "Редактировать подкритерий" : "Edit Sub-criterion") : (locale === "ru" ? "Новый подкритерий" : "New Sub-criterion")}
             </h3>
@@ -576,7 +576,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 <Input value={subForm.name} onChange={(e) => setSubForm({ ...subForm, name: e.target.value })} />
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setShowSubModal(false)}>{locale === "ru" ? "Отмена" : "Cancel"}</Button>
               <Button onClick={saveSub} className="bg-[#C41E3A] hover:bg-[#a01830]">{locale === "ru" ? "Сохранить" : "Save"}</Button>
             </div>
@@ -586,13 +586,13 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
       {/* Criterion Modal */}
       {showCriterionModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 py-8 sm:items-center">
+          <div className="mx-4 w-full max-w-lg rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingCriterion ? (locale === "ru" ? "Редактировать критерий" : "Edit Criterion") : (locale === "ru" ? "Новый критерий" : "New Criterion")}
             </h3>
             <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium mb-1">{locale === "ru" ? "Тип" : "Type"}</label>
                   <select
@@ -651,7 +651,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                   <label className="block text-sm font-medium mb-2">{locale === "ru" ? "Варианты оценки" : "Judgement Options"}</label>
                   <div className="space-y-2">
                     {criterionForm.judgementOptions.map((opt, i) => (
-                      <div key={i} className="flex gap-2 items-center">
+                      <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input
                           type="number"
                           className="w-20"
@@ -678,7 +678,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 </div>
               )}
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setShowCriterionModal(false)}>{locale === "ru" ? "Отмена" : "Cancel"}</Button>
               <Button onClick={saveCriterion} className="bg-[#C41E3A] hover:bg-[#a01830]">{locale === "ru" ? "Сохранить" : "Save"}</Button>
             </div>

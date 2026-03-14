@@ -187,12 +187,12 @@ export default function EventsPage() {
             return (
               <Card key={event.id} className="flex flex-col">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <CardTitle className="text-lg">{event.name}</CardTitle>
                       <p className="text-sm text-red-600 mt-1">{event.competency}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
+                    <span className={`inline-flex self-start rounded-full px-2 py-1 text-xs font-medium ${badge.className}`}>
                       {badge.label}
                     </span>
                   </div>

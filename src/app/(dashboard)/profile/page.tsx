@@ -205,7 +205,7 @@ export default function ProfilePage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Фото */}
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
               <div className="relative">
                 <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                   {profile.photo ? (
@@ -388,7 +388,7 @@ export default function ProfilePage() {
             )}
 
             <div className="flex justify-end">
-              <Button type="submit" isLoading={isSaving}>
+              <Button type="submit" isLoading={isSaving} className="w-full sm:w-auto">
                 {t.profile.saveChanges}
               </Button>
             </div>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
           <p className="text-sm text-gray-600 mb-4">{t.profile.deleteWarning}</p>
           <Button
             variant="outline"
-            className="text-red-600 border-red-300 hover:bg-red-50"
+            className="w-full border-red-300 text-red-600 hover:bg-red-50 sm:w-auto"
             onClick={handleDeleteAccount}
             isLoading={isDeleting}
           >

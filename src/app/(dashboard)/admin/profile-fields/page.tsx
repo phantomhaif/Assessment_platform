@@ -179,8 +179,8 @@ export default function ProfileFieldsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
             {locale === "ru" ? "Поля профиля" : "Profile Fields"}
@@ -192,7 +192,7 @@ export default function ProfileFieldsPage() {
             }
           </p>
         </div>
-        <Button onClick={openCreateModal}>
+        <Button onClick={openCreateModal} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           {locale === "ru" ? "Добавить поле" : "Add Field"}
         </Button>
@@ -214,10 +214,10 @@ export default function ProfileFieldsPage() {
           {fields.map((field) => (
             <Card key={field.id}>
               <CardContent className="py-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{field.name}</span>
                       {field.nameEn && (
                         <span className="text-gray-400">/ {field.nameEn}</span>
@@ -237,7 +237,7 @@ export default function ProfileFieldsPage() {
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2 self-end sm:self-auto">
                     <Button variant="outline" size="sm" onClick={() => openEditModal(field)}>
                       {locale === "ru" ? "Изменить" : "Edit"}
                     </Button>
@@ -259,9 +259,9 @@ export default function ProfileFieldsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-start justify-between gap-3 border-b p-6">
               <h2 className="text-lg font-bold">
                 {editingField
                   ? (locale === "ru" ? "Редактировать поле" : "Edit Field")
@@ -315,11 +315,11 @@ export default function ProfileFieldsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {locale === "ru" ? "Варианты ответа" : "Options"}
                   </label>
-                  <div className="grid grid-cols-2 gap-2 mb-1">
+                  <div className="mb-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <span className="text-xs text-gray-500 font-medium">RU</span>
                     <span className="text-xs text-gray-500 font-medium">EN</span>
                   </div>
-                  <div className="flex gap-2 mb-3">
+                  <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
                     <Input
                       value={newOption}
                       onChange={(e) => setNewOption(e.target.value)}
@@ -366,11 +366,11 @@ export default function ProfileFieldsPage() {
                 </label>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t">
-              <Button variant="outline" onClick={() => setShowModal(false)}>
+            <div className="flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setShowModal(false)} className="w-full sm:w-auto">
                 {locale === "ru" ? "Отмена" : "Cancel"}
               </Button>
-              <Button onClick={handleSave} isLoading={isSaving}>
+              <Button onClick={handleSave} isLoading={isSaving} className="w-full sm:w-auto">
                 {locale === "ru" ? "Сохранить" : "Save"}
               </Button>
             </div>

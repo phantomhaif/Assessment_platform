@@ -28,8 +28,8 @@ export function Header({ onMenuClick }: HeaderProps) {
     : `Welcome, ${session?.user?.name}`
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 md:px-6 gap-3">
-      <div className="flex items-center gap-2 min-w-0">
+    <header className="flex min-h-16 items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2 md:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         {onMenuClick && (
           <button
             onClick={onMenuClick}
@@ -39,12 +39,12 @@ export function Header({ onMenuClick }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </button>
         )}
-        <h2 className="text-sm md:text-lg font-semibold text-gray-900 truncate">
+        <h2 className="truncate text-xs font-semibold text-gray-900 sm:text-sm md:text-lg">
           {greeting}
         </h2>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+      <div className="flex shrink-0 items-center gap-2 md:gap-4">
         <LanguageSwitcher />
         <button className="hidden sm:inline-flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
           <Bell className="h-5 w-5" />

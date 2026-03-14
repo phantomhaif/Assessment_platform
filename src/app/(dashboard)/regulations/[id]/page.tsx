@@ -120,7 +120,7 @@ export default function RegulationDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:items-center sm:gap-4">
         <Link href="/regulations">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
@@ -128,7 +128,7 @@ export default function RegulationDetailPage({
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{regulation.title}</h1>
-          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+          <div className="mt-1 flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center sm:gap-4">
             <span className="flex items-center gap-1">
               <Building className="h-4 w-4" />
               {regulation.eventName}
@@ -143,7 +143,7 @@ export default function RegulationDetailPage({
 
       {/* Status banner */}
       {regulation.isSigned ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-4 sm:flex-row sm:items-center">
           <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
             <Check className="h-5 w-5 text-green-600" />
           </div>
@@ -155,7 +155,7 @@ export default function RegulationDetailPage({
           </div>
         </div>
       ) : (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center gap-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 sm:flex-row sm:items-center">
           <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
             <FileText className="h-5 w-5 text-orange-600" />
           </div>
@@ -192,7 +192,7 @@ export default function RegulationDetailPage({
                 {error}
               </div>
             )}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium text-gray-900">
                   {t.regulations.confirmReading}
@@ -204,7 +204,7 @@ export default function RegulationDetailPage({
               <Button
                 onClick={handleSign}
                 disabled={isSigning}
-                className="min-w-[150px]"
+                className="w-full sm:min-w-[150px] sm:w-auto"
               >
                 {isSigning ? (
                   t.regulations.signing

@@ -12,12 +12,12 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
+          <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-3">
+            <div className="flex min-w-0 items-center gap-2">
               <Image src="/logo.png" alt="Industry Skills" width={40} height={40} />
-              <span className="font-bold text-xl">Assessment Platform</span>
+              <span className="truncate font-bold text-base sm:text-xl">Assessment Platform</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-4">
               <button
                 onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
                 className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
@@ -267,7 +267,7 @@ function Step({
   description: string
 }) {
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-4 sm:gap-6">
       <div className="flex-shrink-0 w-10 h-10 bg-[#C41E3A] text-white rounded-full flex items-center justify-center font-bold">
         {number}
       </div>

@@ -354,13 +354,13 @@ export default function AdminScoringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.scoring.title}</h1>
           <p className="text-gray-500 mt-1">{t.scoring.subtitle}</p>
         </div>
         {selectedTeamId && (
-          <Button onClick={() => saveScores()} isLoading={isSaving}>
+          <Button onClick={() => saveScores()} isLoading={isSaving} className="w-full sm:w-auto">
             <Save className="h-4 w-4 mr-2" />
             {t.common.save}
           </Button>
@@ -448,8 +448,8 @@ export default function AdminScoringPage() {
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => toggleModule(module.id)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-3">
                     {expandedModules.has(module.id) ? (
                       <ChevronDown className="h-5 w-5 text-gray-400" />
                     ) : (
@@ -464,7 +464,7 @@ export default function AdminScoringPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div className="text-2xl font-bold text-red-600">
                       {((calculateModuleScore(module) / module.maxScore) * 100).toFixed(0)}%
                     </div>
@@ -506,7 +506,7 @@ export default function AdminScoringPage() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 md:shrink-0">
+                                <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
                                   {criterion.type === "M" ? (
                                     // Measurement type - numeric input with 0.5 step
                                     <input
@@ -523,8 +523,8 @@ export default function AdminScoringPage() {
                                       className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                                     />
                                   ) : (
-                                    <div className="flex flex-col items-start gap-2 md:items-end">
-                                      <div className="flex items-center gap-1">
+                                    <div className="flex w-full flex-col items-start gap-2 sm:w-auto md:items-end">
+                                      <div className="flex flex-wrap items-center gap-1">
                                         {[0, 1, 2].map(judgeIndex => {
                                           const value = currentJudgeValues[judgeIndex] ?? 0
 
@@ -570,7 +570,7 @@ export default function AdminScoringPage() {
                                       </p>
                                     </div>
                                   )}
-                                  <span className="text-sm text-gray-500 w-16 text-right">
+                                  <span className="w-auto text-sm text-gray-500 sm:w-16 sm:text-right">
                                     {currentScore} / {criterion.maxScore}
                                   </span>
                                 </div>

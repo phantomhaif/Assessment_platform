@@ -86,8 +86,8 @@ export default function RegulationsPage() {
                 {unsignedRegulations.map((regulation) => (
                   <Link key={regulation.id} href={`/regulations/${regulation.id}`}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-orange-500">
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div>
+                      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
                           <h3 className="font-medium text-gray-900">
                             {regulation.title}
                           </h3>
@@ -95,7 +95,7 @@ export default function RegulationsPage() {
                             {regulation.eventName} &bull; {formatDate(regulation.createdAt)}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
                           <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
                             {t.regulations.needsSignature}
                           </span>
@@ -119,8 +119,8 @@ export default function RegulationsPage() {
                 {signedRegulations.map((regulation) => (
                   <Link key={regulation.id} href={`/regulations/${regulation.id}`}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-green-500">
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div>
+                      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
                           <h3 className="font-medium text-gray-900">
                             {regulation.title}
                           </h3>
@@ -128,7 +128,7 @@ export default function RegulationsPage() {
                             {regulation.eventName} &bull; {t.regulations.signedOn} {formatDate(regulation.signedAt!)}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
                             <Check className="h-3 w-3" />
                             {t.regulations.signedLabel}

@@ -98,8 +98,8 @@ export default function AdminTeamsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.teams.title}</h1>
           <p className="text-gray-500 mt-1">{t.teams.subtitle}</p>
@@ -108,7 +108,7 @@ export default function AdminTeamsPage() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4 items-end">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.nav.events}
@@ -127,7 +127,7 @@ export default function AdminTeamsPage() {
               </select>
             </div>
             {selectedEventId && (
-              <Button onClick={() => setShowCreateForm(true)}>
+              <Button onClick={() => setShowCreateForm(true)} className="w-full md:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {t.teams.createTeam}
               </Button>
@@ -142,15 +142,15 @@ export default function AdminTeamsPage() {
             <CardTitle>{t.teams.newTeam}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Input
                 placeholder={t.teams.teamNamePlaceholder}
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 className="flex-1"
               />
-              <Button onClick={createTeam}>{t.common.create}</Button>
-              <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+              <Button onClick={createTeam} className="w-full sm:w-auto">{t.common.create}</Button>
+              <Button variant="outline" onClick={() => setShowCreateForm(false)} className="w-full sm:w-auto">
                 {t.common.cancel}
               </Button>
             </div>

@@ -98,7 +98,7 @@ export default function AdminRegulationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t.regulationsAdmin.title}</h1>
           <p className="text-gray-500 mt-1">
@@ -107,7 +107,7 @@ export default function AdminRegulationsPage() {
         </div>
         {selectedEventId && (
           <Link href={`/admin/regulations/new?eventId=${selectedEventId}`}>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               {t.regulationsAdmin.createRegulation}
             </Button>
@@ -167,11 +167,11 @@ export default function AdminRegulationsPage() {
                 {protocols.map((protocol) => (
                   <div
                     key={protocol.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex flex-col gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 md:flex-row md:items-center md:justify-between"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900">{protocol.title}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                      <div className="mt-1 flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                         <span>{t.events.version} {protocol.version}</span>
                         <span className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
@@ -183,27 +183,28 @@ export default function AdminRegulationsPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
                       <Link href={`/admin/regulations/${protocol.id}/signatures`}>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="w-full">
                           <FileText className="h-4 w-4 mr-2" />
                           {locale === "ru" ? "Подписи" : "Signatures"}
                         </Button>
                       </Link>
                       <Link href={`/admin/regulations/${protocol.id}/assign`}>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="w-full">
                           <Users className="h-4 w-4 mr-2" />
                           {t.regulationsAdmin.assignTo}
                         </Button>
                       </Link>
                       <Link href={`/admin/regulations/${protocol.id}/edit`}>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => handleDelete(protocol.id)}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
