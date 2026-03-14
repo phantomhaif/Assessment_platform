@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const archive = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" })
+    const archive = await zip.generateAsync({ type: "arraybuffer", compression: "DEFLATE" })
     const archiveBlob = new Blob([archive], { type: "application/zip" })
     const filename = `${sanitizePathSegment(event.name)}-team-submissions.zip`
     const asciiFilename = filename.normalize("NFKD").replace(/[^\x20-\x7E]/g, "_")
