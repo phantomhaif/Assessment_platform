@@ -24,9 +24,11 @@ import {
 interface SidebarProps {
   userRole: string
   userName?: string
+  className?: string
+  onNavigate?: () => void
 }
 
-export function Sidebar({ userRole, userName }: SidebarProps) {
+export function Sidebar({ userRole, userName, className, onNavigate }: SidebarProps) {
   const pathname = usePathname()
   const { t, locale } = useI18n()
 
@@ -81,7 +83,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 min-h-screen flex flex-col" style={{ background: 'var(--sidebar-background)' }}>
+    <aside className={cn("w-64 min-h-screen flex flex-col", className)} style={{ background: 'var(--sidebar-background)' }}>
       {/* Logo section */}
       <div className="p-5 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -105,6 +107,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
               <li key={link.href}>
                 <Link
                   href={link.href}
+                  onClick={onNavigate}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive

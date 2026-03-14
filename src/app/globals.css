@@ -54,6 +54,20 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -435,5 +449,21 @@ tr:hover {
 
   h2 {
     font-size: 1.25rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  table {
+    table-layout: fixed;
+  }
+
+  .wrapper {
+    padding: 0 1rem;
   }
 }
