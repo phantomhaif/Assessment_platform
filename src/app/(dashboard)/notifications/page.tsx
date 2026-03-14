@@ -161,19 +161,19 @@ export default function NotificationsPage() {
                         </Button>
                       )}
                       {notification.link && (
-                        <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
-                          <Link
-                            href={notification.link}
-                            onClick={() => {
-                              if (!notification.isRead) {
-                                void markNotifications([notification.id])
-                              }
-                            }}
-                          >
+                        <Link
+                          href={notification.link}
+                          onClick={() => {
+                            if (!notification.isRead) {
+                              void markNotifications([notification.id])
+                            }
+                          }}
+                        >
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
                             <ExternalLink className="mr-2 h-4 w-4" />
                             {locale === "ru" ? "Открыть" : "Open"}
-                          </Link>
-                        </Button>
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </div>

@@ -297,12 +297,12 @@ export default function SubmissionsPage() {
                             <div className="flex flex-wrap gap-2">
                               {existingFile && (
                                 <>
-                                  <Button variant="outline" size="sm" asChild>
-                                    <a href={existingFile.fileUrl} target="_blank" rel="noopener noreferrer">
+                                  <a href={existingFile.fileUrl} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm">
                                       <Download className="mr-2 h-4 w-4" />
                                       {locale === "ru" ? "Скачать" : "Download"}
-                                    </a>
-                                  </Button>
+                                    </Button>
+                                  </a>
                                   <Button
                                     variant="outline"
                                     size="sm"

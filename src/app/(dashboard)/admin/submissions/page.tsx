@@ -343,12 +343,12 @@ export default function AdminSubmissionsPage() {
                                 </div>
 
                                 {file && (
-                                  <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-                                    <a href={file.fileUrl} target="_blank" rel="noopener noreferrer">
+                                  <a href={file.fileUrl} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                                       <Download className="mr-2 h-4 w-4" />
                                       {locale === "ru" ? "Скачать" : "Download"}
-                                    </a>
-                                  </Button>
+                                    </Button>
+                                  </a>
                                 )}
                               </div>
                             </div>
