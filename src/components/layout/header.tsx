@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { Bell, User, Menu } from "lucide-react"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
@@ -12,6 +14,25 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { data: session } = useSession()
   const { locale, t } = useI18n()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch("/api/notifications?limit=1")
+        if (!response.ok) return
+
+        const data = await response.json()
+        setUnreadCount(data.unreadCount || 0)
+      } catch (error) {
+        console.error("Error fetching unread notifications:", error)
+      }
+    }
+
+    if (session?.user?.id) {
+      fetchUnreadCount()
+    }
+  }, [session?.user?.id])
 
   const getRoleName = (role: string | undefined) => {
     switch (role) {
@@ -46,9 +67,17 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       <div className="flex shrink-0 items-center gap-2 md:gap-4">
         <LanguageSwitcher />
-        <button className="hidden sm:inline-flex p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+        <Link
+          href="/notifications"
+          className="relative inline-flex rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+        >
           <Bell className="h-5 w-5" />
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
             <User className="h-5 w-5 text-red-600" />

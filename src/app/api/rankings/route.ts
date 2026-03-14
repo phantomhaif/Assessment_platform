@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+type RankedTeamRecord = {
+  id: string
+  name: string
+  number: number | null
+  rank: number | null
+  totalScore: number | null
+  event: {
+    name: string
+    eventStart: Date
+  }
+}
+
+type AggregatedRanking = {
+  rank: number
+  name: string
+  totalScore: number
+  eventsCount: number
+  teams: RankedTeamRecord[]
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()
@@ -13,12 +33,22 @@ export async function GET(req: NextRequest) {
     const period = searchParams.get("period") || "all" // all, year, event
     const eventId = searchParams.get("eventId")
 
-    let teams: any[] = []
+    let teams: RankedTeamRecord[] = []
 
     if (period === "event" && eventId) {
       // Ranking for specific event
       teams = await prisma.team.findMany({
-        where: { eventId },
+        where: {
+          eventId,
+          totalScore: {
+            not: null,
+          },
+          event: {
+            status: {
+              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
+            },
+          },
+        },
         include: {
           event: {
             select: {
@@ -33,17 +63,18 @@ export async function GET(req: NextRequest) {
         ],
       })
     } else if (period === "year") {
-      // Ranking for current year
-      const currentYear = new Date().getFullYear()
-      const yearStart = new Date(currentYear, 0, 1)
-      const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59)
+      // Ranking for the last 365 days
+      const yearStart = new Date()
+      yearStart.setDate(yearStart.getDate() - 365)
 
       teams = await prisma.team.findMany({
         where: {
           event: {
             eventStart: {
               gte: yearStart,
-              lte: yearEnd,
+            },
+            status: {
+              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
             },
           },
           totalScore: {
@@ -64,6 +95,11 @@ export async function GET(req: NextRequest) {
       // Ranking for all events
       teams = await prisma.team.findMany({
         where: {
+          event: {
+            status: {
+              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
+            },
+          },
           totalScore: {
             not: null,
           },
@@ -82,15 +118,17 @@ export async function GET(req: NextRequest) {
 
     // Calculate cumulative scores for teams with same name (for "all" and "year" periods)
     if (period !== "event") {
-      const teamScores = new Map<string, { teams: any[]; totalScore: number }>()
+      const teamScores = new Map<string, { name: string; teams: RankedTeamRecord[]; totalScore: number }>()
 
       teams.forEach((team) => {
-        const existing = teamScores.get(team.name)
+        const normalizedName = team.name.trim().replace(/\s+/g, " ").toLowerCase()
+        const existing = teamScores.get(normalizedName)
         if (existing) {
           existing.teams.push(team)
           existing.totalScore += team.totalScore || 0
         } else {
-          teamScores.set(team.name, {
+          teamScores.set(normalizedName, {
+            name: team.name.trim(),
             teams: [team],
             totalScore: team.totalScore || 0,
           })
@@ -98,9 +136,10 @@ export async function GET(req: NextRequest) {
       })
 
       // Convert to array and sort by cumulative score
-      const rankings = Array.from(teamScores.entries())
-        .map(([name, data]) => ({
-          name,
+      const rankings: AggregatedRanking[] = Array.from(teamScores.values())
+        .map((data) => ({
+          rank: 0,
+          name: data.name,
           totalScore: data.totalScore,
           eventsCount: data.teams.length,
           teams: data.teams,
@@ -113,7 +152,7 @@ export async function GET(req: NextRequest) {
         if (index > 0 && rankings[index - 1].totalScore !== item.totalScore) {
           currentRank = index + 1
         }
-        (item as any).rank = currentRank
+        item.rank = currentRank
       })
 
       return NextResponse.json(rankings)

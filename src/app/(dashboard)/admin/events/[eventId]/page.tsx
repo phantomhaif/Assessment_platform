@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Mail } from "lucide-react"
+import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Mail, FolderOpen } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
@@ -159,6 +159,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             <Button variant="outline">
               <Mail className="h-4 w-4 mr-2" />
               {t.adminEvent.sendEmail}
+            </Button>
+          </Link>
+          <Link href={`/admin/submissions?eventId=${eventId}`}>
+            <Button variant="outline">
+              <FolderOpen className="h-4 w-4 mr-2" />
+              {locale === "ru" ? "Работы команд" : "Team Submissions"}
             </Button>
           </Link>
         </div>

@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -33,6 +34,7 @@ model User {
   uploadedFiles          TeamFile[]
   teamMemberships        TeamMember[]
   customFieldValues      ProfileFieldValue[]
+  notifications          Notification[]
 
   @@map("users")
 }
@@ -177,6 +179,22 @@ model TeamFile {
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
 
   @@map("team_files")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(INFO)
+  title     String
+  message   String           @db.Text
+  link      String?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
 }
 
 model AssessmentSchema {
@@ -387,4 +405,10 @@ enum CriterionType {
 enum EventFormat {
   ONLINE
   OFFLINE
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
 }

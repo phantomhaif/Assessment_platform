@@ -18,7 +18,8 @@ import {
   UserCircle,
   Inbox,
   ChevronRight,
-  Settings
+  Settings,
+  Bell,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -37,7 +38,9 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/events", label: t.nav.events, icon: Calendar },
     { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/submissions", label: locale === "ru" ? "Работы" : "Submissions", icon: Upload },
     { href: "/my-passports", label: t.nav.myPassports, icon: Award },
+    { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
@@ -46,6 +49,7 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/scoring", label: t.nav.scoring, icon: ClipboardList },
     { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
@@ -57,11 +61,13 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/admin/scoring", label: t.nav.scoring, icon: ClipboardList },
     { href: "/admin/schemas", label: t.nav.schemas, icon: Upload },
+    { href: "/admin/submissions", label: locale === "ru" ? "Работы команд" : "Team Submissions", icon: Upload },
     { href: "/admin/documents", label: t.nav.documents, icon: FileText },
     { href: "/admin/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/admin/passports", label: t.nav.passports, icon: Award },
     { href: "/admin/users", label: t.nav.users, icon: Users },
     { href: "/admin/profile-fields", label: locale === "ru" ? "Поля профиля" : "Profile Fields", icon: Settings },
+    { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
   ]
 
@@ -74,34 +80,42 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case "ADMIN": return t.roles.admin
-      case "ORGANIZER": return t.roles.organizer
-      case "EXPERT": return t.roles.expert
-      case "PARTICIPANT": return t.roles.participant
-      default: return t.roles.guest
+      case "ADMIN":
+        return t.roles.admin
+      case "ORGANIZER":
+        return t.roles.organizer
+      case "EXPERT":
+        return t.roles.expert
+      case "PARTICIPANT":
+        return t.roles.participant
+      default:
+        return t.roles.guest
     }
   }
 
   return (
-    <aside className={cn("w-64 min-h-screen flex flex-col", className)} style={{ background: 'var(--sidebar-background)' }}>
-      {/* Logo section */}
-      <div className="p-5 border-b border-gray-200">
+    <aside className={cn("flex min-h-screen w-64 flex-col", className)} style={{ background: "var(--sidebar-background)" }}>
+      <div className="border-b border-gray-200 p-5">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image src="/logo.png" alt="Industry Skills" width={52} height={52} className="flex-shrink-0" />
-          <div className="flex flex-col justify-between h-[52px]">
-            <h1 className="text-[#C41E3A] font-black leading-tight tracking-wider uppercase" style={{ fontSize: '14px' }}>INDUSTRY<br />SKILLS</h1>
-            <p className="text-[#64748b] text-xs leading-none">{locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}</p>
+          <div className="flex h-[52px] flex-col justify-between">
+            <h1 className="font-black uppercase leading-tight tracking-wider text-[#C41E3A]" style={{ fontSize: "14px" }}>
+              INDUSTRY
+              <br />
+              SKILLS
+            </h1>
+            <p className="text-xs leading-none text-[#64748b]">
+              {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
+            </p>
           </div>
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
         <ul className="space-y-1">
           {links.map((link) => {
             const Icon = link.icon
-            const isActive = pathname === link.href ||
-              (link.href !== "/dashboard" && pathname.startsWith(link.href))
+            const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href))
 
             return (
               <li key={link.href}>
@@ -109,10 +123,10 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
                   href={link.href}
                   onClick={onNavigate}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-[#C41E3A] text-white shadow-lg shadow-red-500/20 hover:bg-[#a01830]"
-                      : "text-[#94a3b8] hover:text-[#C41E3A] hover:bg-gray-100"
+                      : "text-[#94a3b8] hover:bg-gray-100 hover:text-[#C41E3A]"
                   )}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
@@ -125,23 +139,20 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
         </ul>
       </nav>
 
-      {/* User section */}
-      <div className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-3 px-3 py-2 mb-3">
-          <div className="w-9 h-9 rounded-full bg-[#C41E3A]/20 flex items-center justify-center">
+      <div className="border-t border-white/10 p-4">
+        <div className="mb-3 flex items-center gap-3 px-3 py-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C41E3A]/20">
             <UserCircle className="h-5 w-5 text-[#C41E3A]" />
           </div>
-          <div className="flex-1 min-w-0">
-            {userName && (
-              <p className="text-white text-sm font-medium truncate">{userName}</p>
-            )}
-            <p className="text-[#64748b] text-xs">{getRoleName(userRole)}</p>
+          <div className="min-w-0 flex-1">
+            {userName && <p className="truncate text-sm font-medium text-white">{userName}</p>}
+            <p className="text-xs text-[#64748b]">{getRoleName(userRole)}</p>
           </div>
         </div>
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-[#94a3b8] hover:text-white hover:bg-white/5 transition-all duration-200"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#94a3b8] transition-all duration-200 hover:bg-white/5 hover:text-white"
         >
           <LogOut className="h-5 w-5" />
           {t.nav.logout}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { notifyTeamFileActivity } from "@/lib/notifications"
 import { writeFile, mkdir, unlink } from "fs/promises"
 import path from "path"
 import { existsSync } from "fs"
@@ -113,6 +114,8 @@ export async function POST(
       where: { teamId, moduleCode },
     })
 
+    const action = existingFile ? "replaced" : "uploaded"
+
     if (existingFile) {
       // Delete physical file
       try {
@@ -121,7 +124,7 @@ export async function POST(
         if (existsSync(fullOldPath)) {
           await unlink(fullOldPath)
         }
-      } catch (e) {
+      } catch {
         // Ignore if file doesn't exist
       }
 
@@ -154,6 +157,14 @@ export async function POST(
         fileUrl: `/api/files/team-files/${teamId}/${filename}`,
         fileSize: buffer.length,
       },
+    })
+
+    await notifyTeamFileActivity({
+      teamId,
+      actorId: session.user.id,
+      moduleCode,
+      fileName: file.name,
+      action,
     })
 
     return NextResponse.json(teamFile)
@@ -199,7 +210,7 @@ export async function DELETE(
     }
 
     // Get file record
-    const file = await prisma.teamFile.findUnique({
+    const file = await prisma.teamFile.findFirst({
       where: { id: fileId, teamId },
     })
 
@@ -214,13 +225,21 @@ export async function DELETE(
       if (existsSync(fullFilePath)) {
         await unlink(fullFilePath)
       }
-    } catch (e) {
+    } catch {
       // Ignore if file doesn't exist
     }
 
     // Delete database record
     await prisma.teamFile.delete({
       where: { id: fileId },
+    })
+
+    await notifyTeamFileActivity({
+      teamId,
+      actorId: session.user.id,
+      moduleCode: file.moduleCode,
+      fileName: file.fileName,
+      action: "deleted",
     })
 
     return NextResponse.json({ success: true })
