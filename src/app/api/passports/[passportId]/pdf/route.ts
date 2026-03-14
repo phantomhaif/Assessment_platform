@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { renderSkillPassportPdf } from "@/lib/pdf/render-skill-passport"
+import { renderSkillPassportPdf, type PassportLocale } from "@/lib/pdf/render-skill-passport"
+
+type ScoreGroup = {
+  number?: number
+  name?: string
+  nameEn?: string
+  score?: number
+  maxScore?: number
+}
+
+type ScoreModule = {
+  code?: string
+  name?: string
+  nameEn?: string
+  score?: number
+  maxScore?: number
+}
 
 export async function GET(
   req: NextRequest,
@@ -12,6 +28,9 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const locale: PassportLocale =
+      req.nextUrl.searchParams.get("lang")?.toLowerCase() === "en" ? "en" : "ru"
 
     const { passportId } = await params
 
@@ -38,23 +57,31 @@ export async function GET(
 
     const startDate = new Date(passport.event.eventStart)
     const endDate = new Date(passport.event.eventEnd)
-    const dateRange = formatDateRange(startDate, endDate)
+    const dateRange = formatDateRange(startDate, endDate, locale)
 
-    const skillGroups = (passport.skillGroupScores as any[]) || []
-    const formattedSkillGroups = skillGroups.map((group: any) => ({
-      number: group.number,
-      name: group.name || group.nameEn || `Группа ${group.number}`,
-      score: group.score,
-      maxScore: group.maxScore,
-    }))
+    const skillGroups = ((passport.skillGroupScores as unknown as ScoreGroup[]) || []).map(
+      (group, index) => ({
+        number: Number(group.number ?? index + 1),
+        name:
+          locale === "en"
+            ? group.nameEn || group.name || `Skill group ${Number(group.number ?? index + 1)}`
+            : group.name || group.nameEn || `Группа ${Number(group.number ?? index + 1)}`,
+        score: Number(group.score ?? 0),
+        maxScore: Number(group.maxScore ?? 0),
+      })
+    )
 
-    const modules = (passport.moduleScores as any[]) || []
-    const formattedModules = modules.map((module: any) => ({
-      code: module.code,
-      name: module.name || `Модуль ${module.code}`,
-      score: module.score,
-      maxScore: module.maxScore,
-    }))
+    const modules = ((passport.moduleScores as unknown as ScoreModule[]) || []).map(
+      (module, index) => ({
+        code: String(module.code || String.fromCharCode(65 + index)),
+        name:
+          locale === "en"
+            ? module.nameEn || module.name || `Module ${String(module.code || index + 1)}`
+            : module.name || module.nameEn || `Модуль ${String(module.code || index + 1)}`,
+        score: Number(module.score ?? 0),
+        maxScore: Number(module.maxScore ?? 0),
+      })
+    )
 
     const passportData = {
       participantName: `${passport.user.lastName} ${passport.user.firstName}`,
@@ -63,9 +90,10 @@ export async function GET(
       eventName: passport.event.name,
       competency: passport.event.competency,
       dateRange,
-      totalScore: passport.totalScore,
-      skillGroups: formattedSkillGroups,
-      modules: formattedModules,
+      totalScore: Number(passport.totalScore ?? 0),
+      locale,
+      skillGroups,
+      modules,
     }
 
     const pdfBuffer = await renderSkillPassportPdf(passportData)
@@ -73,34 +101,42 @@ export async function GET(
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="skill-passport-${passport.id}.pdf"`,
+        "Content-Disposition": `attachment; filename="skill-passport-${passport.id}-${locale}.pdf"`,
       },
     })
   } catch (error) {
-    console.error("Error generating PDF:", error)
+    console.error("Error generating passport PDF:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
   }
 }
 
-function formatDateRange(start: Date, end: Date): string {
-  const months = [
-    "января",
-    "февраля",
-    "марта",
-    "апреля",
-    "мая",
-    "июня",
-    "июля",
-    "августа",
-    "сентября",
-    "октября",
-    "ноября",
-    "декабря",
-  ]
+function formatDateRange(start: Date, end: Date, locale: PassportLocale): string {
+  const monthLocale = locale === "en" ? "en-US" : "ru-RU"
+  const monthFormatter = new Intl.DateTimeFormat(monthLocale, {
+    month: "long",
+    timeZone: "UTC",
+  })
 
-  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-    return `${start.getDate()}-${end.getDate()} ${months[end.getMonth()]} ${end.getFullYear()} г.`
+  const startDay = start.getUTCDate()
+  const endDay = end.getUTCDate()
+  const startMonth = monthFormatter.format(start)
+  const endMonth = monthFormatter.format(end)
+  const startYear = start.getUTCFullYear()
+  const endYear = end.getUTCFullYear()
+  const sameMonth = start.getUTCMonth() === end.getUTCMonth() && startYear === endYear
+
+  if (locale === "en") {
+    if (sameMonth) return `${startDay}-${endDay} ${capitalize(endMonth)} ${endYear}`
+    if (startYear === endYear) return `${startDay} ${capitalize(startMonth)} - ${endDay} ${capitalize(endMonth)} ${endYear}`
+    return `${startDay} ${capitalize(startMonth)} ${startYear} - ${endDay} ${capitalize(endMonth)} ${endYear}`
   }
 
-  return `${start.getDate()} ${months[start.getMonth()]} - ${end.getDate()} ${months[end.getMonth()]} ${end.getFullYear()} г.`
+  if (sameMonth) return `${startDay}-${endDay} ${endMonth} ${endYear} г.`
+  if (startYear === endYear) return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${endYear} г.`
+  return `${startDay} ${startMonth} ${startYear} г. - ${endDay} ${endMonth} ${endYear} г.`
+}
+
+function capitalize(value: string): string {
+  if (!value) return value
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }

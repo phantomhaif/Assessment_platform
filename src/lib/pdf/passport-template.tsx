@@ -1,68 +1,37 @@
 import React from "react"
+import path from "node:path"
 import {
+  Circle,
   Document,
-  Font,
+  Image,
   Page,
-  Path,
   StyleSheet,
   Svg,
   Text,
   View,
 } from "@react-pdf/renderer"
-import path from "path"
 
-Font.register({
-  family: "Roboto",
-  fonts: [
-    {
-      src: path.join(process.cwd(), "public/fonts/Roboto-Regular.ttf"),
-      fontWeight: "normal",
-    },
-    {
-      src: path.join(process.cwd(), "public/fonts/Roboto-Bold.ttf"),
-      fontWeight: "bold",
-    },
-  ],
-})
+export type PassportLocale = "ru" | "en"
 
-Font.register({
-  family: "Montserrat",
-  fonts: [
-    {
-      src: path.join(process.cwd(), "public/fonts/Montserrat-Regular.ttf"),
-      fontWeight: "normal",
-    },
-    {
-      src: path.join(process.cwd(), "public/fonts/Montserrat-Medium.ttf"),
-      fontWeight: 500,
-    },
-    {
-      src: path.join(process.cwd(), "public/fonts/Montserrat-SemiBold.ttf"),
-      fontWeight: 600,
-    },
-    {
-      src: path.join(process.cwd(), "public/fonts/Montserrat-Bold.ttf"),
-      fontWeight: "bold",
-    },
-  ],
-})
+type ScoreRowData = {
+  number?: number
+  code?: string
+  name: string
+  score: number
+  maxScore: number
+}
 
-const RU = {
-  topLogoCreonomika: "\u041a\u0420\u0415\u041e\u041d\u041e\u041c\u0418\u041a\u0410",
-  topLogoCITB: "\u0426\u0418\u0422\u0411",
-  topLogoRPro: "R-\u041f\u0420\u041e",
-  roboComponent: "\u0420\u043e\u0431\u043e\u041a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442",
-  subtitle: "\u041f\u0410\u0421\u041f\u041e\u0420\u0422 \u041a\u041e\u041c\u041f\u0415\u0422\u0415\u041d\u0426\u0418\u0419",
-  competencyLabel: "\u043f\u043e \u043a\u043e\u043c\u043f\u0435\u0442\u0435\u043d\u0446\u0438\u0438",
-  signatureName: "\u0410.\u0412. \u041a\u041e\u0420\u0410\u0411\u041b\u0415\u0412",
-  signatureRole1: "\u041f\u0440\u0435\u0434\u0441\u0435\u0434\u0430\u0442\u0435\u043b\u044c \u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u041a\u043b\u0430\u0441\u0442\u0435\u0440\u0430 \u00ab\u041a\u0440\u0435\u043e\u043d\u043e\u043c\u0438\u043a\u0430\u00bb",
-  signatureRole2: "\u0410\u043a\u0430\u0434\u0435\u043c\u0438\u043a \u0421\u0430\u043d\u043a\u0442-\u041f\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433\u0441\u043a\u043e\u0439 \u0418\u043d\u0436\u0435\u043d\u0435\u0440\u043d\u043e\u0439 \u0410\u043a\u0430\u0434\u0435\u043c\u0438\u0438",
-  rightTitle: "\u041f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u044b\u0435\n\u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b",
-  totalScoreLabel: "\u0438\u0437 100 \u0431\u0430\u043b\u043b\u043e\u0432",
-  skillSectionTitle:
-    "\u0414\u0435\u0442\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u044b\u0445 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432 \u0432 \u0440\u0430\u0437\u0440\u0435\u0437\u0435 \u0433\u0440\u0443\u043f\u043f\u044b \u043d\u0430\u0432\u044b\u043a\u043e\u0432 / WSSS:",
-  moduleSectionTitle:
-    "\u0414\u0435\u0442\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u044b\u0445 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432 \u0432 \u0440\u0430\u0437\u0440\u0435\u0437\u0435 \u043c\u043e\u0434\u0443\u043b\u0435\u0439:",
+export interface SkillPassportData {
+  participantName: string
+  participantMiddleName?: string
+  organization: string
+  eventName: string
+  competency: string
+  dateRange: string
+  totalScore: number
+  locale?: PassportLocale
+  skillGroups: ScoreRowData[]
+  modules: ScoreRowData[]
 }
 
 const colors = {
@@ -71,512 +40,505 @@ const colors = {
   nearBlack: "#1E1E1E",
   ink: "#010101",
   gray: "#7E878F",
-  graySoft: "#8C8C8C",
+  softGray: "#8C8C8C",
   divider: "#D5D9DE",
-  chipBorder: "#D6DCE1",
+  waveDark: "#6F8297",
+  waveLight: "#C8D2DD",
 }
 
-const TOP_LOGOS = [RU.topLogoCreonomika, RU.topLogoCITB, RU.topLogoRPro]
-const BOTTOM_LOGOS = ["R-PRO DIGITAL", "R-Pro", RU.roboComponent, "PICASO 3D"]
-const DOT_LEADER = ".".repeat(44)
+const logoBase = path.join(process.cwd(), "public", "templates", "passport-logos")
+
+const logoSets = {
+  ru: {
+    top: [
+      { key: "creonomika", src: path.join(logoBase, "ru", "creonomika.png"), width: 86, height: 18 },
+      { key: "iitb", src: path.join(logoBase, "ru", "iitb.png"), width: 66, height: 18 },
+      { key: "rpro-concern", src: path.join(logoBase, "ru", "rpro-concern.png"), width: 92, height: 18 },
+    ],
+    bottom: [
+      { key: "rpds", src: path.join(logoBase, "ru", "rpds.png"), width: 96, height: 20 },
+      { key: "rpro-robotics", src: path.join(logoBase, "ru", "rpro-robotics.png"), width: 110, height: 24 },
+      { key: "robocomponent", src: path.join(logoBase, "ru", "robocomponent.png"), width: 100, height: 18 },
+      { key: "picaso", src: path.join(logoBase, "ru", "picaso.png"), width: 96, height: 18 },
+      { key: "vdn", src: path.join(logoBase, "ru", "vdn-clean.png"), width: 120, height: 24 },
+    ],
+  },
+  en: {
+    top: [
+      { key: "creonomika", src: path.join(logoBase, "en", "creonomika.png"), width: 96, height: 18 },
+      { key: "iitb", src: path.join(logoBase, "en", "iitb.png"), width: 56, height: 18 },
+      { key: "rpro-concern", src: path.join(logoBase, "en", "rpro-concern.png"), width: 92, height: 18 },
+    ],
+    bottom: [
+      { key: "rpds", src: path.join(logoBase, "en", "rpds.png"), width: 96, height: 20 },
+      { key: "rpro-robotics", src: path.join(logoBase, "en", "rpro-robotics.png"), width: 110, height: 24 },
+      { key: "robocomponent", src: path.join(logoBase, "en", "robocomponent.png"), width: 106, height: 18 },
+      { key: "picaso", src: path.join(logoBase, "en", "picaso.png"), width: 96, height: 18 },
+      { key: "vdn", src: path.join(logoBase, "en", "vdn-clean.png"), width: 120, height: 24 },
+    ],
+  },
+} as const
+
+const industryLogoSrc = path.join(logoBase, "common", "industry-skills.png")
+
+const copy = {
+  ru: {
+    titleMain: "SKILLS PASSPORT",
+    titleSub: "PASSPORT OF COMPETENCIES",
+    competencyLabel: "по компетенции",
+    signName: "А.В. КОРАБЛЕВ",
+    signRole1: "Председатель правления Кластера «Креономика»",
+    signRole2: "Академик Санкт-Петербургской Инженерной Академии",
+    resultsTitle: "Полученные\nрезультаты",
+    totalLabel: "из 100 баллов",
+    skillSection: "Детализация полученных результатов в разрезе группы навыков / WSSS:",
+    moduleSection: "Детализация полученных результатов в разрезе модулей:",
+  },
+  en: {
+    titleMain: "SKILLS PASSPORT",
+    titleSub: "COMPETENCY PASSPORT",
+    competencyLabel: "for competency",
+    signName: "A.V. KORABLEV",
+    signRole1: "CHAIRMAN OF THE CLUSTER CREONOMYCA",
+    signRole2: "Academician of St. Petersburg Engineering Academy",
+    resultsTitle: "Achieved\nresults",
+    totalLabel: "out of 100 points",
+    skillSection: "Detailed score breakdown by skill group / WSSS:",
+    moduleSection: "Detailed score breakdown by modules:",
+  },
+} as const
 
 const styles = StyleSheet.create({
   page: {
     position: "relative",
     backgroundColor: "#FFFFFF",
     fontFamily: "Montserrat",
-    padding: 0,
+    paddingTop: 28,
+    paddingBottom: 36,
+    paddingHorizontal: 28,
   },
-  leftDecoration: {
-    position: "absolute",
-    top: 126,
-    left: -48,
-    width: 220,
-    height: 420,
-  },
-  rightDecoration: {
-    position: "absolute",
-    top: 126,
-    right: -48,
-    width: 220,
-    height: 420,
-  },
-  topLogoRow: {
-    position: "absolute",
-    top: 35,
-    left: 34,
+  topLogos: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 14,
+    minHeight: 28,
   },
-  topLogoItem: {
-    marginRight: 18,
-  },
-  topLogoText: {
-    fontFamily: "Montserrat",
-    fontWeight: 600,
-    fontSize: 9,
-    color: colors.gray,
-    letterSpacing: 0.15,
-  },
-  topLogoTextSmall: {
-    fontSize: 8.4,
-  },
-  leftColumn: {
+  industryBrand: {
     position: "absolute",
-    left: 38,
-    top: 99,
-    width: 390,
+    top: 26,
+    right: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  rightColumn: {
-    position: "absolute",
-    left: 497,
-    top: 100,
-    width: 309,
+  industryBrandText: {
+    color: colors.red,
+    fontSize: 14,
+    fontWeight: 700,
+    lineHeight: 0.95,
+    textAlign: "right",
+  },
+  content: {
+    marginTop: 18,
+    flexDirection: "row",
+    minHeight: 500,
+    gap: 18,
+  },
+  leftCol: {
+    width: 360,
+    paddingTop: 8,
+    paddingRight: 8,
   },
   divider: {
-    position: "absolute",
-    left: 477,
-    top: 86,
-    bottom: 86,
     width: 1,
     backgroundColor: colors.divider,
   },
-  title: {
-    fontFamily: "Montserrat",
-    fontSize: 36,
-    fontWeight: "bold",
-    color: colors.red,
-    letterSpacing: 0,
+  rightCol: {
+    flex: 1,
+    paddingTop: 6,
   },
-  subtitle: {
-    marginTop: 2,
-    fontFamily: "Montserrat",
-    fontSize: 16,
-    fontWeight: "normal",
+  titleMain: {
     color: colors.red,
+    fontSize: 32,
+    fontWeight: 700,
+    lineHeight: 0.98,
   },
-  participantName: {
-    marginTop: 18,
-    fontFamily: "Montserrat",
+  titleSub: {
+    marginTop: 4,
+    color: colors.red,
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 400,
+    textTransform: "uppercase",
+  },
+  person: {
+    marginTop: 18,
+    fontSize: 16,
+    fontWeight: 700,
+    lineHeight: 1.22,
     color: colors.black,
   },
   organization: {
     marginTop: 8,
-    width: 368,
-    fontFamily: "Montserrat",
-    fontSize: 11,
-    fontWeight: "normal",
+    fontSize: 11.5,
+    lineHeight: 1.3,
+    maxWidth: 280,
     color: colors.black,
-    lineHeight: 1.25,
   },
   eventBlock: {
-    marginTop: 50,
-    width: 280,
+    marginTop: 46,
+    maxWidth: 270,
   },
   eventName: {
-    fontFamily: "Montserrat",
-    fontSize: 14,
-    fontWeight: "bold",
     color: colors.red,
-    lineHeight: 1.2,
+    fontSize: 15,
+    fontWeight: 700,
+    lineHeight: 1.15,
   },
   competencyLabel: {
-    marginTop: 8,
-    fontFamily: "Montserrat",
-    fontSize: 14,
+    marginTop: 10,
+    fontSize: 13,
     fontWeight: 500,
     color: colors.ink,
   },
-  competencyBadge: {
+  competencyPill: {
     marginTop: 8,
-    width: 280,
-    minHeight: 34,
-    borderRadius: 3,
     backgroundColor: colors.red,
-    justifyContent: "center",
-    paddingVertical: 6,
+    borderRadius: 4,
+    paddingVertical: 8,
     paddingHorizontal: 12,
+    minHeight: 38,
+    justifyContent: "center",
   },
   competencyText: {
-    fontFamily: "Montserrat",
-    fontSize: 18,
-    fontWeight: 600,
     color: "#FFFFFF",
-    lineHeight: 1.1,
+    fontSize: 16,
+    fontWeight: 600,
+    lineHeight: 1.15,
   },
-  dateText: {
+  date: {
     marginTop: 12,
-    fontFamily: "Montserrat",
     fontSize: 11,
-    fontWeight: "normal",
     color: colors.ink,
   },
-  signatureBlock: {
-    marginTop: 40,
-    width: 310,
+  signature: {
+    marginTop: 44,
+    maxWidth: 280,
   },
   signatureName: {
-    fontFamily: "Montserrat",
-    fontWeight: "bold",
-    fontSize: 12.7,
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.15,
     color: colors.ink,
-    lineHeight: 1.1,
   },
   signatureRole: {
     marginTop: 3,
-    fontFamily: "Montserrat",
+    fontSize: 9.5,
     fontWeight: 500,
-    fontSize: 10,
-    color: colors.ink,
     lineHeight: 1.2,
+    color: colors.ink,
   },
   signatureLine: {
-    marginTop: 12,
-    width: 116.5,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.graySoft,
+    marginTop: 26,
+    width: 110,
+    borderTopWidth: 1,
+    borderTopColor: colors.softGray,
   },
-  rightHeader: {
+  rightHead: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 10,
   },
-  rightTitle: {
-    width: 186,
-    fontFamily: "Montserrat",
-    fontWeight: "bold",
-    fontSize: 20,
-    lineHeight: 1.25,
+  resultsTitle: {
+    maxWidth: 150,
+    fontSize: 22,
+    fontWeight: 700,
+    lineHeight: 1.1,
     color: colors.black,
   },
-  totalScoreBlock: {
-    width: 95,
+  totalWrap: {
     alignItems: "flex-end",
+    minWidth: 92,
   },
-  totalScore: {
-    fontFamily: "Montserrat",
-    fontWeight: "bold",
-    fontSize: 36,
+  totalValue: {
     color: colors.red,
-    lineHeight: 1,
+    fontSize: 38,
+    fontWeight: 700,
+    lineHeight: 0.95,
   },
-  totalScoreLabel: {
-    marginTop: 2,
-    fontFamily: "Montserrat",
-    fontWeight: "bold",
-    fontSize: 12,
+  totalLabel: {
+    marginTop: 4,
     color: colors.nearBlack,
+    fontSize: 10.5,
+    fontWeight: 700,
   },
   sectionTitle: {
-    marginTop: 10,
+    marginTop: 8,
     marginBottom: 6,
     fontFamily: "Roboto",
-    fontWeight: "bold",
     fontSize: 9,
-    color: colors.nearBlack,
+    fontWeight: 700,
     lineHeight: 1.25,
-  },
-  moduleSectionTitle: {
-    marginTop: 20,
-    marginBottom: 8,
-    fontFamily: "Roboto",
-    fontWeight: "bold",
-    fontSize: 9,
     color: colors.nearBlack,
-    lineHeight: 1.25,
   },
-  scoreRow: {
+  rows: {
+    gap: 4,
+  },
+  row: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
+    minHeight: 16,
+    gap: 4,
   },
   rowPrefix: {
-    width: 16,
+    width: 18,
     fontFamily: "Roboto",
     fontSize: 8.5,
+    lineHeight: 1.1,
     color: colors.nearBlack,
   },
   rowLabel: {
-    width: 206,
+    width: 186,
     fontFamily: "Roboto",
     fontSize: 8.5,
+    lineHeight: 1.12,
     color: colors.nearBlack,
-    lineHeight: 1.18,
   },
   rowDotsWrap: {
     flex: 1,
-    marginHorizontal: 4,
-    overflow: "hidden",
+    borderBottomWidth: 1,
+    borderBottomColor: "#9DA5AC",
+    borderStyle: "dotted",
+    marginBottom: 3,
+    minWidth: 24,
   },
-  rowDots: {
+  rowScore: {
+    width: 56,
+    textAlign: "right",
     fontFamily: "Roboto",
-    fontSize: 8,
-    color: colors.gray,
-    letterSpacing: 0.5,
-  },
-  rowScoreWrap: {
-    width: 47,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "baseline",
-  },
-  rowScoreValue: {
-    fontFamily: "Roboto",
-    fontWeight: "bold",
-    fontSize: 9,
+    fontSize: 8.8,
+    lineHeight: 1.1,
     color: colors.nearBlack,
   },
-  rowScoreMax: {
-    fontFamily: "Roboto",
-    fontSize: 9,
-    color: colors.nearBlack,
+  rowScoreStrong: {
+    fontWeight: 700,
   },
-  bottomLogoRow: {
-    position: "absolute",
-    bottom: 51,
-    left: 196,
-    width: 430,
+  bottomLogos: {
+    marginTop: "auto",
+    paddingTop: 18,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-  },
-  bottomLogoText: {
-    fontFamily: "Montserrat",
-    fontWeight: 600,
-    fontSize: 8.4,
-    color: colors.gray,
-    letterSpacing: 0.2,
+    gap: 16,
+    flexWrap: "wrap",
   },
 })
 
-interface PassportData {
-  participantName: string
-  participantMiddleName?: string
-  organization: string
-  eventName: string
-  competency: string
-  dateRange: string
-  totalScore: number
-  skillGroups: Array<{
-    number: number
-    name: string
-    score: number
-    maxScore: number
-  }>
-  modules: Array<{
-    code: string
-    name: string
-    score: number
-    maxScore: number
-  }>
+function formatScore(value: number, locale: PassportLocale) {
+  if (!Number.isFinite(value)) return "0"
+  const rounded = Math.round(value * 100) / 100
+  if (Number.isInteger(rounded)) return String(rounded)
+  const formatted = rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")
+  return locale === "ru" ? formatted.replace(".", ",") : formatted
 }
 
-interface ScoreRowProps {
-  prefix: string
-  label: string
-  score: number
-  maxScore: number
-  height: number
+function truncate(value: string, maxLength: number) {
+  const normalized = value.replace(/\s+/g, " ").trim()
+  if (normalized.length <= maxLength) return normalized
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`
 }
 
-function formatScore(score: number): string {
-  if (!Number.isFinite(score)) return "0"
-  const rounded = Math.round(score * 100) / 100
-  if (Number.isInteger(rounded)) return rounded.toString()
-  return rounded.toFixed(2).replace(".", ",")
+function buildWaveDots(cols: number, rows: number, width: number, height: number, reverse = false) {
+  const dots: React.ReactNode[] = []
+
+  for (let layer = 0; layer < 2; layer += 1) {
+    const phase = layer === 0 ? 0 : 0.9
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const nx = col / Math.max(1, cols - 1)
+        const ny = row / Math.max(1, rows - 1)
+        const xNorm = reverse ? 1 - nx : nx
+        const wave =
+          Math.sin(xNorm * 12.4 - ny * 8.8 + phase) * 0.45 +
+          Math.cos(xNorm * 7.2 + ny * 11.2 - phase) * 0.35 +
+          Math.sin(xNorm * 15.8 - ny * 4.6 + phase * 1.2) * 0.2
+        const intensity = Math.max(0, Math.min(1, (wave + 1) / 2))
+        const fadeX = Math.max(0, 1 - Math.abs(xNorm - 0.5) / 0.62)
+        const fadeY = Math.max(0, 1 - Math.abs(ny - 0.5) / 0.72)
+        const alpha = (0.08 + intensity * 0.26) * fadeX * fadeY * (layer === 0 ? 1 : 0.7)
+        const radius = 0.55 + intensity * (layer === 0 ? 1.45 : 1.05)
+        const fill = intensity > 0.52 ? colors.waveDark : colors.waveLight
+
+        dots.push(
+          <Circle
+            key={`${layer}-${row}-${col}`}
+            cx={12 + (width - 24) * nx}
+            cy={12 + (height - 24) * ny}
+            r={radius}
+            fill={fill}
+            opacity={Number(alpha.toFixed(3))}
+          />
+        )
+      }
+    }
+  }
+
+  return dots
 }
 
-function clampText(value: string, maxLength: number): string {
-  const text = value?.trim() || ""
-  if (text.length <= maxLength) return text
-  return `${text.slice(0, maxLength - 3).trimEnd()}...`
-}
-
-function ScoreRow({ prefix, label, score, maxScore, height }: ScoreRowProps) {
+function LogoStrip({
+  items,
+  justify = "flex-start",
+}: {
+  items: ReadonlyArray<{ key: string; src: string; width: number; height: number }>
+  justify?: "flex-start" | "center"
+}) {
   return (
-    <View style={[styles.scoreRow, { height }]}>
-      <Text style={styles.rowPrefix}>{prefix}</Text>
-      <Text style={styles.rowLabel}>{clampText(label, 64)}</Text>
-      <View style={styles.rowDotsWrap}>
-        <Text style={styles.rowDots}>{DOT_LEADER}</Text>
-      </View>
-      <View style={styles.rowScoreWrap}>
-        <Text style={styles.rowScoreValue}>{formatScore(score)}</Text>
-        <Text style={styles.rowScoreMax}>/{formatScore(maxScore)}</Text>
-      </View>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: justify,
+        gap: 14,
+        flexWrap: "wrap",
+      }}
+    >
+      {items.map((item) => (
+        <Image
+          key={item.key}
+          src={item.src}
+          alt=""
+          style={{ width: item.width, height: item.height, objectFit: "contain" }}
+        />
+      ))}
     </View>
   )
 }
 
-function LeftDecoration() {
+function ScoreRows({
+  items,
+  locale,
+  mode,
+}: {
+  items: ScoreRowData[]
+  locale: PassportLocale
+  mode: "skill" | "module"
+}) {
+  const normalizedItems = items.slice(0, mode === "skill" ? 9 : 6)
+
   return (
-    <Svg style={styles.leftDecoration} viewBox="0 0 220 420">
-      <Path
-        d="M0 0 C135 22 166 168 52 240 C-18 286 0 354 106 420 L0 420 Z"
-        fill="#D9E0E8"
-        fillOpacity={0.26}
-      />
-      <Path
-        d="M6 28 C126 52 144 176 52 230 C-5 266 4 336 94 392"
-        stroke="#D0D7DE"
-        strokeOpacity={0.48}
-        strokeWidth={10}
-        fill="none"
-      />
-      <Path
-        d="M42 0 C160 34 192 182 94 264 C44 306 56 358 136 420"
-        stroke="#E1E6EB"
-        strokeOpacity={0.55}
-        strokeWidth={12}
-        fill="none"
-      />
-    </Svg>
+    <View style={styles.rows}>
+      {normalizedItems.map((item, index) => {
+        const prefix =
+          mode === "module"
+            ? `${String(item.code || String.fromCharCode(65 + index)).replace(/\.$/, "")}.`
+            : `${Number(item.number ?? index + 1)}.`
+
+        return (
+          <View key={`${mode}-${prefix}-${index}`} style={styles.row}>
+            <Text style={styles.rowPrefix}>{prefix}</Text>
+            <Text style={styles.rowLabel}>{truncate(item.name || "-", 58)}</Text>
+            <View style={styles.rowDotsWrap} />
+            <Text style={styles.rowScore}>
+              <Text style={styles.rowScoreStrong}>{formatScore(item.score ?? 0, locale)}</Text>
+              /{formatScore(item.maxScore ?? 0, locale)}
+            </Text>
+          </View>
+        )
+      })}
+    </View>
   )
 }
 
-function RightDecoration() {
-  return (
-    <Svg style={styles.rightDecoration} viewBox="0 0 220 420">
-      <Path
-        d="M220 0 C85 22 54 168 168 240 C238 286 220 354 114 420 L220 420 Z"
-        fill="#D9E0E8"
-        fillOpacity={0.26}
-      />
-      <Path
-        d="M214 28 C94 52 76 176 168 230 C225 266 216 336 126 392"
-        stroke="#D0D7DE"
-        strokeOpacity={0.48}
-        strokeWidth={10}
-        fill="none"
-      />
-      <Path
-        d="M178 0 C60 34 28 182 126 264 C176 306 164 358 84 420"
-        stroke="#E1E6EB"
-        strokeOpacity={0.55}
-        strokeWidth={12}
-        fill="none"
-      />
-    </Svg>
+export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
+  const locale = data.locale === "en" ? "en" : "ru"
+  const text = copy[locale]
+  const logos = logoSets[locale]
+  const fullName = [data.participantName, data.participantMiddleName].filter(Boolean).join(" ").trim()
+  const displayName = truncate(fullName.toUpperCase() || "-", 64)
+  const organization = truncate(data.organization || "-", 110)
+  const eventName = truncate(data.eventName || "-", 86)
+  const competency = truncate((data.competency || "-").toUpperCase(), 48)
+  const totalScore = formatScore(data.totalScore ?? 0, locale)
+  const sortedSkillGroups = [...(data.skillGroups || [])].sort(
+    (a, b) => Number(a.number ?? 0) - Number(b.number ?? 0)
   )
-}
-
-export function SkillPassportDocument({ data }: { data: PassportData }) {
-  const participantFullName = clampText(
-    [data.participantName, data.participantMiddleName].filter(Boolean).join(" ").trim(),
-    62
-  )
-
-  const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => a.number - b.number)
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
-    String(a.code).localeCompare(String(b.code), "en", { numeric: true })
-  )
-
-  const skillRowHeight = Math.max(
-    16,
-    Math.min(21, 188 / Math.max(1, sortedSkillGroups.length))
-  )
-  const moduleRowHeight = Math.max(
-    15,
-    Math.min(22, 88 / Math.max(1, sortedModules.length))
+    String(a.code || "").localeCompare(String(b.code || ""), "en", { numeric: true })
   )
 
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <LeftDecoration />
-        <RightDecoration />
+        <Svg style={{ position: "absolute", top: 72, left: -70, width: 360, height: 210 }}>
+          {buildWaveDots(28, 14, 360, 210)}
+        </Svg>
+        <Svg style={{ position: "absolute", right: -78, bottom: 34, width: 390, height: 220 }}>
+          {buildWaveDots(30, 14, 390, 220, true)}
+        </Svg>
 
-        <View style={styles.topLogoRow}>
-          {TOP_LOGOS.map((logo, index) => (
-            <View key={logo} style={styles.topLogoItem}>
-              <Text
-                style={
-                  index === 1
-                    ? [styles.topLogoText, styles.topLogoTextSmall]
-                    : styles.topLogoText
-                }
-              >
-                {logo}
-              </Text>
-            </View>
-          ))}
+        <LogoStrip items={logos.top} />
+
+        <View style={styles.industryBrand}>
+          <Text style={styles.industryBrandText}>Industry{"\n"}Skills</Text>
+          <Image
+            src={industryLogoSrc}
+            alt=""
+            style={{ width: 34, height: 34, objectFit: "contain" }}
+          />
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.content}>
+          <View style={styles.leftCol}>
+            <Text style={styles.titleMain}>{text.titleMain}</Text>
+            <Text style={styles.titleSub}>{text.titleSub}</Text>
 
-        <View style={styles.leftColumn}>
-          <Text style={styles.title}>SKILLS PASSPORT</Text>
-          <Text style={styles.subtitle}>{RU.subtitle}</Text>
+            <Text style={styles.person}>{displayName}</Text>
+            <Text style={styles.organization}>{organization}</Text>
 
-          <Text style={styles.participantName}>{participantFullName || "-"}</Text>
-          <Text style={styles.organization}>{clampText(data.organization || "-", 90)}</Text>
-
-          <View style={styles.eventBlock}>
-            <Text style={styles.eventName}>{clampText(data.eventName || "-", 44)}</Text>
-            <Text style={styles.competencyLabel}>{RU.competencyLabel}</Text>
-            <View style={styles.competencyBadge}>
-              <Text style={styles.competencyText}>{clampText(data.competency || "-", 34)}</Text>
+            <View style={styles.eventBlock}>
+              <Text style={styles.eventName}>{eventName}</Text>
+              <Text style={styles.competencyLabel}>{text.competencyLabel}</Text>
+              <View style={styles.competencyPill}>
+                <Text style={styles.competencyText}>{competency}</Text>
+              </View>
+              <Text style={styles.date}>{data.dateRange || "-"}</Text>
             </View>
-            <Text style={styles.dateText}>{data.dateRange || "-"}</Text>
-          </View>
 
-          <View style={styles.signatureBlock}>
-            <Text style={styles.signatureName}>{RU.signatureName}</Text>
-            <Text style={styles.signatureRole}>{RU.signatureRole1}</Text>
-            <Text style={styles.signatureRole}>{RU.signatureRole2}</Text>
-            <View style={styles.signatureLine} />
-          </View>
-        </View>
-
-        <View style={styles.rightColumn}>
-          <View style={styles.rightHeader}>
-            <Text style={styles.rightTitle}>{RU.rightTitle}</Text>
-            <View style={styles.totalScoreBlock}>
-              <Text style={styles.totalScore}>{formatScore(data.totalScore)}</Text>
-              <Text style={styles.totalScoreLabel}>{RU.totalScoreLabel}</Text>
+            <View style={styles.signature}>
+              <Text style={styles.signatureName}>{text.signName}</Text>
+              <Text style={styles.signatureRole}>{text.signRole1}</Text>
+              <Text style={styles.signatureRole}>{text.signRole2}</Text>
+              <View style={styles.signatureLine} />
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>{RU.skillSectionTitle}</Text>
+          <View style={styles.divider} />
 
-          {sortedSkillGroups.map((group, index) => (
-            <ScoreRow
-              key={`group-${group.number}-${index}`}
-              prefix={`${group.number}.`}
-              label={group.name}
-              score={group.score}
-              maxScore={group.maxScore}
-              height={skillRowHeight}
-            />
-          ))}
+          <View style={styles.rightCol}>
+            <View style={styles.rightHead}>
+              <Text style={styles.resultsTitle}>{text.resultsTitle}</Text>
+              <View style={styles.totalWrap}>
+                <Text style={styles.totalValue}>{totalScore}</Text>
+                <Text style={styles.totalLabel}>{text.totalLabel}</Text>
+              </View>
+            </View>
 
-          <Text style={styles.moduleSectionTitle}>{RU.moduleSectionTitle}</Text>
+            <Text style={styles.sectionTitle}>{text.skillSection}</Text>
+            <ScoreRows items={sortedSkillGroups} locale={locale} mode="skill" />
 
-          {sortedModules.map((module, index) => {
-            const moduleCode = String(module.code || index + 1).trim()
-            const prefix = moduleCode.endsWith(".") ? moduleCode : `${moduleCode}.`
-            return (
-              <ScoreRow
-                key={`module-${moduleCode}-${index}`}
-                prefix={prefix}
-                label={module.name}
-                score={module.score}
-                maxScore={module.maxScore}
-                height={moduleRowHeight}
-              />
-            )
-          })}
+            <Text style={styles.sectionTitle}>{text.moduleSection}</Text>
+            <ScoreRows items={sortedModules} locale={locale} mode="module" />
+          </View>
         </View>
 
-        <View style={styles.bottomLogoRow}>
-          {BOTTOM_LOGOS.map((logo) => (
-            <Text key={logo} style={styles.bottomLogoText}>
-              {logo}
-            </Text>
-          ))}
+        <View style={styles.bottomLogos}>
+          <LogoStrip items={logos.bottom} justify="center" />
         </View>
       </Page>
     </Document>
   )
 }
+
+export default SkillPassportDocument
