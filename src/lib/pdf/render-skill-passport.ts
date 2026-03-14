@@ -39,7 +39,9 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
     throw new Error("SkillPassportDocument export not found")
   }
   ensureFontsRegistered()
-  const document = React.createElement(SkillPassportDocument, { data })
+  const document = React.createElement(SkillPassportDocument, {
+    data,
+  }) as React.ReactElement<ReactPdf.DocumentProps>
   const buffer = await ReactPdf.renderToBuffer(document)
   return new Uint8Array(buffer)
 }
