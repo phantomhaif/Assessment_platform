@@ -181,6 +181,7 @@ function renderRows(items: ScoreRowData[], locale: PassportLocale, mode: "skill"
         mode === "module"
           ? `${String(item.code || String.fromCharCode(65 + index)).replace(/\.$/, "")}.`
           : `${Number(item.number ?? index + 1)}.`
+
       return `
         <div class="row">
           <span class="row-prefix">${escapeHtml(prefix)}</span>
@@ -193,11 +194,11 @@ function renderRows(items: ScoreRowData[], locale: PassportLocale, mode: "skill"
     .join("")
 }
 
-function renderLogoStrip(items: ReadonlyArray<{ key: string; src: string; alt: string }>, bottom = false) {
+function renderLogoStrip(items: ReadonlyArray<{ key: string; src: string; alt: string }>, type: "top" | "bottom") {
   return items
     .map(
       (item) => `
-        <span class="logo-item ${bottom ? "logo-bottom" : "logo-top"}" data-key="${escapeHtml(item.key)}">
+        <span class="logo-item logo-${type}" data-key="${escapeHtml(item.key)}">
           <img src="${item.src}" alt="${escapeHtml(item.alt)}" />
         </span>
       `
@@ -241,12 +242,27 @@ function buildPassportHtml(data: SkillPassportData) {
     html, body { margin: 0; padding: 0; background: #fff; }
     body { font-family: "Montserrat", Arial, sans-serif; }
     .passport {
-      width: 297mm; height: 210mm; position: relative; overflow: hidden;
-      padding: 28px 28px 34px; background: #fff; color: #000;
+      width: 297mm;
+      height: 210mm;
+      position: relative;
+      overflow: hidden;
+      padding: 28px 28px 34px;
+      background: #fff;
+      color: #000;
     }
     .industry-brand {
-      position: absolute; top: 24px; right: 30px; display: flex; align-items: center; gap: 8px;
-      color: #BE1622; font-weight: 700; font-size: 15px; line-height: .95; text-align: right;
+      position: absolute;
+      top: 24px;
+      right: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #BE1622;
+      font-weight: 700;
+      font-size: 15px;
+      line-height: .95;
+      text-align: right;
+      z-index: 2;
     }
     .industry-brand img { width: 34px; height: 34px; object-fit: contain; }
     .bg-wave { position: absolute; pointer-events: none; opacity: .88; overflow: hidden; }
@@ -256,11 +272,24 @@ function buildPassportHtml(data: SkillPassportData) {
     .logos-top,.logos-bottom,.content { position: relative; z-index: 1; }
     .logos-top,.logos-bottom { display:flex; align-items:center; flex-wrap:wrap; gap: 12px 18px; }
     .logos-top { min-height: 28px; margin-bottom: 18px; }
-    .logos-bottom { justify-content:center; margin-top: 18px; }
+    .logos-bottom {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 26px;
+      justify-content: center;
+    }
     .logo-item img { display:block; object-fit:contain; }
     .logo-top img { max-height: 24px; max-width: 170px; }
     .logo-bottom img { max-height: 28px; max-width: 190px; }
-    .content { display:grid; grid-template-columns: 360px 1px 1fr; gap: 18px; min-height: 500px; margin-top: 18px; }
+    .content {
+      display:grid;
+      grid-template-columns: 360px 1px 1fr;
+      gap: 18px;
+      min-height: 500px;
+      margin-top: 18px;
+      padding-bottom: 76px;
+    }
     .divider { background:#D5D9DE; }
     .left-col { padding-top:8px; padding-right:8px; }
     .right-col { padding-top:6px; }
@@ -301,7 +330,7 @@ function buildPassportHtml(data: SkillPassportData) {
     <div class="bg-wave wave-left">${createWaveSvg(false)}</div>
     <div class="bg-wave wave-right">${createWaveSvg(true)}</div>
 
-    <div class="logos-top">${renderLogoStrip(logos.top)}</div>
+    <div class="logos-top">${renderLogoStrip(logos.top, "top")}</div>
 
     <div class="content">
       <section class="left-col">
@@ -345,7 +374,7 @@ function buildPassportHtml(data: SkillPassportData) {
       </section>
     </div>
 
-    <div class="logos-bottom">${renderLogoStrip(logos.bottom, true)}</div>
+    <div class="logos-bottom">${renderLogoStrip(logos.bottom, "bottom")}</div>
   </section>
 </body>
 </html>`

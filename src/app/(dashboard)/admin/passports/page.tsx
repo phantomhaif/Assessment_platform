@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Award, Download } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
@@ -25,9 +25,14 @@ interface Passport {
   } | null
 }
 
+type EventOption = {
+  id: string
+  name: string
+}
+
 export default function AdminPassportsPage() {
-  const { t } = useI18n()
-  const [events, setEvents] = useState<any[]>([])
+  const { t, locale } = useI18n()
+  const [events, setEvents] = useState<EventOption[]>([])
   const [selectedEventId, setSelectedEventId] = useState("")
   const [passports, setPassports] = useState<Passport[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -71,13 +76,13 @@ export default function AdminPassportsPage() {
 
   const downloadPdf = async (passportId: string) => {
     try {
-      const response = await fetch(`/api/passports/${passportId}/pdf`)
+      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${locale}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `skill-passport-${passportId}.pdf`
+        a.download = `skill-passport-${passportId}-${locale}.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

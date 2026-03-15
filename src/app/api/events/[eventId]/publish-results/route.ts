@@ -145,35 +145,34 @@ export async function POST(
 
         await removePassportPdfCache(passport.id)
         try {
-          const { fileUrl } = await ensurePassportPdf(
-            {
-              id: passport.id,
-              totalScore,
-              moduleScores,
-              skillGroupScores,
-              user: {
-                firstName: member.user.firstName,
-                lastName: member.user.lastName,
-                middleName: member.user.middleName,
-                organization: member.user.organization,
-              },
-              event: {
-                name: event.name,
-                competency: event.competency,
-                eventStart: event.eventStart,
-                eventEnd: event.eventEnd,
-              },
-              team: team ? { name: team.name } : null,
-            } satisfies SkillPassportRecord,
-            "ru",
-            true
-          )
+          const passportRecord = {
+            id: passport.id,
+            totalScore,
+            moduleScores,
+            skillGroupScores,
+            user: {
+              firstName: member.user.firstName,
+              lastName: member.user.lastName,
+              middleName: member.user.middleName,
+              organization: member.user.organization,
+            },
+            event: {
+              name: event.name,
+              competency: event.competency,
+              eventStart: event.eventStart,
+              eventEnd: event.eventEnd,
+            },
+            team: team ? { name: team.name } : null,
+          } satisfies SkillPassportRecord
+
+          const { fileUrl } = await ensurePassportPdf(passportRecord, "ru", true)
+          await ensurePassportPdf(passportRecord, "en", true)
 
           await prisma.skillPassport.update({
             where: { id: passport.id },
             data: { pdfUrl: fileUrl },
           })
-          pdfsPrepared += 1
+          pdfsPrepared += 2
         } catch (pdfError) {
           console.error(`Error pre-generating passport PDF for ${passport.id}:`, pdfError)
         }

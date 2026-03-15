@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Award, Download, Calendar, Trophy, Users } from "lucide-react"
 import { format } from "date-fns"
@@ -60,13 +60,13 @@ export default function MyPassportsPage() {
 
   const downloadPdf = async (passportId: string) => {
     try {
-      const response = await fetch(`/api/passports/${passportId}/pdf`)
+      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${locale}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `skill-passport-${passportId}.pdf`
+        a.download = `skill-passport-${passportId}-${locale}.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

@@ -45,7 +45,7 @@ const UPLOADS_BASE = process.env.NODE_ENV === "production"
   ? "/app/uploads"
   : path.join(process.cwd(), "public", "uploads")
 
-function capitalize(value: string): string {
+function capitalize(value: string) {
   if (!value) return value
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
