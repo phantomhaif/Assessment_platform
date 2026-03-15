@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -61,38 +61,50 @@ const copy = {
 const logoSets = {
   ru: {
     top: [
-      { key: "creonomika", src: assetUrl("public", "templates", "passport-logos", "ru", "creonomika.png"), alt: "Креономика" },
-      { key: "iitb", src: assetUrl("public", "templates", "passport-logos", "ru", "iitb.png"), alt: "ЦИТБ" },
-      { key: "rpro-concern", src: assetUrl("public", "templates", "passport-logos", "ru", "rpro-concern.png"), alt: "R-ПРО" },
+      { key: "creonomika", src: assetDataUrl("public", "templates", "passport-logos", "ru", "creonomika.png"), alt: "Креономика" },
+      { key: "iitb", src: assetDataUrl("public", "templates", "passport-logos", "ru", "iitb.png"), alt: "ЦИТБ" },
+      { key: "rpro-concern", src: assetDataUrl("public", "templates", "passport-logos", "ru", "rpro-concern.png"), alt: "R-ПРО" },
     ],
     bottom: [
-      { key: "rpds", src: assetUrl("public", "templates", "passport-logos", "ru", "rpds.png"), alt: "R-PRO DIGITAL" },
-      { key: "rpro-robotics", src: assetUrl("public", "templates", "passport-logos", "ru", "rpro-robotics.png"), alt: "R-Pro Robotics" },
-      { key: "robocomponent", src: assetUrl("public", "templates", "passport-logos", "ru", "robocomponent.png"), alt: "РобоКомпонент" },
-      { key: "picaso", src: assetUrl("public", "templates", "passport-logos", "ru", "picaso.png"), alt: "PICASO 3D" },
-      { key: "vdn", src: assetUrl("public", "templates", "passport-logos", "ru", "vdn-clean.png"), alt: "ВЭБ Робототехника" },
+      { key: "rpds", src: assetDataUrl("public", "templates", "passport-logos", "ru", "rpds.png"), alt: "R-PRO DIGITAL" },
+      { key: "rpro-robotics", src: assetDataUrl("public", "templates", "passport-logos", "ru", "rpro-robotics.png"), alt: "R-Pro Robotics" },
+      { key: "robocomponent", src: assetDataUrl("public", "templates", "passport-logos", "ru", "robocomponent.png"), alt: "РобоКомпонент" },
+      { key: "picaso", src: assetDataUrl("public", "templates", "passport-logos", "ru", "picaso.png"), alt: "PICASO 3D" },
+      { key: "vdn", src: assetDataUrl("public", "templates", "passport-logos", "ru", "vdn-clean.png"), alt: "ВЭБ Робототехника" },
     ],
   },
   en: {
     top: [
-      { key: "creonomika", src: assetUrl("public", "templates", "passport-logos", "en", "creonomika.png"), alt: "Creonomyca" },
-      { key: "iitb", src: assetUrl("public", "templates", "passport-logos", "en", "iitb.png"), alt: "IITB" },
-      { key: "rpro-concern", src: assetUrl("public", "templates", "passport-logos", "en", "rpro-concern.png"), alt: "R-PRO" },
+      { key: "creonomika", src: assetDataUrl("public", "templates", "passport-logos", "en", "creonomika.png"), alt: "Creonomyca" },
+      { key: "iitb", src: assetDataUrl("public", "templates", "passport-logos", "en", "iitb.png"), alt: "IITB" },
+      { key: "rpro-concern", src: assetDataUrl("public", "templates", "passport-logos", "en", "rpro-concern.png"), alt: "R-PRO" },
     ],
     bottom: [
-      { key: "rpds", src: assetUrl("public", "templates", "passport-logos", "en", "rpds.png"), alt: "R-PRO DIGITAL" },
-      { key: "rpro-robotics", src: assetUrl("public", "templates", "passport-logos", "en", "rpro-robotics.png"), alt: "R-Pro Robotics" },
-      { key: "robocomponent", src: assetUrl("public", "templates", "passport-logos", "en", "robocomponent.png"), alt: "RoboKomponent" },
-      { key: "picaso", src: assetUrl("public", "templates", "passport-logos", "en", "picaso.png"), alt: "PICASO 3D" },
-      { key: "vdn", src: assetUrl("public", "templates", "passport-logos", "en", "vdn-clean.png"), alt: "WEB Robotics" },
+      { key: "rpds", src: assetDataUrl("public", "templates", "passport-logos", "en", "rpds.png"), alt: "R-PRO DIGITAL" },
+      { key: "rpro-robotics", src: assetDataUrl("public", "templates", "passport-logos", "en", "rpro-robotics.png"), alt: "R-Pro Robotics" },
+      { key: "robocomponent", src: assetDataUrl("public", "templates", "passport-logos", "en", "robocomponent.png"), alt: "RoboKomponent" },
+      { key: "picaso", src: assetDataUrl("public", "templates", "passport-logos", "en", "picaso.png"), alt: "PICASO 3D" },
+      { key: "vdn", src: assetDataUrl("public", "templates", "passport-logos", "en", "vdn-clean.png"), alt: "WEB Robotics" },
     ],
   },
 } as const
 
-const industryLogoSrc = assetUrl("public", "templates", "passport-logos", "common", "industry-skills.png")
+const industryLogoSrc = assetDataUrl("public", "templates", "passport-logos", "common", "industry-skills.png")
 
 function assetUrl(...segments: string[]) {
   return pathToFileURL(path.join(process.cwd(), ...segments)).href
+}
+
+function assetDataUrl(...segments: string[]) {
+  const filePath = path.join(process.cwd(), ...segments)
+  const ext = path.extname(filePath).toLowerCase()
+  const mimeType =
+    ext === ".png" ? "image/png" :
+    ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
+    ext === ".svg" ? "image/svg+xml" :
+    "application/octet-stream"
+  const base64 = readFileSync(filePath).toString("base64")
+  return `data:${mimeType};base64,${base64}`
 }
 
 function escapeHtml(value: string) {
@@ -110,12 +122,6 @@ function formatScore(value: number, locale: PassportLocale) {
   if (Number.isInteger(rounded)) return String(rounded)
   const formatted = rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")
   return locale === "ru" ? formatted.replace(".", ",") : formatted
-}
-
-function truncate(value: string, maxLength: number) {
-  const normalized = value.replace(/\s+/g, " ").trim()
-  if (normalized.length <= maxLength) return normalized
-  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`
 }
 
 function blendHex(a: string, b: string, t: number) {
@@ -185,7 +191,7 @@ function renderRows(items: ScoreRowData[], locale: PassportLocale, mode: "skill"
       return `
         <div class="row">
           <span class="row-prefix">${escapeHtml(prefix)}</span>
-          <span class="row-label">${escapeHtml(truncate(item.name || "-", 58))}</span>
+          <span class="row-label">${escapeHtml((item.name || "-").replace(/\s+/g, " ").trim())}</span>
           <span class="row-dots"></span>
           <span class="row-score"><strong>${escapeHtml(formatScore(item.score ?? 0, locale))}</strong>/${escapeHtml(formatScore(item.maxScore ?? 0, locale))}</span>
         </div>
@@ -211,10 +217,10 @@ function buildPassportHtml(data: SkillPassportData) {
   const text = copy[locale]
   const logos = logoSets[locale]
   const fullName = [data.participantName, data.participantMiddleName].filter(Boolean).join(" ").trim()
-  const displayName = truncate(fullName.toUpperCase() || "-", 64)
-  const organization = truncate(data.organization || "-", 110)
-  const eventName = truncate(data.eventName || "-", 86)
-  const competency = truncate((data.competency || "-").toUpperCase(), 48)
+  const displayName = (fullName.toUpperCase() || "-").replace(/\s+/g, " ").trim()
+  const organization = (data.organization || "-").replace(/\s+/g, " ").trim()
+  const eventName = (data.eventName || "-").replace(/\s+/g, " ").trim()
+  const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
