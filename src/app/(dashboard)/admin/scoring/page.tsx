@@ -232,7 +232,7 @@ export default function AdminScoringPage() {
 
     const rawSum = judgeValues
       .slice(0, judgesCount)
-      .reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0)
+      .reduce((sum, value) => sum + (typeof value === "number" && Number.isFinite(value) ? value : 0), 0)
 
     const normalized = (rawSum / maxRawScore) * criterion.maxScore
     return Math.round(normalized * 100) / 100
