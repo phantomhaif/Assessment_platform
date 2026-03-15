@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { sendEmail } from "@/lib/email"
+import { renderEmailBrandHeader, sendEmail } from "@/lib/email"
 
 export async function POST(
   req: NextRequest,
@@ -101,15 +101,7 @@ function buildReminderEmail({
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background: #f8fafc;">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 32px 40px; border-radius: 12px 12px 0 0;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="width: 48px; height: 48px; background: #C41E3A; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <span style="color: white; font-weight: bold; font-size: 18px;">IS</span>
-          </div>
-          <div>
-            <div style="color: white; font-size: 20px; font-weight: bold;">Industry Skills</div>
-            <div style="color: #94a3b8; font-size: 13px;">${escapeHtml(eventName)}</div>
-          </div>
-        </div>
+        ${renderEmailBrandHeader(escapeHtml(eventName), "dark")}
       </div>
 
       <!-- Body -->

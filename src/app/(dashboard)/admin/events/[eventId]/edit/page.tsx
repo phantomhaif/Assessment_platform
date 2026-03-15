@@ -12,15 +12,17 @@ import { useI18n } from "@/lib/i18n/context"
 export default function EditEventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
   const router = useRouter()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
 
   const [formData, setFormData] = useState({
     name: "",
+    nameEn: "",
     description: "",
     competency: "",
+    competencyEn: "",
     eventFormat: "OFFLINE" as "ONLINE" | "OFFLINE",
     location: "",
     registrationStart: "",
@@ -42,8 +44,10 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
         const event = await response.json()
         setFormData({
           name: event.name,
+          nameEn: event.nameEn || "",
           description: event.description || "",
           competency: event.competency,
+          competencyEn: event.competencyEn || "",
           eventFormat: event.eventFormat || "OFFLINE",
           location: event.location || "",
           registrationStart: formatDateForInput(event.registrationStart),
@@ -145,11 +149,23 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
               required
             />
             <Input
+              label={locale === "ru" ? "Название мероприятия (EN)" : "Event name (EN)"}
+              name="nameEn"
+              value={formData.nameEn}
+              onChange={handleChange}
+            />
+            <Input
               label={`${t.events.competency} *`}
               name="competency"
               value={formData.competency}
               onChange={handleChange}
               required
+            />
+            <Input
+              label={locale === "ru" ? "Компетенция (EN)" : "Competency (EN)"}
+              name="competencyEn"
+              value={formData.competencyEn}
+              onChange={handleChange}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

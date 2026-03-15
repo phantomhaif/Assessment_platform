@@ -12,8 +12,17 @@ type NotificationPayload = {
 export async function createNotifications(payloads: NotificationPayload[]) {
   if (payloads.length === 0) return
 
+  const deduped = Array.from(
+    new Map(
+      payloads.map((payload) => [
+        `${payload.userId}\u0000${payload.type ?? "INFO"}\u0000${payload.title}\u0000${payload.message}\u0000${payload.link ?? ""}`,
+        payload,
+      ])
+    ).values()
+  )
+
   await prisma.notification.createMany({
-    data: payloads.map((payload) => ({
+    data: deduped.map((payload) => ({
       userId: payload.userId,
       title: payload.title,
       message: payload.message,

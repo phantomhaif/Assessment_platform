@@ -34,9 +34,27 @@ const smtpTransport = smtpConfigured
   : null
 
 const resendFromEmail = process.env.EMAIL_FROM || smtpFromEmail || "Industry Skills <onboarding@resend.dev>"
+const publicBaseUrl = (process.env.NEXTAUTH_URL || "").replace(/\/$/, "")
+const brandLogoUrl = publicBaseUrl ? `${publicBaseUrl}/logo.png` : ""
 
 export function isEmailConfigured() {
   return Boolean(resend || smtpTransport)
+}
+
+export function renderEmailBrandHeader(subtitle?: string, theme: "light" | "dark" = "light") {
+  const logo = brandLogoUrl
+    ? `<img src="${brandLogoUrl}" alt="Industry Skills" width="56" height="56" style="display:block; width:56px; height:56px; object-fit:contain; margin:0 auto 16px;" />`
+    : `<div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #C41E3A; border-radius: 12px; margin-bottom: 16px;"><span style="color: white; font-weight: bold; font-size: 20px;">IS</span></div>`
+  const titleColor = theme === "dark" ? "#ffffff" : "#0f172a"
+  const subtitleColor = theme === "dark" ? "#94a3b8" : "#64748b"
+
+  return `
+    <div style="text-align: center; margin-bottom: 24px;">
+      ${logo}
+      <h2 style="margin: 0; color: ${titleColor}; font-size: 22px;">Industry Skills Platform</h2>
+      ${subtitle ? `<p style="margin: 8px 0 0; color: ${subtitleColor}; font-size: 14px;">${subtitle}</p>` : ""}
+    </div>
+  `
 }
 
 function normalizeRecipients(to: string | string[]) {
@@ -120,12 +138,7 @@ export async function sendEmail(payload: EmailPayload) {
 export async function sendVerificationCode(email: string, code: string) {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #C41E3A; border-radius: 12px; margin-bottom: 16px;">
-          <span style="color: white; font-weight: bold; font-size: 20px;">IS</span>
-        </div>
-        <h2 style="margin: 0; color: #0f172a; font-size: 22px;">Industry Skills Platform</h2>
-      </div>
+      ${renderEmailBrandHeader()}
       <div style="background: #f8fafc; border-radius: 12px; padding: 24px; text-align: center;">
         <p style="color: #64748b; margin-top: 0;">Ваш код подтверждения входа / Your login verification code:</p>
         <div style="font-size: 40px; font-weight: bold; letter-spacing: 8px; color: #C41E3A; margin: 16px 0;">${code}</div>
@@ -150,12 +163,7 @@ export async function sendVerificationCode(email: string, code: string) {
 export async function sendRegistrationCode(email: string, code: string, firstName: string) {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #C41E3A; border-radius: 12px; margin-bottom: 16px;">
-          <span style="color: white; font-weight: bold; font-size: 20px;">IS</span>
-        </div>
-        <h2 style="margin: 0; color: #0f172a; font-size: 22px;">Industry Skills Platform</h2>
-      </div>
+      ${renderEmailBrandHeader()}
       <p style="color: #334155; margin-bottom: 16px;">
         Здравствуйте, ${firstName}! / Hello, ${firstName}!
       </p>

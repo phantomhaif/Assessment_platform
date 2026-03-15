@@ -37,6 +37,13 @@ interface Team {
   number: number | null
 }
 
+interface EventOption {
+  id: string
+  name: string
+  status: string
+  assessmentSchema?: { id: string; name: string } | null
+}
+
 interface Score {
   criterionId: string
   teamId: string
@@ -52,12 +59,12 @@ interface ScorePayload {
 }
 
 export default function AdminScoringPage() {
-  const [events, setEvents] = useState<any[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [modules, setModules] = useState<Module[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [scores, setScores] = useState<Map<string, number>>(new Map())
-  const [judgeScores, setJudgeScores] = useState<Map<string, number[]>>(new Map())
+  const [judgeScores, setJudgeScores] = useState<Map<string, (number | null)[]>>(new Map())
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
   const [selectedTeamId, setSelectedTeamId] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
@@ -88,7 +95,7 @@ export default function AdminScoringPage() {
       if (response.ok) {
         const data = await response.json()
         // Show all events that have assessment schema loaded
-        setEvents(data.filter((e: any) =>
+        setEvents(data.filter((e: EventOption) =>
           e.assessmentSchema || ["IN_PROGRESS", "SCORING", "RESULTS_PUBLISHED"].includes(e.status)
         ))
       }
@@ -139,7 +146,7 @@ export default function AdminScoringPage() {
       if (response.ok) {
         const data = await response.json()
         const scoresMap = new Map<string, number>()
-        const judgeScoresMap = new Map<string, number[]>()
+        const judgeScoresMap = new Map<string, (number | null)[]>()
         data.forEach((score: Score) => {
           const key = `${score.criterionId}-${score.teamId}`
           scoresMap.set(key, score.value)
@@ -174,11 +181,22 @@ export default function AdminScoringPage() {
     }
   }
 
-  const handleScoreChange = (criterionId: string, value: number, maxScore: number) => {
-    // Allow half scores (0.5 increments)
-    if (value < 0 || value > maxScore) return
-
+  const handleScoreChange = (criterionId: string, rawValue: string, maxScore: number) => {
     const key = `${criterionId}-${selectedTeamId}`
+    const trimmed = rawValue.trim()
+
+    if (trimmed === "") {
+      setScores(prev => {
+        const next = new Map(prev)
+        next.delete(key)
+        return next
+      })
+      return
+    }
+
+    const value = Number(trimmed)
+    if (!Number.isFinite(value) || value < 0 || value > maxScore) return
+
     setScores(prev => new Map(prev).set(key, value))
   }
 
@@ -202,7 +220,11 @@ export default function AdminScoringPage() {
     return Number.isFinite(max) && max > 0 ? max : 3
   }
 
-  const normalizeJScore = (judgeValues: number[], criterion: Criterion) => {
+  const normalizeJScore = (judgeValues: (number | null)[], criterion: Criterion) => {
+    if (judgeValues.some((value) => value === null || value === undefined)) {
+      return undefined
+    }
+
     const judgesCount = 3
     const maxJudgeScore = getJudgeScaleMax(criterion)
     const maxRawScore = judgesCount * maxJudgeScore
@@ -241,24 +263,37 @@ export default function AdminScoringPage() {
       return [derived, derived, derived]
     }
 
-    return [0, 0, 0]
+    return [null, null, null]
   }
 
-  const handleJudgeScoreChange = (criterion: Criterion, judgeIndex: number, rawValue: number) => {
+  const handleJudgeScoreChange = (criterion: Criterion, judgeIndex: number, rawValue: string) => {
     const key = getScoreKey(criterion.id)
     const current = getJudgeValues(criterion)
     const next = [...current]
     const maxJudgeScore = getJudgeScaleMax(criterion)
 
-    const safeValue = Number.isFinite(rawValue)
-      ? Math.min(maxJudgeScore, Math.max(0, rawValue))
-      : 0
+    if (rawValue.trim() === "") {
+      next[judgeIndex] = null
+    } else {
+      const numericValue = Number(rawValue)
+      const safeValue = Number.isFinite(numericValue)
+        ? Math.min(maxJudgeScore, Math.max(0, numericValue))
+        : 0
+      next[judgeIndex] = safeValue
+    }
 
-    next[judgeIndex] = safeValue
     const normalized = normalizeJScore(next, criterion)
 
     setJudgeScores(prev => new Map(prev).set(key, next))
-    setScores(prev => new Map(prev).set(key, normalized))
+    setScores(prev => {
+      const nextScores = new Map(prev)
+      if (normalized === undefined) {
+        nextScores.delete(key)
+      } else {
+        nextScores.set(key, normalized)
+      }
+      return nextScores
+    })
   }
 
   // Check for missing criteria
@@ -322,7 +357,7 @@ export default function AdminScoringPage() {
       } else {
         throw new Error("Failed to save")
       }
-    } catch (error) {
+    } catch {
       setSaveStatus(t.scoring.saveError)
     } finally {
       setIsSaving(false)
@@ -483,7 +518,7 @@ export default function AdminScoringPage() {
                         <div className="space-y-3">
                           {subCriterion.criteria.map(criterion => {
                             const key = getScoreKey(criterion.id)
-                            const currentScore = scores.get(key) ?? 0
+                            const currentScore = scores.get(key)
                             const currentJudgeValues = getJudgeValues(criterion)
 
                             return (
@@ -514,13 +549,14 @@ export default function AdminScoringPage() {
                                       min={0}
                                       max={criterion.maxScore}
                                       step={0.5}
-                                      value={currentScore}
+                                      value={currentScore ?? ""}
                                       onChange={(e) => handleScoreChange(
                                         criterion.id,
-                                        parseFloat(e.target.value) || 0,
+                                        e.target.value,
                                         criterion.maxScore
                                       )}
                                       className="w-20 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                      placeholder={locale === "ru" ? "—" : "-"}
                                     />
                                   ) : (
                                     <div className="flex w-full flex-col items-start gap-2 sm:w-auto md:items-end">
@@ -531,15 +567,16 @@ export default function AdminScoringPage() {
                                           return criterion.judgementOptions && criterion.judgementOptions.length > 0 ? (
                                             <select
                                               key={judgeIndex}
-                                              value={value}
+                                              value={value === null ? "" : String(value)}
                                               onChange={(e) => handleJudgeScoreChange(
                                                 criterion,
                                                 judgeIndex,
-                                                parseFloat(e.target.value) || 0
+                                                e.target.value
                                               )}
-                                              className="h-9 w-16 rounded-md border border-gray-300 bg-white px-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              className="h-9 w-24 min-w-24 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                                               title={`Judge ${judgeIndex + 1}`}
                                             >
+                                              <option value="">{locale === "ru" ? "—" : "-"}</option>
                                               {criterion.judgementOptions.map(option => (
                                                 <option key={option.score} value={option.score}>
                                                   {option.score}
@@ -553,25 +590,26 @@ export default function AdminScoringPage() {
                                               min={0}
                                               max={getJudgeScaleMax(criterion)}
                                               step={0.5}
-                                              value={value}
+                                              value={value ?? ""}
                                               onChange={(e) => handleJudgeScoreChange(
                                                 criterion,
                                                 judgeIndex,
-                                                parseFloat(e.target.value) || 0
+                                                e.target.value
                                               )}
-                                              className="w-16 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              className="w-24 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                                               title={`Judge ${judgeIndex + 1}`}
+                                              placeholder={locale === "ru" ? "—" : "-"}
                                             />
                                           )
                                         })}
                                       </div>
                                       <p className="text-[11px] text-gray-500">
-                                        {"J1 + J2 + J3 -> "}{currentScore.toFixed(2)}
+                                        {"J1 + J2 + J3 -> "}{currentScore !== undefined ? currentScore.toFixed(2) : "—"}
                                       </p>
                                     </div>
                                   )}
                                   <span className="w-auto text-sm text-gray-500 sm:w-16 sm:text-right">
-                                    {currentScore} / {criterion.maxScore}
+                                    {currentScore !== undefined ? currentScore : "—"} / {criterion.maxScore}
                                   </span>
                                 </div>
                               </div>

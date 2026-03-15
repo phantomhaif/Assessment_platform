@@ -74,15 +74,15 @@ export default function AdminPassportsPage() {
     }
   }
 
-  const downloadPdf = async (passportId: string) => {
+  const downloadPdf = async (passportId: string, downloadLocale: "ru" | "en" = locale as "ru" | "en") => {
     try {
-      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${locale}`)
+      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${downloadLocale}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `skill-passport-${passportId}-${locale}.pdf`
+        a.download = `skill-passport-${passportId}-${downloadLocale}.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

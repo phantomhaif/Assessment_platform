@@ -6,8 +6,10 @@ import { EventStatus } from "@prisma/client"
 
 const createEventSchema = z.object({
   name: z.string().min(1, "Название обязательно"),
+  nameEn: z.string().optional(),
   description: z.string().optional(),
   competency: z.string().min(1, "Компетенция обязательна"),
+  competencyEn: z.string().optional(),
   eventFormat: z.enum(["ONLINE", "OFFLINE"]).default("OFFLINE"),
   location: z.string().optional(),
   registrationStart: z.string(),
@@ -18,7 +20,7 @@ const createEventSchema = z.object({
   minTeamSize: z.number().int().positive().default(1),
 })
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth()
     const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "ORGANIZER"
@@ -82,8 +84,12 @@ export async function POST(req: NextRequest) {
     const event = await prisma.event.create({
       data: {
         name: validatedData.name,
+        nameEn: validatedData.nameEn || null,
         description: validatedData.description,
         competency: validatedData.competency,
+        competencyEn: validatedData.competencyEn || null,
+        eventFormat: validatedData.eventFormat,
+        location: validatedData.location || null,
         registrationStart: new Date(validatedData.registrationStart),
         registrationEnd: new Date(validatedData.registrationEnd),
         eventStart: new Date(validatedData.eventStart),

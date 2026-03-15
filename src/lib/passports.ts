@@ -32,7 +32,9 @@ export type SkillPassportRecord = {
   }
   event: {
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
     eventStart: Date
     eventEnd: Date
   }
@@ -110,8 +112,14 @@ export function buildSkillPassportData(
     participantName: `${passport.user.lastName} ${passport.user.firstName}`,
     participantMiddleName: passport.user.middleName || undefined,
     organization: passport.user.organization || passport.team?.name || "",
-    eventName: passport.event.name,
-    competency: passport.event.competency,
+    eventName:
+      locale === "en"
+        ? passport.event.nameEn || passport.event.name
+        : passport.event.name,
+    competency:
+      locale === "en"
+        ? passport.event.competencyEn || passport.event.competency
+        : passport.event.competency,
     dateRange: formatPassportDateRange(
       new Date(passport.event.eventStart),
       new Date(passport.event.eventEnd),

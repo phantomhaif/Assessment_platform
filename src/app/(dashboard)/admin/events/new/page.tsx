@@ -11,14 +11,16 @@ import { useI18n } from "@/lib/i18n/context"
 
 export default function NewEventPage() {
   const router = useRouter()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
   const [formData, setFormData] = useState({
     name: "",
+    nameEn: "",
     description: "",
     competency: "",
+    competencyEn: "",
     eventFormat: "OFFLINE" as "ONLINE" | "OFFLINE",
     location: "",
     registrationStart: "",
@@ -99,12 +101,28 @@ export default function NewEventPage() {
             />
 
             <Input
+              label={locale === "ru" ? "Название мероприятия (EN)" : "Event name (EN)"}
+              name="nameEn"
+              value={formData.nameEn}
+              onChange={handleChange}
+              placeholder="Event name in English"
+            />
+
+            <Input
               label={`${t.events.competency} *`}
               name="competency"
               value={formData.competency}
               onChange={handleChange}
               placeholder={t.eventForm.competencyPlaceholder}
               required
+            />
+
+            <Input
+              label={locale === "ru" ? "Компетенция (EN)" : "Competency (EN)"}
+              name="competencyEn"
+              value={formData.competencyEn}
+              onChange={handleChange}
+              placeholder="Competency in English"
             />
 
             <div>

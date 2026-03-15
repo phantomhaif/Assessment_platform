@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { generateResetToken, storeResetToken } from "@/lib/reset-tokens"
-import { sendEmail } from "@/lib/email"
+import { renderEmailBrandHeader, sendEmail } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,12 +28,7 @@ export async function POST(req: NextRequest) {
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #C41E3A; border-radius: 12px; margin-bottom: 16px;">
-            <span style="color: white; font-weight: bold; font-size: 20px;">IS</span>
-          </div>
-          <h2 style="margin: 0; color: #0f172a; font-size: 22px;">Industry Skills Platform</h2>
-        </div>
+        ${renderEmailBrandHeader()}
         <p style="color: #334155;">Здравствуйте, ${user.firstName}!</p>
         <p style="color: #64748b;">
           Вы запросили сброс пароля. Нажмите кнопку ниже, чтобы создать новый пароль.<br/>

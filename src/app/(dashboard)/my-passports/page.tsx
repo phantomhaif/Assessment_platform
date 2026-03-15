@@ -58,15 +58,15 @@ export default function MyPassportsPage() {
     }
   }
 
-  const downloadPdf = async (passportId: string) => {
+  const downloadPdf = async (passportId: string, downloadLocale: "ru" | "en") => {
     try {
-      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${locale}`)
+      const response = await fetch(`/api/passports/${passportId}/pdf?lang=${downloadLocale}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `skill-passport-${passportId}-${locale}.pdf`
+        a.download = `skill-passport-${passportId}-${downloadLocale}.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -167,7 +167,7 @@ export default function MyPassportsPage() {
                   {passport.moduleScores.slice(0, 3).map((module) => (
                     <div key={module.code} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-gray-600">
-                        {module.code}. {module.name.slice(0, 25)}...
+                        {module.code}. {module.name}
                       </span>
                       <span className="font-medium">
                         {module.score}/{module.maxScore}
@@ -176,14 +176,24 @@ export default function MyPassportsPage() {
                   ))}
                 </div>
 
-                <Button
-                  onClick={() => downloadPdf(passport.id)}
-                  className="w-full"
-                  variant="outline"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {t.passports.downloadPdf}
-                </Button>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Button
+                    onClick={() => downloadPdf(passport.id, "ru")}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {locale === "ru" ? "Скачать PDF (RU)" : "Download PDF (RU)"}
+                  </Button>
+                  <Button
+                    onClick={() => downloadPdf(passport.id, "en")}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {locale === "ru" ? "Скачать PDF (EN)" : "Download PDF (EN)"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

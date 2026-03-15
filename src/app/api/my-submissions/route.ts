@@ -12,6 +12,13 @@ export async function GET() {
     const memberships = await prisma.teamMember.findMany({
       where: {
         userId: session.user.id,
+        team: {
+          event: {
+            status: {
+              in: ["IN_PROGRESS", "SCORING"],
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
