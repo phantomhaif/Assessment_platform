@@ -1,12 +1,9 @@
-import { execFile } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
-import os from "node:os"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { promisify } from "node:util"
-
-const execFileAsync = promisify(execFile)
+import puppeteer from "puppeteer-core"
 
 export type PassportLocale = "ru" | "en"
 
@@ -403,32 +400,64 @@ function findChromeExecutable() {
 }
 
 export async function renderSkillPassportPdf(data: SkillPassportData): Promise<Uint8Array> {
-  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "skill-passport-"))
+  const tmpDir = await mkdtemp(path.join(tmpdir(), "skill-passport-"))
   const htmlPath = path.join(tmpDir, "passport.html")
-  const pdfPath = path.join(tmpDir, "passport.pdf")
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
 
   try {
     await writeFile(htmlPath, buildPassportHtml(data), "utf8")
 
-    const chromePath = findChromeExecutable()
-    await execFileAsync(
-      chromePath,
-      [
-        "--headless=new",
+    browser = await puppeteer.launch({
+      executablePath: findChromeExecutable(),
+      headless: true,
+      args: [
         "--disable-gpu",
         "--no-first-run",
         "--no-default-browser-check",
-        "--no-pdf-header-footer",
         "--no-sandbox",
-        `--print-to-pdf=${pdfPath}`,
-        pathToFileURL(htmlPath).href,
+        "--disable-setuid-sandbox",
       ],
-      { timeout: 15000, windowsHide: true, maxBuffer: 10 * 1024 * 1024 }
-    )
+    })
 
-    const pdf = await readFile(pdfPath)
+    const page = await browser.newPage()
+    await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "networkidle0", timeout: 15000 })
+    await page.evaluate(async () => {
+      if ("fonts" in document) {
+        await document.fonts.ready
+      }
+
+      await Promise.all(
+        Array.from(document.images).map(async (image) => {
+          if (!image.complete) {
+            await new Promise<void>((resolve) => {
+              image.addEventListener("load", () => resolve(), { once: true })
+              image.addEventListener("error", () => resolve(), { once: true })
+            })
+          }
+
+          if ("decode" in image) {
+            try {
+              await image.decode()
+            } catch {
+              // Ignore decode failures and let the browser render what it has.
+            }
+          }
+        })
+      )
+    })
+
+    const pdf = await page.pdf({
+      format: "A4",
+      landscape: true,
+      printBackground: true,
+      displayHeaderFooter: false,
+      preferCSSPageSize: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    })
+
     return new Uint8Array(pdf)
   } finally {
+    await browser?.close().catch(() => undefined)
     await rm(tmpDir, { recursive: true, force: true })
   }
 }
