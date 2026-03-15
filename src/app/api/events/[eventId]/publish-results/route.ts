@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { ensurePassportPdf, removePassportPdfCache, type SkillPassportRecord } from "@/lib/passports"
 
 export async function POST(
   req: NextRequest,
@@ -62,6 +63,7 @@ export async function POST(
 
     const schema = event.assessmentSchema
     const passportsCreated: string[] = []
+    let pdfsPrepared = 0
 
     // Calculate total scores for all teams first
     const teamScoresMap: { teamId: string; totalScore: number }[] = []
@@ -117,7 +119,7 @@ export async function POST(
 
       // Create passport for each team member
       for (const member of team.members) {
-        await prisma.skillPassport.upsert({
+        const passport = await prisma.skillPassport.upsert({
           where: {
             userId_eventId: {
               userId: member.userId,
@@ -140,6 +142,41 @@ export async function POST(
             publishedAt: new Date(),
           },
         })
+
+        await removePassportPdfCache(passport.id)
+        try {
+          const { fileUrl } = await ensurePassportPdf(
+            {
+              id: passport.id,
+              totalScore,
+              moduleScores,
+              skillGroupScores,
+              user: {
+                firstName: member.user.firstName,
+                lastName: member.user.lastName,
+                middleName: member.user.middleName,
+                organization: member.user.organization,
+              },
+              event: {
+                name: event.name,
+                competency: event.competency,
+                eventStart: event.eventStart,
+                eventEnd: event.eventEnd,
+              },
+              team: team ? { name: team.name } : null,
+            } satisfies SkillPassportRecord,
+            "ru",
+            true
+          )
+
+          await prisma.skillPassport.update({
+            where: { id: passport.id },
+            data: { pdfUrl: fileUrl },
+          })
+          pdfsPrepared += 1
+        } catch (pdfError) {
+          console.error(`Error pre-generating passport PDF for ${passport.id}:`, pdfError)
+        }
 
         passportsCreated.push(member.user.email)
       }
@@ -173,6 +210,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       passportsCreated: passportsCreated.length,
+      pdfsPrepared,
     })
   } catch (error) {
     console.error("Error publishing results:", error)
