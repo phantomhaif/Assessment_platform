@@ -1,10 +1,10 @@
 import React from "react"
-import path from "node:path"
 import {
   Document,
-  Image,
   Page,
+  Path,
   StyleSheet,
+  Svg,
   Text,
   View,
 } from "@react-pdf/renderer"
@@ -40,47 +40,10 @@ const colors = {
   gray: "#7E878F",
   softGray: "#8C8C8C",
   divider: "#D5D9DE",
-  waveDark: "#6F8297",
-  waveLight: "#C8D2DD",
+  decoFill: "#D9E0E8",
+  decoStroke: "#D0D7DE",
+  decoStrokeLight: "#E1E6EB",
 }
-
-const logoBase = path.join(process.cwd(), "public", "templates", "passport-logos")
-const backgroundBase = path.join(process.cwd(), "public", "templates", "passport-bg")
-const leftWaveSrc = path.join(backgroundBase, "wave-left.png")
-const rightWaveSrc = path.join(backgroundBase, "wave-right.png")
-
-const logoSets = {
-  ru: {
-    top: [
-      { key: "creonomika", src: path.join(logoBase, "ru", "creonomika.png"), width: 86, height: 18 },
-      { key: "iitb", src: path.join(logoBase, "ru", "iitb.png"), width: 66, height: 18 },
-      { key: "rpro-concern", src: path.join(logoBase, "ru", "rpro-concern.png"), width: 92, height: 18 },
-    ],
-    bottom: [
-      { key: "rpds", src: path.join(logoBase, "ru", "rpds.png"), width: 96, height: 20 },
-      { key: "rpro-robotics", src: path.join(logoBase, "ru", "rpro-robotics.png"), width: 110, height: 24 },
-      { key: "robocomponent", src: path.join(logoBase, "ru", "robocomponent.png"), width: 100, height: 18 },
-      { key: "picaso", src: path.join(logoBase, "ru", "picaso.png"), width: 96, height: 18 },
-      { key: "vdn", src: path.join(logoBase, "ru", "vdn-clean.png"), width: 120, height: 24 },
-    ],
-  },
-  en: {
-    top: [
-      { key: "creonomika", src: path.join(logoBase, "en", "creonomika.png"), width: 96, height: 18 },
-      { key: "iitb", src: path.join(logoBase, "en", "iitb.png"), width: 56, height: 18 },
-      { key: "rpro-concern", src: path.join(logoBase, "en", "rpro-concern.png"), width: 92, height: 18 },
-    ],
-    bottom: [
-      { key: "rpds", src: path.join(logoBase, "en", "rpds.png"), width: 96, height: 20 },
-      { key: "rpro-robotics", src: path.join(logoBase, "en", "rpro-robotics.png"), width: 110, height: 24 },
-      { key: "robocomponent", src: path.join(logoBase, "en", "robocomponent.png"), width: 106, height: 18 },
-      { key: "picaso", src: path.join(logoBase, "en", "picaso.png"), width: 96, height: 18 },
-      { key: "vdn", src: path.join(logoBase, "en", "vdn-clean.png"), width: 120, height: 24 },
-    ],
-  },
-} as const
-
-const industryLogoSrc = path.join(logoBase, "common", "industry-skills.png")
 
 const copy = {
   ru: {
@@ -94,6 +57,8 @@ const copy = {
     totalLabel: "из 100 баллов",
     skillSection: "Детализация полученных результатов в разрезе группы навыков / WSSS:",
     moduleSection: "Детализация полученных результатов в разрезе модулей:",
+    topLogos: ["КРЕОНОМИКА", "ЦИТБ", "R-ПРО"],
+    bottomLogos: ["R-PRO DIGITAL", "R-Pro Robotics", "РобоКомпонент", "PICASO 3D", "ВЭБ Робототехника"],
   },
   en: {
     titleMain: "SKILLS PASSPORT",
@@ -106,6 +71,8 @@ const copy = {
     totalLabel: "out of 100 points",
     skillSection: "Detailed score breakdown by skill group / WSSS:",
     moduleSection: "Detailed score breakdown by modules:",
+    topLogos: ["CREONOMYCA", "IITB", "R-PRO"],
+    bottomLogos: ["R-PRO DIGITAL", "R-Pro Robotics", "RoboKomponent", "PICASO 3D", "WEB Robotics"],
   },
 } as const
 
@@ -115,26 +82,44 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontFamily: "Montserrat",
     paddingTop: 28,
-    paddingBottom: 36,
+    paddingBottom: 34,
     paddingHorizontal: 28,
+  },
+  leftDecoration: {
+    position: "absolute",
+    top: 96,
+    left: -54,
+    width: 230,
+    height: 380,
+  },
+  rightDecoration: {
+    position: "absolute",
+    right: -54,
+    bottom: 20,
+    width: 240,
+    height: 390,
   },
   topLogos: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 16,
     minHeight: 28,
+  },
+  topLogoItem: {
+    fontSize: 8.8,
+    fontWeight: 600,
+    color: colors.gray,
+    letterSpacing: 0.25,
   },
   industryBrand: {
     position: "absolute",
-    top: 26,
-    right: 32,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    top: 24,
+    right: 30,
+    alignItems: "flex-end",
   },
   industryBrandText: {
     color: colors.red,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 700,
     lineHeight: 0.95,
     textAlign: "right",
@@ -306,13 +291,15 @@ const styles = StyleSheet.create({
     lineHeight: 1.12,
     color: colors.nearBlack,
   },
-  rowDotsWrap: {
+  rowDots: {
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#9DA5AC",
-    borderStyle: "dotted",
     marginBottom: 3,
     minWidth: 24,
+    fontFamily: "Roboto",
+    fontSize: 7.5,
+    lineHeight: 1,
+    color: "#9DA5AC",
+    letterSpacing: 0.8,
   },
   rowScore: {
     width: 56,
@@ -334,6 +321,12 @@ const styles = StyleSheet.create({
     gap: 16,
     flexWrap: "wrap",
   },
+  bottomLogoItem: {
+    fontSize: 8.4,
+    fontWeight: 600,
+    color: colors.gray,
+    letterSpacing: 0.2,
+  },
 })
 
 function formatScore(value: number, locale: PassportLocale) {
@@ -350,31 +343,59 @@ function truncate(value: string, maxLength: number) {
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`
 }
 
-function LogoStrip({
-  items,
-  justify = "flex-start",
-}: {
-  items: ReadonlyArray<{ key: string; src: string; width: number; height: number }>
-  justify?: "flex-start" | "center"
-}) {
+function DotLeader() {
+  return <Text style={styles.rowDots}>....................................</Text>
+}
+
+function LeftDecoration() {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: justify,
-        gap: 14,
-        flexWrap: "wrap",
-      }}
-    >
-      {items.map((item) => (
-        <Image
-          key={item.key}
-          src={item.src}
-          style={{ width: item.width, height: item.height, objectFit: "contain" }}
-        />
-      ))}
-    </View>
+    <Svg style={styles.leftDecoration} viewBox="0 0 230 380">
+      <Path
+        d="M0 0 C140 20 176 140 72 214 C12 256 6 322 106 380 L0 380 Z"
+        fill={colors.decoFill}
+        fillOpacity={0.24}
+      />
+      <Path
+        d="M8 22 C128 46 154 154 70 210 C22 246 26 302 96 354"
+        stroke={colors.decoStroke}
+        strokeOpacity={0.5}
+        strokeWidth={10}
+        fill="none"
+      />
+      <Path
+        d="M44 2 C156 34 194 166 102 238 C62 274 68 326 136 380"
+        stroke={colors.decoStrokeLight}
+        strokeOpacity={0.6}
+        strokeWidth={12}
+        fill="none"
+      />
+    </Svg>
+  )
+}
+
+function RightDecoration() {
+  return (
+    <Svg style={styles.rightDecoration} viewBox="0 0 240 390">
+      <Path
+        d="M240 0 C96 22 60 148 166 224 C226 270 232 332 126 390 L240 390 Z"
+        fill={colors.decoFill}
+        fillOpacity={0.24}
+      />
+      <Path
+        d="M230 24 C110 48 86 156 170 214 C216 250 214 306 144 358"
+        stroke={colors.decoStroke}
+        strokeOpacity={0.5}
+        strokeWidth={10}
+        fill="none"
+      />
+      <Path
+        d="M194 0 C84 32 44 170 136 244 C176 282 170 334 104 388"
+        stroke={colors.decoStrokeLight}
+        strokeOpacity={0.6}
+        strokeWidth={12}
+        fill="none"
+      />
+    </Svg>
   )
 }
 
@@ -401,7 +422,7 @@ function ScoreRows({
           <View key={`${mode}-${prefix}-${index}`} style={styles.row}>
             <Text style={styles.rowPrefix}>{prefix}</Text>
             <Text style={styles.rowLabel}>{truncate(item.name || "-", 58)}</Text>
-            <View style={styles.rowDotsWrap} />
+            <DotLeader />
             <Text style={styles.rowScore}>
               <Text style={styles.rowScoreStrong}>{formatScore(item.score ?? 0, locale)}</Text>
               /{formatScore(item.maxScore ?? 0, locale)}
@@ -416,7 +437,6 @@ function ScoreRows({
 export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
   const locale = data.locale === "en" ? "en" : "ru"
   const text = copy[locale]
-  const logos = logoSets[locale]
   const fullName = [data.participantName, data.participantMiddleName].filter(Boolean).join(" ").trim()
   const displayName = truncate(fullName.toUpperCase() || "-", 64)
   const organization = truncate(data.organization || "-", 110)
@@ -433,23 +453,19 @@ export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <Image
-          src={leftWaveSrc}
-          style={{ position: "absolute", top: 72, left: -70, width: 360, height: 210 }}
-        />
-        <Image
-          src={rightWaveSrc}
-          style={{ position: "absolute", right: -78, bottom: 34, width: 390, height: 220 }}
-        />
+        <LeftDecoration />
+        <RightDecoration />
 
-        <LogoStrip items={logos.top} />
+        <View style={styles.topLogos}>
+          {text.topLogos.map((item) => (
+            <Text key={item} style={styles.topLogoItem}>
+              {item}
+            </Text>
+          ))}
+        </View>
 
         <View style={styles.industryBrand}>
           <Text style={styles.industryBrandText}>Industry{"\n"}Skills</Text>
-          <Image
-            src={industryLogoSrc}
-            style={{ width: 34, height: 34, objectFit: "contain" }}
-          />
         </View>
 
         <View style={styles.content}>
@@ -497,7 +513,11 @@ export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
         </View>
 
         <View style={styles.bottomLogos}>
-          <LogoStrip items={logos.bottom} justify="center" />
+          {text.bottomLogos.map((item) => (
+            <Text key={item} style={styles.bottomLogoItem}>
+              {item}
+            </Text>
+          ))}
         </View>
       </Page>
     </Document>
