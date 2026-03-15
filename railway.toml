@@ -7,4 +7,4 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [[deploy.beforeStartCommand]]
-command = "node prisma/fix-migration.js && npx prisma db push --skip-generate && npx prisma db seed"
+command = "node prisma/fix-migration.js && npx -y prisma@5.22.0 db push --skip-generate --schema prisma/schema.prisma && npx -y tsx@4.21.0 prisma/seed.ts"

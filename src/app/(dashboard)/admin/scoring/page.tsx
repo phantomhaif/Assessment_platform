@@ -70,7 +70,7 @@ export default function AdminScoringPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     fetchEvents()
