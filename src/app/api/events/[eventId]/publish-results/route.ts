@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { computeEventResults, loadEventResultsSource } from "@/lib/event-results"
-import { ensurePassportPdf, removePassportPdfCache, type SkillPassportRecord } from "@/lib/passports"
 
 export async function GET(
   req: NextRequest,
@@ -81,7 +80,6 @@ export async function POST(
     }
 
     const results = computeEventResults(event)
-    let pdfsPrepared = 0
     let passportsTouched = 0
 
     for (const team of results) {
@@ -120,51 +118,6 @@ export async function POST(
         })
 
         passportsTouched += 1
-        await removePassportPdfCache(passport.id)
-
-        if (publishPassports) {
-          try {
-            const passportRecord = {
-              id: passport.id,
-              totalScore: team.totalScore,
-              moduleScores: team.moduleScores,
-              skillGroupScores: team.skillGroupScores,
-              user: {
-                firstName: member.user.firstName,
-                lastName: member.user.lastName,
-                middleName: member.user.middleName,
-                organization: member.user.organization,
-              },
-              event: {
-                name: event.name,
-                nameEn: event.nameEn,
-                competency: event.competency,
-                competencyEn: event.competencyEn,
-                eventStart: event.eventStart,
-                eventEnd: event.eventEnd,
-                assessmentSchema: {
-                  modules: event.assessmentSchema.modules.map((module) => ({
-                    code: module.code,
-                    name: module.name,
-                    nameEn: module.nameEn,
-                  })),
-                },
-              },
-              team: { name: team.teamName },
-            } satisfies SkillPassportRecord
-
-            const { fileUrl } = await ensurePassportPdf(passportRecord, "ru", true)
-            await ensurePassportPdf(passportRecord, "en", true)
-
-            await prisma.skillPassport.update({
-              where: { id: passport.id },
-              data: { pdfUrl: fileUrl },
-            })
-            pdfsPrepared += 2
-          } catch (pdfError) {
-            console.error(`Error pre-generating passport PDF for ${passport.id}:`, pdfError)
-          }
-        }
       }
     }
 
@@ -176,7 +129,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       passportsTouched,
-      pdfsPrepared,
+      pdfsPrepared: 0,
       publishPassports,
     })
   } catch (error) {

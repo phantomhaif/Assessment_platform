@@ -147,7 +147,9 @@ export function buildSkillPassportData(
         const schemaModule = schemaModulesByCode.get(String(module.code || ""))
         if (locale === "en") {
           return (
-            toEnglishText(module.nameEn || schemaModule?.nameEn, module.name || schemaModule?.name) ||
+            (module.nameEn || schemaModule?.nameEn || "").trim() ||
+            module.name ||
+            schemaModule?.name ||
             `Module ${String(module.code || index + 1)}`
           )
         }

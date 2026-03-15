@@ -60,7 +60,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const [isLoading, setIsLoading] = useState(true)
   const [previewTeams, setPreviewTeams] = useState<RankedTeam[]>([])
   const [publishPassports, setPublishPassports] = useState(true)
-  const [isPreparingPassports, setIsPreparingPassports] = useState(false)
+  const [isPreparingSamplePassport, setIsPreparingSamplePassport] = useState(false)
+  const [isGeneratingAllPassports, setIsGeneratingAllPassports] = useState(false)
 
   useEffect(() => {
     fetchEvent()
@@ -134,24 +135,49 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
     }
   }
 
-  const preparePassports = async () => {
-    setIsPreparingPassports(true)
+  const prepareSamplePassport = async () => {
+    setIsPreparingSamplePassport(true)
     try {
       const response = await fetch(`/api/events/${eventId}/prepare-passports`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "sample" }),
       })
 
       if (response.ok) {
         alert(
           locale === "ru"
-            ? "Черновики паспортов подготовлены. Их можно проверить в разделе «Паспорта»."
-            : "Passport drafts are ready. Review them in Passports."
+            ? "Тестовый паспорт подготовлен в русском и английском вариантах. Проверьте его в разделе «Паспорта»."
+            : "The sample passport is ready in both languages. Review it in Passports."
         )
       }
     } catch (error) {
-      console.error("Error preparing passports:", error)
+      console.error("Error preparing sample passport:", error)
     } finally {
-      setIsPreparingPassports(false)
+      setIsPreparingSamplePassport(false)
+    }
+  }
+
+  const generateAllPassports = async () => {
+    setIsGeneratingAllPassports(true)
+    try {
+      const response = await fetch(`/api/events/${eventId}/prepare-passports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "all" }),
+      })
+
+      if (response.ok) {
+        alert(
+          locale === "ru"
+            ? "Паспорта для всех участников подготовлены последовательно и сохранены как черновики."
+            : "Passports for all participants were generated sequentially and saved as drafts."
+        )
+      }
+    } catch (error) {
+      console.error("Error generating all passports:", error)
+    } finally {
+      setIsGeneratingAllPassports(false)
     }
   }
 
@@ -385,9 +411,13 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               {locale === "ru" ? "Предпросмотр результатов" : "Results preview"}
             </CardTitle>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button variant="outline" onClick={preparePassports} disabled={isPreparingPassports}>
+              <Button variant="outline" onClick={prepareSamplePassport} disabled={isPreparingSamplePassport || isGeneratingAllPassports}>
                 <FileText className="h-4 w-4 mr-2" />
-                {locale === "ru" ? "Подготовить паспорта" : "Prepare passports"}
+                {locale === "ru" ? "Подготовить тестовый паспорт" : "Prepare sample passport"}
+              </Button>
+              <Button variant="outline" onClick={generateAllPassports} disabled={isPreparingSamplePassport || isGeneratingAllPassports}>
+                <Download className="h-4 w-4 mr-2" />
+                {locale === "ru" ? "Сгенерировать все паспорта" : "Generate all passports"}
               </Button>
               <Link href={`/admin/passports?eventId=${eventId}`}>
                 <Button variant="outline">
@@ -398,6 +428,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             </div>
           </CardHeader>
           <CardContent>
+            <p className="mb-4 text-sm text-gray-500">
+              {locale === "ru"
+                ? "Сначала проверьте один тестовый паспорт на двух языках, затем отдельно запустите генерацию для всех участников. Публикация результатов больше не ждёт генерацию PDF."
+                : "First review one sample passport in both languages, then run generation for all participants separately. Publishing results no longer waits for PDF generation."}
+            </p>
             {previewTeams.length === 0 ? (
               <p className="text-sm text-gray-500">
                 {locale === "ru" ? "Добавьте оценки, чтобы увидеть предварительный рейтинг." : "Add scores to see the preview ranking."}

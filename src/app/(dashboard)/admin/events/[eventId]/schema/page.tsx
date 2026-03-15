@@ -430,8 +430,13 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                 >
                   <div className="flex items-start gap-2">
                     {expandedModules.has(module.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    <span className="font-semibold">{module.code}: {module.name}</span>
-                    <span className="text-sm text-gray-500">({module.maxScore} {locale === "ru" ? "баллов" : "pts"})</span>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{module.code}: {module.name}</span>
+                        <span className="text-sm text-gray-500">({module.maxScore} {locale === "ru" ? "баллов" : "pts"})</span>
+                      </div>
+                      {module.nameEn && <p className="text-xs text-gray-500">{module.nameEn}</p>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="sm" onClick={() => openEditModule(module)}>
