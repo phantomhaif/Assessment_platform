@@ -471,10 +471,10 @@ export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <Svg style={{ position: "absolute", top: 72, left: -70, width: 360, height: 210 }}>
-          {buildWaveDots(28, 14, 360, 210)}
+          {buildWaveDots(12, 6, 360, 210)}
         </Svg>
         <Svg style={{ position: "absolute", right: -78, bottom: 34, width: 390, height: 220 }}>
-          {buildWaveDots(30, 14, 390, 220, true)}
+          {buildWaveDots(14, 6, 390, 220, true)}
         </Svg>
 
         <LogoStrip items={logos.top} />
