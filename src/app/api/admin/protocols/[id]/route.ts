@@ -5,7 +5,9 @@ import { z } from "zod"
 
 const updateProtocolSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
+  titleEn: z.string().optional(),
   content: z.string().min(1, "Содержание обязательно"),
+  contentEn: z.string().optional(),
 })
 
 export async function GET(
@@ -18,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -60,7 +62,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -68,12 +70,13 @@ export async function PATCH(
     const body = await req.json()
     const validatedData = updateProtocolSchema.parse(body)
 
-    // Increment version on update
     const protocol = await prisma.protocol.update({
       where: { id },
       data: {
         title: validatedData.title,
+        titleEn: validatedData.titleEn || null,
         content: validatedData.content,
+        contentEn: validatedData.contentEn || null,
         version: { increment: 1 },
       },
     })
@@ -101,16 +104,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { id } = await params
-
-    await prisma.protocol.delete({
-      where: { id },
-    })
-
+    await prisma.protocol.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting protocol:", error)

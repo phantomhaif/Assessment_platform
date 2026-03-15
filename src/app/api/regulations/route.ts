@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get protocols assigned to this user
+    const locale = req.nextUrl.searchParams.get("lang") === "en" ? "en" : "ru"
+
     const assignments = await prisma.protocolAssignment.findMany({
       where: {
         userId: session.user.id,
@@ -40,13 +41,12 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    // Transform data to include signed status
     const regulationsWithStatus = assignments.map(({ protocol }) => ({
       id: protocol.id,
-      title: protocol.title,
+      title: locale === "en" ? protocol.titleEn || protocol.title : protocol.title,
       version: protocol.version,
       eventId: protocol.eventId,
-      eventName: protocol.event?.name || "Общий регламент",
+      eventName: protocol.event?.name || (locale === "en" ? "General regulation" : "Общий регламент"),
       createdAt: protocol.createdAt,
       isSigned: protocol.signatures.length > 0,
       signedAt: protocol.signatures[0]?.signedAt || null,

@@ -1,7 +1,54 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { computeEventResults, loadEventResultsSource } from "@/lib/event-results"
 import { ensurePassportPdf, removePassportPdfCache, type SkillPassportRecord } from "@/lib/passports"
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const { eventId } = await params
+    const event = await loadEventResultsSource(eventId)
+
+    if (!event) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    }
+
+    if (!event.assessmentSchema) {
+      return NextResponse.json({ error: "No assessment schema" }, { status: 400 })
+    }
+
+    const preview = computeEventResults(event).map((team) => ({
+      id: team.teamId,
+      name: team.teamName,
+      number: team.teamNumber,
+      rank: team.rank ?? null,
+      totalScore: team.totalScore,
+      members: team.members.map((member) => ({
+        id: member.user.id,
+        firstName: member.user.firstName,
+        lastName: member.user.lastName,
+        email: member.user.email,
+      })),
+    }))
+
+    return NextResponse.json({ teams: preview })
+  } catch (error) {
+    console.error("Error preparing results preview:", error)
+    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+  }
+}
 
 export async function POST(
   req: NextRequest,
@@ -13,45 +60,15 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { eventId } = await params
+    const body = await req.json().catch(() => ({}))
+    const publishPassports = body.publishPassports !== false
 
-    // Get event with schema and teams
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      include: {
-        assessmentSchema: {
-          include: {
-            modules: {
-              orderBy: { order: "asc" },
-              include: {
-                subCriteria: {
-                  include: {
-                    criteria: true,
-                  },
-                },
-              },
-            },
-            skillGroups: {
-              orderBy: { number: "asc" },
-            },
-          },
-        },
-        teams: {
-          include: {
-            members: {
-              include: {
-                user: true,
-              },
-            },
-            scores: true,
-          },
-        },
-      },
-    })
+    const event = await loadEventResultsSource(eventId)
 
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
@@ -61,63 +78,19 @@ export async function POST(
       return NextResponse.json({ error: "No assessment schema" }, { status: 400 })
     }
 
-    const schema = event.assessmentSchema
-    const passportsCreated: string[] = []
+    const results = computeEventResults(event)
     let pdfsPrepared = 0
+    let passportsTouched = 0
 
-    // Calculate total scores for all teams first
-    const teamScoresMap: { teamId: string; totalScore: number }[] = []
-
-    for (const team of event.teams) {
-      // Calculate scores
-      const teamScores = team.scores
-
-      // Calculate module scores
-      const moduleScores = schema.modules.map(module => {
-        const criterionIds = module.subCriteria.flatMap(s =>
-          s.criteria.map(c => c.id)
-        )
-        const score = teamScores
-          .filter(s => criterionIds.includes(s.criterionId))
-          .reduce((sum, s) => sum + s.value, 0)
-
-        return {
-          code: module.code,
-          name: module.name,
-          score,
-          maxScore: module.maxScore,
-        }
+    for (const team of results) {
+      await prisma.team.update({
+        where: { id: team.teamId },
+        data: {
+          rank: team.rank ?? null,
+          totalScore: team.totalScore,
+        },
       })
 
-      // Calculate skill group scores
-      const skillGroupScores = schema.skillGroups.map(group => {
-        // Find all criteria belonging to this skill group by skillGroupId
-        const criteriaInGroup = schema.modules.flatMap(m =>
-          m.subCriteria.flatMap(s =>
-            s.criteria.filter(c => c.skillGroupId === group.id)
-          )
-        )
-
-        const criterionIds = criteriaInGroup.map(c => c.id)
-        const score = teamScores
-          .filter(s => criterionIds.includes(s.criterionId))
-          .reduce((sum, s) => sum + s.value, 0)
-
-        return {
-          number: group.number,
-          name: group.name,
-          nameEn: group.nameEn,
-          score: Math.min(score, group.maxScore),
-          maxScore: group.maxScore,
-        }
-      })
-
-      const totalScore = moduleScores.reduce((sum, m) => sum + m.score, 0)
-
-      // Store team score for ranking
-      teamScoresMap.push({ teamId: team.id, totalScore })
-
-      // Create passport for each team member
       for (const member of team.members) {
         const passport = await prisma.skillPassport.upsert({
           where: {
@@ -127,80 +100,72 @@ export async function POST(
             },
           },
           update: {
-            totalScore,
-            moduleScores,
-            skillGroupScores,
-            publishedAt: new Date(),
+            teamId: team.teamId,
+            totalScore: team.totalScore,
+            moduleScores: team.moduleScores,
+            skillGroupScores: team.skillGroupScores,
+            publishedAt: publishPassports ? new Date() : null,
           },
           create: {
             userId: member.userId,
             eventId,
-            teamId: team.id,
-            totalScore,
-            moduleScores,
-            skillGroupScores,
-            publishedAt: new Date(),
+            teamId: team.teamId,
+            totalScore: team.totalScore,
+            moduleScores: team.moduleScores,
+            skillGroupScores: team.skillGroupScores,
+            publishedAt: publishPassports ? new Date() : null,
           },
         })
 
+        passportsTouched += 1
         await removePassportPdfCache(passport.id)
-        try {
-          const passportRecord = {
-            id: passport.id,
-            totalScore,
-            moduleScores,
-            skillGroupScores,
-            user: {
-              firstName: member.user.firstName,
-              lastName: member.user.lastName,
-              middleName: member.user.middleName,
-              organization: member.user.organization,
-            },
-            event: {
-              name: event.name,
-              competency: event.competency,
-              eventStart: event.eventStart,
-              eventEnd: event.eventEnd,
-            },
-            team: team ? { name: team.name } : null,
-          } satisfies SkillPassportRecord
 
-          const { fileUrl } = await ensurePassportPdf(passportRecord, "ru", true)
-          await ensurePassportPdf(passportRecord, "en", true)
+        if (publishPassports) {
+          try {
+            const passportRecord = {
+              id: passport.id,
+              totalScore: team.totalScore,
+              moduleScores: team.moduleScores,
+              skillGroupScores: team.skillGroupScores,
+              user: {
+                firstName: member.user.firstName,
+                lastName: member.user.lastName,
+                middleName: member.user.middleName,
+                organization: member.user.organization,
+              },
+              event: {
+                name: event.name,
+                nameEn: event.nameEn,
+                competency: event.competency,
+                competencyEn: event.competencyEn,
+                eventStart: event.eventStart,
+                eventEnd: event.eventEnd,
+                assessmentSchema: {
+                  modules: event.assessmentSchema.modules.map((module) => ({
+                    code: module.code,
+                    name: module.name,
+                    nameEn: module.nameEn,
+                  })),
+                },
+              },
+              team: { name: team.teamName },
+            } satisfies SkillPassportRecord
 
-          await prisma.skillPassport.update({
-            where: { id: passport.id },
-            data: { pdfUrl: fileUrl },
-          })
-          pdfsPrepared += 2
-        } catch (pdfError) {
-          console.error(`Error pre-generating passport PDF for ${passport.id}:`, pdfError)
+            const { fileUrl } = await ensurePassportPdf(passportRecord, "ru", true)
+            await ensurePassportPdf(passportRecord, "en", true)
+
+            await prisma.skillPassport.update({
+              where: { id: passport.id },
+              data: { pdfUrl: fileUrl },
+            })
+            pdfsPrepared += 2
+          } catch (pdfError) {
+            console.error(`Error pre-generating passport PDF for ${passport.id}:`, pdfError)
+          }
         }
-
-        passportsCreated.push(member.user.email)
       }
     }
 
-    // Calculate rankings using Standard Competition Ranking (1, 2, 2, 4...)
-    teamScoresMap.sort((a, b) => b.totalScore - a.totalScore)
-
-    let currentRank = 1
-    for (let i = 0; i < teamScoresMap.length; i++) {
-      // If not the first team and has different score than previous, update rank
-      if (i > 0 && teamScoresMap[i].totalScore < teamScoresMap[i - 1].totalScore) {
-        currentRank = i + 1
-      }
-
-      await prisma.team.update({
-        where: { id: teamScoresMap[i].teamId },
-        data: {
-          rank: currentRank,
-          totalScore: teamScoresMap[i].totalScore,
-        },
-      })
-    }
-
-    // Update event status
     await prisma.event.update({
       where: { id: eventId },
       data: { status: "RESULTS_PUBLISHED" },
@@ -208,8 +173,9 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      passportsCreated: passportsCreated.length,
+      passportsTouched,
       pdfsPrepared,
+      publishPassports,
     })
   } catch (error) {
     console.error("Error publishing results:", error)

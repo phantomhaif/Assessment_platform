@@ -12,7 +12,9 @@ import { useI18n } from "@/lib/i18n/context"
 interface Protocol {
   id: string
   title: string
+  titleEn: string | null
   content: string
+  contentEn: string | null
   version: number
   eventId: string
 }
@@ -23,13 +25,15 @@ export default function EditRegulationPage({
   params: Promise<{ id: string }>
 }) {
   const { id: protocolId } = use(params)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const router = useRouter()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [protocol, setProtocol] = useState<Protocol | null>(null)
   const [title, setTitle] = useState("")
+  const [titleEn, setTitleEn] = useState("")
   const [content, setContent] = useState("")
+  const [contentEn, setContentEn] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
@@ -53,7 +57,9 @@ export default function EditRegulationPage({
         const data = await response.json()
         setProtocol(data)
         setTitle(data.title)
+        setTitleEn(data.titleEn || "")
         setContent(data.content)
+        setContentEn(data.contentEn || "")
       }
     } catch (error) {
       console.error("Error fetching protocol:", error)
@@ -73,7 +79,9 @@ export default function EditRegulationPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
+          titleEn,
           content,
+          contentEn,
         }),
       })
 
@@ -139,6 +147,12 @@ export default function EditRegulationPage({
               required
             />
 
+            <Input
+              label={locale === "ru" ? "Название (EN)" : "Title (EN)"}
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+            />
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t.regulationsAdmin.titleText}
@@ -153,6 +167,17 @@ export default function EditRegulationPage({
               <p className="text-sm text-gray-500 mt-1">
                 {t.regulationsAdmin.versionHint}
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {locale === "ru" ? "Текст протокола (EN)" : "Protocol text (EN)"}
+              </label>
+              <textarea
+                value={contentEn}
+                onChange={(e) => setContentEn(e.target.value)}
+                className="w-full min-h-[240px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent resize-none"
+              />
             </div>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

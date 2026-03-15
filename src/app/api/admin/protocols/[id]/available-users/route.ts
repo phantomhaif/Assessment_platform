@@ -32,6 +32,8 @@ export async function GET(
     const applications = await prisma.application.findMany({
       where: { eventId: protocol.eventId },
       select: {
+        approvedRole: true,
+        requestedRole: true,
         user: {
           select: {
             id: true,
@@ -66,7 +68,10 @@ export async function GET(
     const usersMap = new Map()
 
     applications.forEach((app) => {
-      usersMap.set(app.user.id, app.user)
+      usersMap.set(app.user.id, {
+        ...app.user,
+        role: app.approvedRole || app.requestedRole || app.user.role,
+      })
     })
 
     expertAssignments.forEach((assignment) => {

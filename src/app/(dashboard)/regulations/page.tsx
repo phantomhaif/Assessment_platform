@@ -23,11 +23,11 @@ export default function RegulationsPage() {
 
   useEffect(() => {
     fetchRegulations()
-  }, [])
+  }, [locale])
 
   const fetchRegulations = async () => {
     try {
-      const response = await fetch("/api/regulations")
+      const response = await fetch(`/api/regulations?lang=${locale}`)
       if (response.ok) {
         const data = await response.json()
         setRegulations(data)

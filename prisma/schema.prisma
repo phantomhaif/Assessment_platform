@@ -125,6 +125,8 @@ model Application {
   userId             String
   eventId            String
   status             ApplicationStatus @default(PENDING)
+  requestedRole      UserRole          @default(PARTICIPANT)
+  approvedRole       UserRole?
   agreedToRegulation Boolean           @default(false)
   comment            String?
   createdAt          DateTime          @default(now())
@@ -305,7 +307,9 @@ model Protocol {
   id          String                @id @default(cuid())
   eventId     String
   title       String
-  content     String              @db.Text
+  titleEn     String?
+  content     String                @db.Text
+  contentEn   String?               @db.Text
   version     Int                   @default(1)
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt

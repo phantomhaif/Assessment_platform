@@ -46,6 +46,13 @@ interface User {
   organization: string | null
 }
 
+interface EventApplication {
+  user: User
+  status: string
+  requestedRole?: string
+  approvedRole?: string | null
+}
+
 export default function EventTeamsPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
   const { t, locale } = useI18n()
@@ -59,6 +66,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
   const [addingToTeamId, setAddingToTeamId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [isAddingMember, setIsAddingMember] = useState(false)
+  const [isAutoForming, setIsAutoForming] = useState(false)
   const [expandedFilesTeamId, setExpandedFilesTeamId] = useState<string | null>(null)
   const [loadingFilesTeamId, setLoadingFilesTeamId] = useState<string | null>(null)
 
@@ -91,10 +99,17 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/users")
+      const response = await fetch(`/api/events/${eventId}/applications`)
       if (response.ok) {
         const data = await response.json()
-        setUsers(data)
+        const approvedParticipants = (Array.isArray(data) ? data : [])
+          .filter((application: EventApplication) => application.status === "APPROVED")
+          .filter((application: EventApplication) =>
+            (application.approvedRole ?? application.requestedRole) !== "EXPERT"
+          )
+          .map((application: EventApplication) => application.user)
+
+        setUsers(approvedParticipants)
       }
     } catch (error) {
       console.error("Error fetching users:", error)
@@ -205,6 +220,32 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
     }
   }
 
+  const handleAutoFormTeams = async () => {
+    if (!confirm(locale === "ru"
+      ? "Сформировать команды автоматически по организациям из подтвержденных заявок участников?"
+      : "Auto-form teams by organization from approved participant applications?")) {
+      return
+    }
+
+    setIsAutoForming(true)
+    try {
+      const response = await fetch(`/api/events/${eventId}/teams/auto`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        await Promise.all([fetchData(), fetchUsers()])
+      } else {
+        const data = await response.json()
+        alert(data.error || (locale === "ru" ? "Не удалось сформировать команды" : "Failed to auto-form teams"))
+      }
+    } catch (error) {
+      console.error("Error auto-forming teams:", error)
+    } finally {
+      setIsAutoForming(false)
+    }
+  }
+
   const handleDeleteTeam = async (teamId: string) => {
     if (!confirm(t.teams.confirmDeleteTeam)) return
 
@@ -250,10 +291,16 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
             <p className="text-gray-500">{event?.name}</p>
           </div>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          {t.teams.createTeam}
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button onClick={handleAutoFormTeams} variant="outline" disabled={isAutoForming} className="w-full sm:w-auto">
+            <Users className="h-4 w-4 mr-2" />
+            {locale === "ru" ? "Сформировать автоматически" : "Auto-form teams"}
+          </Button>
+          <Button onClick={() => setShowCreateForm(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            {t.teams.createTeam}
+          </Button>
+        </div>
       </div>
 
       {showCreateForm && (

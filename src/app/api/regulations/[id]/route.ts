@@ -12,6 +12,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const locale = req.nextUrl.searchParams.get("lang") === "en" ? "en" : "ru"
     const { id } = await params
 
     const protocol = await prisma.protocol.findUnique({
@@ -41,8 +42,8 @@ export async function GET(
 
     return NextResponse.json({
       id: protocol.id,
-      title: protocol.title,
-      content: protocol.content,
+      title: locale === "en" ? protocol.titleEn || protocol.title : protocol.title,
+      content: locale === "en" ? protocol.contentEn || protocol.content : protocol.content,
       version: protocol.version,
       eventId: protocol.eventId,
       eventName: protocol.event.name,

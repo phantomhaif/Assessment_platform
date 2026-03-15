@@ -2,10 +2,9 @@
 
 import { useState, useEffect, use } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Mail, FolderOpen } from "lucide-react"
+import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Mail, FolderOpen, FileText } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
@@ -22,6 +21,7 @@ interface RankedTeam {
   name: string
   rank: number
   totalScore: number
+  number?: number | null
   members: TeamMember[]
 }
 
@@ -56,9 +56,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const { eventId } = use(params)
   const { t, locale } = useI18n()
   const dateLocale = locale === "ru" ? ru : enUS
-  const router = useRouter()
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [previewTeams, setPreviewTeams] = useState<RankedTeam[]>([])
+  const [publishPassports, setPublishPassports] = useState(true)
+  const [isPreparingPassports, setIsPreparingPassports] = useState(false)
 
   useEffect(() => {
     fetchEvent()
@@ -70,6 +72,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       if (response.ok) {
         const data = await response.json()
         setEvent(data)
+        if (data.status === "SCORING") {
+          fetchPreview()
+        } else {
+          setPreviewTeams([])
+        }
       }
     } catch (error) {
       console.error("Error fetching event:", error)
@@ -97,13 +104,54 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
     try {
       const response = await fetch(`/api/events/${eventId}/publish-results`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publishPassports }),
       })
       if (response.ok) {
-        alert(t.adminEvent.resultsPublishedAlert)
+        alert(
+          publishPassports
+            ? t.adminEvent.resultsPublishedAlert
+            : locale === "ru"
+              ? "Результаты опубликованы. Паспорта сохранены как черновики."
+              : "Results published. Passports remain unpublished."
+        )
         fetchEvent()
       }
     } catch (error) {
       console.error("Error publishing results:", error)
+    }
+  }
+
+  const fetchPreview = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/publish-results`)
+      if (response.ok) {
+        const data = await response.json()
+        setPreviewTeams(data.teams || [])
+      }
+    } catch (error) {
+      console.error("Error fetching results preview:", error)
+    }
+  }
+
+  const preparePassports = async () => {
+    setIsPreparingPassports(true)
+    try {
+      const response = await fetch(`/api/events/${eventId}/prepare-passports`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        alert(
+          locale === "ru"
+            ? "Черновики паспортов подготовлены. Их можно проверить в разделе «Паспорта»."
+            : "Passport drafts are ready. Review them in Passports."
+        )
+      }
+    } catch (error) {
+      console.error("Error preparing passports:", error)
+    } finally {
+      setIsPreparingPassports(false)
     }
   }
 
@@ -202,10 +250,25 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 </Button>
               )}
               {event.status === "SCORING" && (
-                <Button onClick={publishResults} className="w-full">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {t.adminEvent.publishResults}
-                </Button>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-2 rounded-lg border border-gray-200 p-3 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={publishPassports}
+                      onChange={(e) => setPublishPassports(e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span>
+                      {locale === "ru"
+                        ? "Публиковать skill passports вместе с результатами"
+                        : "Publish skill passports together with results"}
+                    </span>
+                  </label>
+                  <Button onClick={publishResults} className="w-full">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {t.adminEvent.publishResults}
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>
@@ -314,6 +377,73 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           )}
         </CardContent>
       </Card>
+
+      {event.status === "SCORING" && (
+        <Card>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-lg">
+              {locale === "ru" ? "Предпросмотр результатов" : "Results preview"}
+            </CardTitle>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={preparePassports} disabled={isPreparingPassports}>
+                <FileText className="h-4 w-4 mr-2" />
+                {locale === "ru" ? "Подготовить паспорта" : "Prepare passports"}
+              </Button>
+              <Link href={`/admin/passports?eventId=${eventId}`}>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  {locale === "ru" ? "Проверить паспорта" : "Review passports"}
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {previewTeams.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                {locale === "ru" ? "Добавьте оценки, чтобы увидеть предварительный рейтинг." : "Add scores to see the preview ranking."}
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[680px]">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+                        {locale === "ru" ? "Место" : "Rank"}
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+                        {t.teams.title}
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+                        {locale === "ru" ? "Участники" : "Members"}
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-600">
+                        {t.adminEvent.scoreColumn}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewTeams.map((team) => (
+                      <tr key={team.id} className="border-b border-gray-100">
+                        <td className="px-4 py-3">{team.rank}</td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{team.name}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {team.members.map((member, index) => (
+                            <span key={`${member.user.lastName}-${index}`}>
+                              {member.user.lastName} {member.user.firstName.charAt(0)}.
+                              {index < team.members.length - 1 && ", "}
+                            </span>
+                          ))}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-red-600">{team.totalScore.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Team Rankings Table - only shown after results are published */}
       {event.status === "RESULTS_PUBLISHED" && event.teams && event.teams.length > 0 && (

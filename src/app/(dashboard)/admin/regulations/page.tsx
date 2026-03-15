@@ -16,6 +16,7 @@ interface Event {
 interface Protocol {
   id: string
   title: string
+  titleEn?: string | null
   version: number
   eventId: string
   eventName: string
@@ -170,7 +171,9 @@ export default function AdminRegulationsPage() {
                     className="flex flex-col gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 md:flex-row md:items-center md:justify-between"
                   >
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900">{protocol.title}</h3>
+                      <h3 className="font-medium text-gray-900">
+                        {locale === "en" ? protocol.titleEn || protocol.title : protocol.title}
+                      </h3>
                       <div className="mt-1 flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                         <span>{t.events.version} {protocol.version}</span>
                         <span className="flex items-center gap-1">

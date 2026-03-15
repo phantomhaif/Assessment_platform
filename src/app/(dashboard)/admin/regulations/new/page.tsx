@@ -10,14 +10,16 @@ import { ArrowLeft, Save } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 export default function NewRegulationPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const router = useRouter()
   const searchParams = useSearchParams()
   const eventId = searchParams.get("eventId")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [title, setTitle] = useState("")
+  const [titleEn, setTitleEn] = useState("")
   const [content, setContent] = useState("")
+  const [contentEn, setContentEn] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -47,7 +49,9 @@ export default function NewRegulationPage() {
         body: JSON.stringify({
           eventId,
           title,
+          titleEn,
           content,
+          contentEn,
         }),
       })
 
@@ -101,6 +105,13 @@ export default function NewRegulationPage() {
               required
             />
 
+            <Input
+              label={locale === "ru" ? "Название (EN)" : "Title (EN)"}
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              placeholder={locale === "ru" ? "English title" : "English title"}
+            />
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t.regulationsAdmin.titleText}
@@ -116,6 +127,18 @@ export default function NewRegulationPage() {
               <p className="text-sm text-gray-500 mt-1">
                 {t.regulationsAdmin.titleHint}
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {locale === "ru" ? "Текст протокола (EN)" : "Protocol text (EN)"}
+              </label>
+              <textarea
+                value={contentEn}
+                onChange={(e) => setContentEn(e.target.value)}
+                className="w-full min-h-[240px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent resize-none"
+                placeholder={locale === "ru" ? "English content" : "English content"}
+              />
             </div>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

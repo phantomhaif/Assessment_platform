@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+const eventApplicationRoles = ["PARTICIPANT", "EXPERT"] as const
+type EventApplicationRole = (typeof eventApplicationRoles)[number]
+
+function normalizeApplicationRole(value: unknown): EventApplicationRole {
+  return value === "EXPERT" ? "EXPERT" : "PARTICIPANT"
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
@@ -97,6 +104,7 @@ export async function POST(
         userId: session.user.id,
         eventId,
         agreedToRegulation: body.agreedToRegulation || false,
+        requestedRole: normalizeApplicationRole(body.requestedRole),
         status: "PENDING",
       },
     })
@@ -123,14 +131,56 @@ export async function PATCH(
     }
 
     const { eventId } = await params
-    const { applicationId, status, comment } = await req.json()
+    const { applicationId, status, comment, approvedRole } = await req.json()
 
-    const application = await prisma.application.update({
+    const existingApplication = await prisma.application.findUnique({
       where: { id: applicationId },
-      data: {
-        status,
-        comment,
+      include: {
+        user: {
+          select: {
+            id: true,
+            role: true,
+          },
+        },
       },
+    })
+
+    if (!existingApplication || existingApplication.eventId !== eventId) {
+      return NextResponse.json({ error: "Application not found" }, { status: 404 })
+    }
+
+    const normalizedApprovedRole = normalizeApplicationRole(
+      approvedRole ?? existingApplication.approvedRole ?? existingApplication.requestedRole
+    )
+
+    const application = await prisma.$transaction(async (tx) => {
+      const updatedApplication = await tx.application.update({
+        where: { id: applicationId },
+        data: {
+          status,
+          comment,
+          approvedRole: status === "APPROVED" ? normalizedApprovedRole : existingApplication.approvedRole,
+        },
+      })
+
+      if (status === "APPROVED") {
+        if (
+          normalizedApprovedRole === "EXPERT" &&
+          !["ADMIN", "ORGANIZER"].includes(existingApplication.user.role)
+        ) {
+          await tx.user.update({
+            where: { id: existingApplication.user.id },
+            data: { role: "EXPERT" },
+          })
+        } else if (existingApplication.user.role === "GUEST") {
+          await tx.user.update({
+            where: { id: existingApplication.user.id },
+            data: { role: "PARTICIPANT" },
+          })
+        }
+      }
+
+      return updatedApplication
     })
 
     return NextResponse.json(application)

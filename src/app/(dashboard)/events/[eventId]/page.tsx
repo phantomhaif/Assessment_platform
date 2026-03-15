@@ -34,6 +34,8 @@ interface Event {
 interface Application {
   id: string
   status: string
+  requestedRole: "PARTICIPANT" | "EXPERT"
+  approvedRole: "PARTICIPANT" | "EXPERT" | null
   agreedToRegulation: boolean
   comment: string | null
   createdAt: string
@@ -84,6 +86,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingModule, setUploadingModule] = useState<string | null>(null)
   const [agreedToRegulation, setAgreedToRegulation] = useState(false)
+  const [requestedRole, setRequestedRole] = useState<"PARTICIPANT" | "EXPERT">("PARTICIPANT")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -163,7 +166,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       const response = await fetch(`/api/events/${eventId}/applications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agreedToRegulation }),
+        body: JSON.stringify({ agreedToRegulation, requestedRole }),
       })
 
       const data = await response.json()
@@ -394,6 +397,13 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   </p>
                 )}
 
+                <p className="text-sm text-gray-500">
+                  {locale === "ru" ? "Роль" : "Role"}:{" "}
+                  {application.approvedRole === "EXPERT" || application.requestedRole === "EXPERT"
+                    ? t.roles.expert
+                    : t.roles.participant}
+                </p>
+
                 {application.comment && (
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-sm text-gray-600">
@@ -444,6 +454,36 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   onChange={(e) => setAgreedToRegulation(e.target.checked)}
                   label={t.events.agreeToRegulation}
                 />
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    {locale === "ru" ? "Роль в мероприятии" : "Role in the event"}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setRequestedRole("PARTICIPANT")}
+                      className={`rounded-lg border px-4 py-3 text-left text-sm transition ${
+                        requestedRole === "PARTICIPANT"
+                          ? "border-red-500 bg-red-50 text-red-700"
+                          : "border-gray-300 bg-white text-gray-700"
+                      }`}
+                    >
+                      {t.roles.participant}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRequestedRole("EXPERT")}
+                      className={`rounded-lg border px-4 py-3 text-left text-sm transition ${
+                        requestedRole === "EXPERT"
+                          ? "border-red-500 bg-red-50 text-red-700"
+                          : "border-gray-300 bg-white text-gray-700"
+                      }`}
+                    >
+                      {t.roles.expert}
+                    </button>
+                  </div>
+                </div>
 
                 <Button
                   onClick={handleSubmitApplication}

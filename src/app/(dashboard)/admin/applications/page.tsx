@@ -11,6 +11,8 @@ import { useI18n } from "@/lib/i18n/context"
 interface Application {
   id: string
   status: string
+  requestedRole: "PARTICIPANT" | "EXPERT"
+  approvedRole: "PARTICIPANT" | "EXPERT" | null
   agreedToRegulation: boolean
   comment: string | null
   createdAt: string
@@ -40,6 +42,8 @@ export default function AdminApplicationsPage() {
   const [showAddParticipant, setShowAddParticipant] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [manualRole, setManualRole] = useState<"PARTICIPANT" | "EXPERT">("PARTICIPANT")
+  const [roleSelections, setRoleSelections] = useState<Record<string, "PARTICIPANT" | "EXPERT">>({})
   const { t, locale } = useI18n()
 
   useEffect(() => {
@@ -83,7 +87,14 @@ export default function AdminApplicationsPage() {
       const response = await fetch(`/api/events/${selectedEventId}/applications`)
       if (response.ok) {
         const data = await response.json()
-        setApplications(Array.isArray(data) ? data : [])
+        const nextApplications = Array.isArray(data) ? data : []
+        setApplications(nextApplications)
+        setRoleSelections(
+          nextApplications.reduce<Record<string, "PARTICIPANT" | "EXPERT">>((acc, application) => {
+            acc[application.id] = (application.approvedRole ?? application.requestedRole ?? "PARTICIPANT")
+            return acc
+          }, {})
+        )
       }
     } catch (error) {
       console.error("Error fetching applications:", error)
@@ -98,7 +109,11 @@ export default function AdminApplicationsPage() {
       const response = await fetch(`/api/events/${selectedEventId}/applications`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ applicationId, status }),
+        body: JSON.stringify({
+          applicationId,
+          status,
+          approvedRole: roleSelections[applicationId] || "PARTICIPANT",
+        }),
       })
 
       if (response.ok) {
@@ -117,7 +132,7 @@ export default function AdminApplicationsPage() {
       const response = await fetch(`/api/events/${selectedEventId}/applications/manual`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, requestedRole: manualRole }),
       })
 
       if (response.ok) {
@@ -141,6 +156,11 @@ export default function AdminApplicationsPage() {
       WITHDRAWN: { label: t.applications.withdrawn, className: "bg-gray-100 text-gray-500", icon: X },
     }
     return badges[status] || { label: status, className: "bg-gray-100 text-gray-700", icon: Clock }
+  }
+
+  const getRoleLabel = (role: "PARTICIPANT" | "EXPERT" | null | undefined) => {
+    if (role === "EXPERT") return t.roles.expert
+    return t.roles.participant
   }
 
   const pendingCount = applications.filter(a => a.status === "PENDING").length
@@ -210,6 +230,19 @@ export default function AdminApplicationsPage() {
                   className="pl-10"
                 />
               </div>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">
+                  {locale === "ru" ? "Роль" : "Role"}
+                </label>
+                <select
+                  value={manualRole}
+                  onChange={(e) => setManualRole(e.target.value as "PARTICIPANT" | "EXPERT")}
+                  className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="PARTICIPANT">{t.roles.participant}</option>
+                  <option value="EXPERT">{t.roles.expert}</option>
+                </select>
+              </div>
               <div className="max-h-64 overflow-y-auto space-y-2">
                 {filteredUsers.slice(0, 20).map((user) => (
                   <div
@@ -220,10 +253,10 @@ export default function AdminApplicationsPage() {
                       <p className="font-medium">
                         {user.lastName} {user.firstName}
                       </p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                      {user.organization && (
-                        <p className="text-xs text-gray-400">{user.organization}</p>
-                      )}
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                        {user.organization && (
+                          <p className="text-xs text-gray-400">{user.organization}</p>
+                        )}
                     </div>
                     <Button size="sm" onClick={() => handleAddParticipant(user.id)}>
                       {t.applications.add}
@@ -307,13 +340,34 @@ export default function AdminApplicationsPage() {
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t.applications.submissionDate}</p>
                             <p className="mt-1 text-sm text-gray-600">{new Date(app.createdAt).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}</p>
                           </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{locale === "ru" ? "Роль" : "Role"}</p>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {getRoleLabel(app.requestedRole)}
+                              {app.approvedRole && app.approvedRole !== app.requestedRole ? ` → ${getRoleLabel(app.approvedRole)}` : ""}
+                            </p>
+                          </div>
                         </div>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.className}`}>
                           <badge.icon className="h-3 w-3" />
                           {badge.label}
                         </span>
                         {app.status === "PENDING" && (
-                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-2">
+                            <select
+                              value={roleSelections[app.id] || app.requestedRole || "PARTICIPANT"}
+                              onChange={(e) =>
+                                setRoleSelections((prev) => ({
+                                  ...prev,
+                                  [app.id]: e.target.value as "PARTICIPANT" | "EXPERT",
+                                }))
+                              }
+                              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                              <option value="PARTICIPANT">{t.roles.participant}</option>
+                              <option value="EXPERT">{t.roles.expert}</option>
+                            </select>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             <Button
                               size="sm"
                               onClick={() => handleUpdateStatus(app.id, "APPROVED")}
@@ -331,6 +385,7 @@ export default function AdminApplicationsPage() {
                               <X className="mr-1 h-4 w-4" />
                               {t.applications.reject}
                             </Button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -351,6 +406,9 @@ export default function AdminApplicationsPage() {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         {t.applications.submissionDate}
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {locale === "ru" ? "Роль" : "Role"}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         {t.common.status}
@@ -382,6 +440,14 @@ export default function AdminApplicationsPage() {
                           <td className="px-6 py-4 text-sm text-gray-500">
                             {new Date(app.createdAt).toLocaleDateString(locale === "ru" ? "ru-RU" : "en-US")}
                           </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            <div>{getRoleLabel(app.requestedRole)}</div>
+                            {app.approvedRole && app.approvedRole !== app.requestedRole && (
+                              <div className="text-xs text-gray-400">
+                                → {getRoleLabel(app.approvedRole)}
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
                               <badge.icon className="h-3 w-3" />
@@ -390,7 +456,21 @@ export default function AdminApplicationsPage() {
                           </td>
                           <td className="px-6 py-4 text-right">
                             {app.status === "PENDING" && (
-                              <div className="flex justify-end gap-2">
+                              <div className="flex flex-col items-end gap-2">
+                                <select
+                                  value={roleSelections[app.id] || app.requestedRole || "PARTICIPANT"}
+                                  onChange={(e) =>
+                                    setRoleSelections((prev) => ({
+                                      ...prev,
+                                      [app.id]: e.target.value as "PARTICIPANT" | "EXPERT",
+                                    }))
+                                  }
+                                  className="h-9 min-w-[9rem] rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                >
+                                  <option value="PARTICIPANT">{t.roles.participant}</option>
+                                  <option value="EXPERT">{t.roles.expert}</option>
+                                </select>
+                                <div className="flex justify-end gap-2">
                                 <Button
                                   size="sm"
                                   onClick={() => handleUpdateStatus(app.id, "APPROVED")}
@@ -408,6 +488,7 @@ export default function AdminApplicationsPage() {
                                   <X className="h-4 w-4 mr-1" />
                                   {t.applications.reject}
                                 </Button>
+                                </div>
                               </div>
                             )}
                           </td>

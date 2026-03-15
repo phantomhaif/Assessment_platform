@@ -23,7 +23,22 @@ export async function GET(
       where: { id: passportId },
       include: {
         user: true,
-        event: true,
+        event: {
+          include: {
+            assessmentSchema: {
+              include: {
+                modules: {
+                  orderBy: { order: "asc" },
+                  select: {
+                    code: true,
+                    name: true,
+                    nameEn: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         team: true,
       },
     })

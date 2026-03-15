@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Award, Download } from "lucide-react"
@@ -32,8 +33,9 @@ type EventOption = {
 
 export default function AdminPassportsPage() {
   const { t, locale } = useI18n()
+  const searchParams = useSearchParams()
   const [events, setEvents] = useState<EventOption[]>([])
-  const [selectedEventId, setSelectedEventId] = useState("")
+  const [selectedEventId, setSelectedEventId] = useState(searchParams.get("eventId") || "")
   const [passports, setPassports] = useState<Passport[]>([])
   const [isLoading, setIsLoading] = useState(false)
 

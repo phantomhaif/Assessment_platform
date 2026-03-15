@@ -37,6 +37,13 @@ export type SkillPassportRecord = {
     competencyEn?: string | null
     eventStart: Date
     eventEnd: Date
+    assessmentSchema?: {
+      modules: {
+        code: string
+        name: string
+        nameEn?: string | null
+      }[]
+    } | null
   }
   team: {
     name: string
@@ -46,10 +53,41 @@ export type SkillPassportRecord = {
 const UPLOADS_BASE = process.env.NODE_ENV === "production"
   ? "/app/uploads"
   : path.join(process.cwd(), "public", "uploads")
+const PASSPORT_CACHE_VERSION = "v3"
 
 function capitalize(value: string) {
   if (!value) return value
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function hasCyrillic(value: string) {
+  return /[А-Яа-яЁё]/.test(value)
+}
+
+function transliterateRu(value: string) {
+  const map: Record<string, string> = {
+    А: "A", а: "a", Б: "B", б: "b", В: "V", в: "v", Г: "G", г: "g",
+    Д: "D", д: "d", Е: "E", е: "e", Ё: "E", ё: "e", Ж: "Zh", ж: "zh",
+    З: "Z", з: "z", И: "I", и: "i", Й: "Y", й: "y", К: "K", к: "k",
+    Л: "L", л: "l", М: "M", м: "m", Н: "N", н: "n", О: "O", о: "o",
+    П: "P", п: "p", Р: "R", р: "r", С: "S", с: "s", Т: "T", т: "t",
+    У: "U", у: "u", Ф: "F", ф: "f", Х: "Kh", х: "kh", Ц: "Ts", ц: "ts",
+    Ч: "Ch", ч: "ch", Ш: "Sh", ш: "sh", Щ: "Shch", щ: "shch", Ъ: "", ъ: "",
+    Ы: "Y", ы: "y", Ь: "", ь: "", Э: "E", э: "e", Ю: "Yu", ю: "yu",
+    Я: "Ya", я: "ya",
+  }
+
+  return value
+    .split("")
+    .map((char) => map[char] ?? char)
+    .join("")
+}
+
+function toEnglishText(primary: string | null | undefined, fallback: string | null | undefined) {
+  const primaryValue = primary?.trim()
+  if (primaryValue) return primaryValue
+  const fallbackValue = fallback?.trim() || ""
+  return hasCyrillic(fallbackValue) ? transliterateRu(fallbackValue) : fallbackValue
 }
 
 export function formatPassportDateRange(
@@ -88,11 +126,15 @@ export function buildSkillPassportData(
   passport: SkillPassportRecord,
   locale: PassportLocale
 ): SkillPassportData {
+  const schemaModulesByCode = new Map(
+    (passport.event.assessmentSchema?.modules || []).map((module) => [module.code, module])
+  )
+
   const skillGroups = ((passport.skillGroupScores as ScoreGroup[]) || []).map((group, index) => ({
     number: Number(group.number ?? index + 1),
     name:
       locale === "en"
-        ? group.nameEn || group.name || `Skill group ${Number(group.number ?? index + 1)}`
+        ? toEnglishText(group.nameEn, group.name) || `Skill group ${Number(group.number ?? index + 1)}`
         : group.name || group.nameEn || `Группа ${Number(group.number ?? index + 1)}`,
     score: Number(group.score ?? 0),
     maxScore: Number(group.maxScore ?? 0),
@@ -101,24 +143,43 @@ export function buildSkillPassportData(
   const modules = ((passport.moduleScores as ScoreModule[]) || []).map((module, index) => ({
     code: String(module.code || String.fromCharCode(65 + index)),
     name:
-      locale === "en"
-        ? module.nameEn || module.name || `Module ${String(module.code || index + 1)}`
-        : module.name || module.nameEn || `Модуль ${String(module.code || index + 1)}`,
+      (() => {
+        const schemaModule = schemaModulesByCode.get(String(module.code || ""))
+        if (locale === "en") {
+          return (
+            toEnglishText(module.nameEn || schemaModule?.nameEn, module.name || schemaModule?.name) ||
+            `Module ${String(module.code || index + 1)}`
+          )
+        }
+        return module.name || schemaModule?.name || module.nameEn || schemaModule?.nameEn || `Модуль ${String(module.code || index + 1)}`
+      })(),
     score: Number(module.score ?? 0),
     maxScore: Number(module.maxScore ?? 0),
   }))
 
   return {
-    participantName: `${passport.user.lastName} ${passport.user.firstName}`,
-    participantMiddleName: passport.user.middleName || undefined,
-    organization: passport.user.organization || passport.team?.name || "",
+    participantName:
+      locale === "en"
+        ? toEnglishText(
+            [passport.user.lastName, passport.user.firstName].filter(Boolean).join(" "),
+            [passport.user.lastName, passport.user.firstName].filter(Boolean).join(" ")
+          )
+        : `${passport.user.lastName} ${passport.user.firstName}`,
+    participantMiddleName:
+      locale === "en"
+        ? toEnglishText(passport.user.middleName, passport.user.middleName) || undefined
+        : passport.user.middleName || undefined,
+    organization:
+      locale === "en"
+        ? toEnglishText(passport.user.organization, passport.team?.name || "") || ""
+        : passport.user.organization || passport.team?.name || "",
     eventName:
       locale === "en"
-        ? passport.event.nameEn || passport.event.name
+        ? toEnglishText(passport.event.nameEn, passport.event.name)
         : passport.event.name,
     competency:
       locale === "en"
-        ? passport.event.competencyEn || passport.event.competency
+        ? toEnglishText(passport.event.competencyEn, passport.event.competency)
         : passport.event.competency,
     dateRange: formatPassportDateRange(
       new Date(passport.event.eventStart),
@@ -133,7 +194,7 @@ export function buildSkillPassportData(
 }
 
 export function getPassportPdfFileName(passportId: string, locale: PassportLocale): string {
-  return `skill-passport-${passportId}-${locale}.pdf`
+  return `skill-passport-${passportId}-${locale}-${PASSPORT_CACHE_VERSION}.pdf`
 }
 
 export function getPassportPdfDir(passportId: string): string {

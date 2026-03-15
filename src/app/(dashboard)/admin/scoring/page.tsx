@@ -565,7 +565,7 @@ export default function AdminScoringPage() {
                                     <div className="flex w-full flex-col items-start gap-2 sm:w-auto md:items-end">
                                       <div className="flex flex-wrap items-center gap-1">
                                         {[0, 1, 2].map(judgeIndex => {
-                                          const value = currentJudgeValues[judgeIndex] ?? 0
+                                          const value = currentJudgeValues[judgeIndex]
 
                                           return criterion.judgementOptions && criterion.judgementOptions.length > 0 ? (
                                             <select
@@ -576,7 +576,7 @@ export default function AdminScoringPage() {
                                                 judgeIndex,
                                                 e.target.value
                                               )}
-                                              className="h-9 w-24 min-w-24 rounded-md border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              className="h-9 w-28 min-w-[7rem] shrink-0 rounded-md border border-gray-300 bg-white px-3 text-center text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:w-32 sm:min-w-[8rem]"
                                               title={`Judge ${judgeIndex + 1}`}
                                             >
                                               <option value="">{locale === "ru" ? "—" : "-"}</option>
@@ -599,7 +599,7 @@ export default function AdminScoringPage() {
                                                 judgeIndex,
                                                 e.target.value
                                               )}
-                                              className="w-24 h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              className="h-9 w-28 min-w-[7rem] shrink-0 rounded-md border border-gray-300 bg-white px-3 text-center text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:w-32 sm:min-w-[8rem]"
                                               title={`Judge ${judgeIndex + 1}`}
                                               placeholder={locale === "ru" ? "—" : "-"}
                                             />

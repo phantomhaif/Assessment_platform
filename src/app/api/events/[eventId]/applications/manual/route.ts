@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+function normalizeApplicationRole(value: unknown) {
+  return value === "EXPERT" ? "EXPERT" : "PARTICIPANT"
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
@@ -17,13 +21,12 @@ export async function POST(
     }
 
     const { eventId } = await params
-    const { userId } = await req.json()
+    const { userId, requestedRole } = await req.json()
 
     if (!userId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
-    // Check if user already has application for this event
     const existingApplication = await prisma.application.findUnique({
       where: {
         userId_eventId: {
@@ -40,26 +43,46 @@ export async function POST(
       )
     }
 
-    // Create application with APPROVED status
-    const application = await prisma.application.create({
-      data: {
-        userId,
-        eventId,
-        agreedToRegulation: true,
-        status: "APPROVED",
-        comment: "Добавлен администратором",
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            organization: true,
+    const role = normalizeApplicationRole(requestedRole)
+
+    const application = await prisma.$transaction(async (tx) => {
+      const created = await tx.application.create({
+        data: {
+          userId,
+          eventId,
+          agreedToRegulation: true,
+          status: "APPROVED",
+          requestedRole: role,
+          approvedRole: role,
+          comment: "Добавлен администратором",
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              organization: true,
+              role: true,
+            },
           },
         },
-      },
+      })
+
+      if (role === "EXPERT" && !["ADMIN", "ORGANIZER"].includes(created.user.role)) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: "EXPERT" },
+        })
+      } else if (created.user.role === "GUEST") {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: "PARTICIPANT" },
+        })
+      }
+
+      return created
     })
 
     return NextResponse.json(application, { status: 201 })

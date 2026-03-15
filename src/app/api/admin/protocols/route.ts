@@ -6,7 +6,9 @@ import { z } from "zod"
 const createProtocolSchema = z.object({
   eventId: z.string(),
   title: z.string().min(1, "Название обязательно"),
+  titleEn: z.string().optional(),
   content: z.string().min(1, "Содержание обязательно"),
+  contentEn: z.string().optional(),
 })
 
 export async function GET(req: NextRequest) {
@@ -16,7 +18,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -47,9 +49,9 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json(
-      protocols.map((p) => ({
-        ...p,
-        eventName: p.event.name,
+      protocols.map((protocol) => ({
+        ...protocol,
+        eventName: protocol.event.name,
       }))
     )
   } catch (error) {
@@ -65,7 +67,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -76,7 +78,9 @@ export async function POST(req: NextRequest) {
       data: {
         eventId: validatedData.eventId,
         title: validatedData.title,
+        titleEn: validatedData.titleEn || null,
         content: validatedData.content,
+        contentEn: validatedData.contentEn || null,
       },
     })
 

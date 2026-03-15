@@ -65,7 +65,7 @@ export async function POST(
           ? {
               create: memberIds.map((userId: string, index: number) => ({
                 userId,
-                role: index === 0 ? "CAPTAIN" : "MEMBER",
+                role: "MEMBER",
               })),
             }
           : undefined,
