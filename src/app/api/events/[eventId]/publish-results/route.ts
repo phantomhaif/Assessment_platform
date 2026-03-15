@@ -36,10 +36,12 @@ export async function GET(
       rank: team.rank ?? null,
       totalScore: team.totalScore,
       members: team.members.map((member) => ({
-        id: member.user.id,
-        firstName: member.user.firstName,
-        lastName: member.user.lastName,
-        email: member.user.email,
+        user: {
+          id: member.user.id,
+          firstName: member.user.firstName,
+          lastName: member.user.lastName,
+          email: member.user.email,
+        },
       })),
     }))
 
