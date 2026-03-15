@@ -342,7 +342,7 @@ export default function AdminScoringPage() {
           }
 
           if (criterion?.type === "J") {
-            payload.judgeScores = getJudgeValues(criterion)
+            payload.judgeScores = getJudgeValues(criterion).map((value) => value ?? 0)
           }
 
           return payload
