@@ -1,12 +1,10 @@
 import React from "react"
 import path from "node:path"
 import {
-  Circle,
   Document,
   Image,
   Page,
   StyleSheet,
-  Svg,
   Text,
   View,
 } from "@react-pdf/renderer"
@@ -47,6 +45,9 @@ const colors = {
 }
 
 const logoBase = path.join(process.cwd(), "public", "templates", "passport-logos")
+const backgroundBase = path.join(process.cwd(), "public", "templates", "passport-bg")
+const leftWaveSrc = path.join(backgroundBase, "wave-left.png")
+const rightWaveSrc = path.join(backgroundBase, "wave-right.png")
 
 const logoSets = {
   ru: {
@@ -349,44 +350,6 @@ function truncate(value: string, maxLength: number) {
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`
 }
 
-function buildWaveDots(cols: number, rows: number, width: number, height: number, reverse = false) {
-  const dots: React.ReactNode[] = []
-
-  for (let layer = 0; layer < 2; layer += 1) {
-    const phase = layer === 0 ? 0 : 0.9
-    for (let row = 0; row < rows; row += 1) {
-      for (let col = 0; col < cols; col += 1) {
-        const nx = col / Math.max(1, cols - 1)
-        const ny = row / Math.max(1, rows - 1)
-        const xNorm = reverse ? 1 - nx : nx
-        const wave =
-          Math.sin(xNorm * 12.4 - ny * 8.8 + phase) * 0.45 +
-          Math.cos(xNorm * 7.2 + ny * 11.2 - phase) * 0.35 +
-          Math.sin(xNorm * 15.8 - ny * 4.6 + phase * 1.2) * 0.2
-        const intensity = Math.max(0, Math.min(1, (wave + 1) / 2))
-        const fadeX = Math.max(0, 1 - Math.abs(xNorm - 0.5) / 0.62)
-        const fadeY = Math.max(0, 1 - Math.abs(ny - 0.5) / 0.72)
-        const alpha = (0.08 + intensity * 0.26) * fadeX * fadeY * (layer === 0 ? 1 : 0.7)
-        const radius = 0.55 + intensity * (layer === 0 ? 1.45 : 1.05)
-        const fill = intensity > 0.52 ? colors.waveDark : colors.waveLight
-
-        dots.push(
-          <Circle
-            key={`${layer}-${row}-${col}`}
-            cx={12 + (width - 24) * nx}
-            cy={12 + (height - 24) * ny}
-            r={radius}
-            fill={fill}
-            opacity={Number(alpha.toFixed(3))}
-          />
-        )
-      }
-    }
-  }
-
-  return dots
-}
-
 function LogoStrip({
   items,
   justify = "flex-start",
@@ -470,12 +433,14 @@ export function SkillPassportDocument({ data }: { data: SkillPassportData }) {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <Svg style={{ position: "absolute", top: 72, left: -70, width: 360, height: 210 }}>
-          {buildWaveDots(12, 6, 360, 210)}
-        </Svg>
-        <Svg style={{ position: "absolute", right: -78, bottom: 34, width: 390, height: 220 }}>
-          {buildWaveDots(14, 6, 390, 220, true)}
-        </Svg>
+        <Image
+          src={leftWaveSrc}
+          style={{ position: "absolute", top: 72, left: -70, width: 360, height: 210 }}
+        />
+        <Image
+          src={rightWaveSrc}
+          style={{ position: "absolute", right: -78, bottom: 34, width: 390, height: 220 }}
+        />
 
         <LogoStrip items={logos.top} />
 
