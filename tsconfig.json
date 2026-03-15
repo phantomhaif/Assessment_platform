@@ -30,5 +30,16 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "tmp",
+    "tmp/**",
+    "tmp*.ts",
+    "tmp*.tsx",
+    "tmp*.mts",
+    "tmp_pre_issue",
+    "tmp_pre_issue/**",
+    "tmp_pre_issue_fix",
+    "tmp_pre_issue_fix/**"
+  ]
 }
