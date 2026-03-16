@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { readFile } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { canAccessEventDocument, resolveEventDocumentAccessContext } from "@/lib/event-document-access"
 
 // Use Railway Volume path in production, local public folder in development
 const UPLOADS_BASE = process.env.NODE_ENV === "production"
@@ -52,6 +55,38 @@ export async function GET(
 
     const filePath = path.join(UPLOADS_BASE, sanitizedPath)
 
+    if (pathSegments[0] === "documents" && pathSegments.length >= 3) {
+      const session = await auth()
+      const eventId = pathSegments[1]
+      const filename = pathSegments[pathSegments.length - 1]
+
+      const document = await prisma.eventDocument.findFirst({
+        where: {
+          eventId,
+          fileUrl: {
+            endsWith: `/documents/${eventId}/${filename}`,
+          },
+        },
+        select: {
+          access: true,
+        },
+      })
+
+      if (!document) {
+        return NextResponse.json({ error: "File not found" }, { status: 404 })
+      }
+
+      const accessContext = await resolveEventDocumentAccessContext(
+        eventId,
+        session?.user?.id,
+        session?.user?.role
+      )
+
+      if (!canAccessEventDocument(document.access, accessContext)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+    }
+
     // Check if file exists
     if (!existsSync(filePath)) {
       return NextResponse.json({ error: "File not found" }, { status: 404 })
@@ -65,7 +100,7 @@ export async function GET(
     const mimeType = MIME_TYPES[extension] || "application/octet-stream"
 
     // Return file with appropriate headers
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         "Content-Type": mimeType,
         "Content-Length": fileBuffer.length.toString(),

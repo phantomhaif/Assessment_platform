@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canAccessEventDocument, resolveEventDocumentAccessContext } from "@/lib/event-document-access"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -14,12 +15,24 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const session = await auth()
     const { eventId } = await params
 
-    const documents = await prisma.eventDocument.findMany({
+    const allDocuments = await prisma.eventDocument.findMany({
       where: { eventId },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     })
+
+    const accessContext = await resolveEventDocumentAccessContext(
+      eventId,
+      session?.user?.id,
+      session?.user?.role
+    )
+
+    const documents =
+      accessContext.isAdminOrOrganizer
+        ? allDocuments
+        : allDocuments.filter((document) => canAccessEventDocument(document.access, accessContext))
 
     return NextResponse.json(documents)
   } catch (error) {

@@ -78,7 +78,9 @@ export async function GET(req: NextRequest) {
       event: {
         id: event.id,
         name: event.name,
+        nameEn: event.nameEn,
         competency: event.competency,
+        competencyEn: event.competencyEn,
         status: event.status,
         eventStart: event.eventStart,
         eventEnd: event.eventEnd,

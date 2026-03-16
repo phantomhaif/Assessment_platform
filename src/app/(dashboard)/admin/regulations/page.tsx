@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { FileText, Plus, Edit, Trash2, Users, Calendar } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedEventName } from "@/lib/events"
 
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   status: string
 }
 
@@ -133,7 +135,7 @@ export default function AdminRegulationsPage() {
             <option value="">{t.regulationsAdmin.selectEventTitle}</option>
             {events.map((event) => (
               <option key={event.id} value={event.id}>
-                {event.name}
+                {getLocalizedEventName(event, locale)}
               </option>
             ))}
           </select>

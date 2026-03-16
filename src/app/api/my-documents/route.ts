@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canAccessEventDocument, resolveEventDocumentAccessContext } from "@/lib/event-document-access"
 
 export async function GET() {
   try {
@@ -9,11 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const [applications, memberships] = await Promise.all([
+    const [applications, memberships, expertAssignments] = await Promise.all([
       prisma.application.findMany({
         where: {
           userId: session.user.id,
-          status: { in: ["PENDING", "APPROVED"] },
+          status: "APPROVED",
         },
         select: { eventId: true },
       }),
@@ -27,12 +28,17 @@ export async function GET() {
           },
         },
       }),
+      prisma.expertAssignment.findMany({
+        where: { expertId: session.user.id },
+        select: { eventId: true },
+      }),
     ])
 
     const eventIds = Array.from(
       new Set([
         ...applications.map((application) => application.eventId),
         ...memberships.map((membership) => membership.team.eventId),
+        ...expertAssignments.map((assignment) => assignment.eventId),
       ])
     )
 
@@ -53,11 +59,6 @@ export async function GET() {
         eventStart: true,
         eventEnd: true,
         documents: {
-          where: {
-            access: {
-              hasSome: ["PUBLIC", "PARTICIPANTS"],
-            },
-          },
           orderBy: [{ order: "asc" }, { createdAt: "asc" }],
           select: {
             id: true,
@@ -73,7 +74,17 @@ export async function GET() {
       orderBy: { eventStart: "asc" },
     })
 
-    return NextResponse.json(events.filter((event) => event.documents.length > 0))
+    const visibleEvents = await Promise.all(
+      events.map(async (event) => {
+        const accessContext = await resolveEventDocumentAccessContext(event.id, session.user.id, session.user.role)
+        return {
+          ...event,
+          documents: event.documents.filter((document) => canAccessEventDocument(document.access, accessContext)),
+        }
+      })
+    )
+
+    return NextResponse.json(visibleEvents.filter((event) => event.documents.length > 0))
   } catch (error) {
     console.error("Error fetching user documents:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })

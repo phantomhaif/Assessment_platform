@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { FileSpreadsheet, Upload, Eye } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedCompetency, getLocalizedEventName } from "@/lib/events"
 
 export default function AdminSchemasPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [events, setEvents] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -57,10 +58,10 @@ export default function AdminSchemasPage() {
           {events.map((event) => (
             <Card key={event.id}>
               <CardHeader>
-                <CardTitle className="text-lg">{event.name}</CardTitle>
+                <CardTitle className="text-lg">{getLocalizedEventName(event, locale)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500 mb-4">{event.competency}</p>
+                <p className="text-sm text-gray-500 mb-4">{getLocalizedCompetency(event, locale)}</p>
 
                 {event.assessmentSchema ? (
                   <div className="space-y-2">

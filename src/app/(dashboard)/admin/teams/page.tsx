@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Users, Plus, UserPlus } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedEventName } from "@/lib/events"
 
 interface Team {
   id: string
@@ -25,6 +26,7 @@ interface Team {
   event: {
     id: string
     name: string
+    nameEn?: string | null
   }
 }
 
@@ -35,7 +37,7 @@ export default function AdminTeamsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newTeamName, setNewTeamName] = useState("")
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   useEffect(() => {
     fetchEvents()
@@ -121,7 +123,7 @@ export default function AdminTeamsPage() {
                 <option value="">{t.applications.selectEvent}</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
-                    {event.name}
+                    {getLocalizedEventName(event, locale)}
                   </option>
                 ))}
               </select>

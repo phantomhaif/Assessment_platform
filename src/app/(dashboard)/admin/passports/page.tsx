@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Award, Download } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedEventName } from "@/lib/events"
 
 interface Passport {
   id: string
@@ -29,6 +30,7 @@ interface Passport {
 type EventOption = {
   id: string
   name: string
+  nameEn?: string | null
 }
 
 export default function AdminPassportsPage() {
@@ -129,7 +131,7 @@ export default function AdminPassportsPage() {
             <option value="">{t.passportsAdmin.selectEvent}</option>
             {events.map((event) => (
               <option key={event.id} value={event.id}>
-                {event.name}
+                {getLocalizedEventName(event, locale)}
               </option>
             ))}
           </select>

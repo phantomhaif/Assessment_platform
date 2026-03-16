@@ -151,11 +151,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
       if (docsRes.ok) {
         const docsData = await docsRes.json()
-        // Filter documents that are visible to participants
-        const visibleDocs = docsData.filter((doc: Document) =>
-          Array.isArray(doc.access) && (doc.access.includes("PUBLIC") || doc.access.includes("PARTICIPANTS"))
-        )
-        setDocuments(visibleDocs)
+        setDocuments(docsData)
       }
     } catch (error) {
       console.error("Error fetching data:", error)

@@ -13,9 +13,18 @@ export default function Home() {
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <Image src="/logo.png" alt="Industry Skills" width={40} height={40} />
-              <span className="truncate font-bold text-base sm:text-xl">INDUSTRY SKILLS Платформа оценивания</span>
+            <div className="flex min-w-0 items-center gap-3">
+              <Image src="/logo.png" alt="Industry Skills" width={52} height={52} className="flex-shrink-0" />
+              <div className="flex min-w-0 flex-col justify-between">
+                <h1 className="font-black uppercase leading-tight tracking-wider text-[#C41E3A]" style={{ fontSize: "14px" }}>
+                  INDUSTRY
+                  <br />
+                  SKILLS
+                </h1>
+                <p className="truncate text-xs leading-none text-[#64748b]">
+                  {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
+                </p>
+              </div>
             </div>
             <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-4">
               <button

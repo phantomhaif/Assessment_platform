@@ -9,11 +9,14 @@ import { Plus, Calendar, Edit, Trash2, Eye, Upload, Filter } from "lucide-react"
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedCompetency, getLocalizedEventName } from "@/lib/events"
 
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   competency: string
+  competencyEn?: string | null
   status: string
   eventStart: string
   eventEnd: string
@@ -111,6 +114,9 @@ export default function AdminEventsPage() {
       return 0
     })
 
+  const getEventLabel = (event: Event) => getLocalizedEventName(event, locale)
+  const getCompetencyLabel = (event: Event) => getLocalizedCompetency(event, locale)
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -145,7 +151,14 @@ export default function AdminEventsPage() {
               >
                 <option value="ALL">{t.common.all}</option>
                 {competencies.map((comp) => (
-                  <option key={comp} value={comp}>{comp}</option>
+                  <option key={comp} value={comp}>
+                    {locale === "en"
+                      ? getLocalizedCompetency(
+                          events.find((event) => event.competency === comp) || { name: "", competency: comp },
+                          locale
+                        )
+                      : comp}
+                  </option>
                 ))}
               </select>
             </div>
@@ -232,8 +245,8 @@ export default function AdminEventsPage() {
                 <Card key={event.id}>
                   <CardContent className="space-y-4 p-4">
                     <div>
-                      <p className="font-medium text-gray-900">{event.name}</p>
-                      <p className="mt-1 break-words text-sm text-gray-500">{event.competency}</p>
+                      <p className="font-medium text-gray-900">{getEventLabel(event)}</p>
+                      <p className="mt-1 break-words text-sm text-gray-500">{getCompetencyLabel(event)}</p>
                     </div>
 
                     <div>
@@ -286,7 +299,7 @@ export default function AdminEventsPage() {
                       <Button
                         variant="ghost"
                         className="w-full justify-center"
-                        onClick={() => handleDeleteEvent(event.id, event.name)}
+                        onClick={() => handleDeleteEvent(event.id, getEventLabel(event))}
                         disabled={deletingId === event.id}
                         title={t.common.delete}
                       >
@@ -330,8 +343,8 @@ export default function AdminEventsPage() {
                   <tr key={event.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900">{event.name}</p>
-                        <p className="text-sm text-gray-500">{event.competency}</p>
+                        <p className="font-medium text-gray-900">{getEventLabel(event)}</p>
+                        <p className="text-sm text-gray-500">{getCompetencyLabel(event)}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -369,7 +382,7 @@ export default function AdminEventsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteEvent(event.id, event.name)}
+                          onClick={() => handleDeleteEvent(event.id, getEventLabel(event))}
                           disabled={deletingId === event.id}
                           title={t.common.delete}
                         >

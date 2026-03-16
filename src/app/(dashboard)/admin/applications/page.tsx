@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Check, X, Clock, UserPlus, Search } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedEventName } from "@/lib/events"
 
 interface Application {
   id: string
@@ -199,7 +200,7 @@ export default function AdminApplicationsPage() {
                 <option value="">{t.applications.selectEvent}</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
-                    {event.name}
+                    {getLocalizedEventName(event, locale)}
                   </option>
                 ))}
               </select>
@@ -237,7 +238,7 @@ export default function AdminApplicationsPage() {
                 <select
                   value={manualRole}
                   onChange={(e) => setManualRole(e.target.value as "PARTICIPANT" | "EXPERT")}
-                  className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm leading-tight focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="PARTICIPANT">{t.roles.participant}</option>
                   <option value="EXPERT">{t.roles.expert}</option>
@@ -465,7 +466,7 @@ export default function AdminApplicationsPage() {
                                       [app.id]: e.target.value as "PARTICIPANT" | "EXPERT",
                                     }))
                                   }
-                                  className="h-9 min-w-[9rem] rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                  className="h-10 min-w-[9rem] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm leading-tight focus:outline-none focus:ring-2 focus:ring-red-500"
                                 >
                                   <option value="PARTICIPANT">{t.roles.participant}</option>
                                   <option value="EXPERT">{t.roles.expert}</option>

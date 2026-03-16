@@ -303,7 +303,7 @@ export const dictionaries = {
       accessLevel: "Уровень доступа",
       version: "Версия",
       types: {
-        regulation: "Протокол",
+        regulation: "Регламент",
         smp: "СМП",
         infrastructure: "Инфраструктура",
         schedule: "Расписание",

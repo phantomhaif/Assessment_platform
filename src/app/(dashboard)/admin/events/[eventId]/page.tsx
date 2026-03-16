@@ -8,6 +8,7 @@ import { ArrowLeft, Edit, Upload, Users, Play, CheckCircle, Trophy, Download, Ma
 import { format } from "date-fns"
 import { ru, enUS } from "date-fns/locale"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedCompetency, getLocalizedDescription, getLocalizedEventName } from "@/lib/events"
 
 interface TeamMember {
   user: {
@@ -28,8 +29,11 @@ interface RankedTeam {
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   description: string | null
+  descriptionEn?: string | null
   competency: string
+  competencyEn?: string | null
   status: string
   registrationStart: string
   registrationEnd: string
@@ -202,6 +206,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
     RESULTS_PUBLISHED: t.events.status.results_published,
   }
 
+  const eventName = getLocalizedEventName(event, locale)
+  const eventCompetency = getLocalizedCompetency(event, locale)
+  const eventDescription = getLocalizedDescription(event, locale)
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -212,8 +220,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-            <p className="text-gray-500">{event.competency}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{eventName}</h1>
+            <p className="text-gray-500">{eventCompetency}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -364,6 +372,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           </CardContent>
         </Card>
       </div>
+
+      {eventDescription && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t.common.description}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-wrap text-sm text-gray-700">{eventDescription}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {event.description && (
         <Card>

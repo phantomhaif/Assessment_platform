@@ -8,10 +8,12 @@ import { Download, FileText, FolderOpen, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedCompetency, getLocalizedEventName } from "@/lib/events"
 
 interface EventOption {
   id: string
   name: string
+  nameEn?: string | null
   status: string
 }
 
@@ -54,7 +56,9 @@ interface AdminSubmissionsResponse {
   event: {
     id: string
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
     status: string
     eventStart: string
     eventEnd: string
@@ -145,7 +149,7 @@ export default function AdminSubmissionsPage() {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `${data?.event.name || "team-submissions"}.zip`
+      link.download = `${(data ? getLocalizedEventName(data.event, locale) : "team-submissions") || "team-submissions"}.zip`
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -215,7 +219,7 @@ export default function AdminSubmissionsPage() {
                 <option value="">{locale === "ru" ? "Выберите мероприятие" : "Select event"}</option>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
-                    {event.name}
+                    {getLocalizedEventName(event, locale)}
                   </option>
                 ))}
               </select>
@@ -256,7 +260,7 @@ export default function AdminSubmissionsPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{data.event.name}</CardTitle>
+              <CardTitle className="text-lg">{getLocalizedEventName(data.event, locale)}</CardTitle>
               <div className="grid grid-cols-1 gap-3 text-sm text-gray-600 sm:grid-cols-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -267,7 +271,7 @@ export default function AdminSubmissionsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  <span>{data.event.competency}</span>
+                  <span>{getLocalizedCompetency(data.event, locale)}</span>
                 </div>
               </div>
             </CardHeader>
