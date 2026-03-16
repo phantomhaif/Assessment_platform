@@ -21,6 +21,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
     name: "",
     nameEn: "",
     description: "",
+    descriptionEn: "",
     competency: "",
     competencyEn: "",
     eventFormat: "OFFLINE" as "ONLINE" | "OFFLINE",
@@ -46,6 +47,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
           name: event.name,
           nameEn: event.nameEn || "",
           description: event.description || "",
+          descriptionEn: event.descriptionEn || "",
           competency: event.competency,
           competencyEn: event.competencyEn || "",
           eventFormat: event.eventFormat || "OFFLINE",
@@ -174,6 +176,18 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
               <textarea
                 name="description"
                 value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {locale === "ru" ? "Описание (EN)" : "Description (EN)"}
+              </label>
+              <textarea
+                name="descriptionEn"
+                value={formData.descriptionEn}
                 onChange={handleChange}
                 rows={4}
                 className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"

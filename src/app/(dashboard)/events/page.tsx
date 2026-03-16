@@ -13,8 +13,11 @@ import { useI18n } from "@/lib/i18n/context"
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   description: string | null
+  descriptionEn?: string | null
   competency: string
+  competencyEn?: string | null
   logo: string | null
   registrationStart: string
   registrationEnd: string
@@ -36,6 +39,12 @@ export default function EventsPage() {
   const [sortBy, setSortBy] = useState<string>("date-desc")
   const { t, locale } = useI18n()
   const dateLocale = locale === "ru" ? ru : enUS
+
+  const getEventName = (event: Event) => (locale === "en" ? event.nameEn || event.name : event.name)
+  const getDescription = (event: Event) =>
+    locale === "en" ? event.descriptionEn || event.description : event.description
+  const getCompetency = (event: Event) =>
+    locale === "en" ? event.competencyEn || event.competency : event.competency
 
   useEffect(() => {
     fetchEvents()
@@ -70,12 +79,12 @@ export default function EventsPage() {
   }
 
   // Get unique competencies for filter
-  const competencies = Array.from(new Set(events.map(e => e.competency)))
+  const competencies = Array.from(new Set(events.map((event) => getCompetency(event))))
 
   // Filter and sort events
   const filteredEvents = events
     .filter((event) => {
-      const matchesCompetency = selectedCompetency === "ALL" || event.competency === selectedCompetency
+      const matchesCompetency = selectedCompetency === "ALL" || getCompetency(event) === selectedCompetency
       const matchesStartDate = !startDate || new Date(event.eventStart) >= new Date(startDate)
       const matchesEndDate = !endDate || new Date(event.eventEnd) <= new Date(endDate)
       return matchesCompetency && matchesStartDate && matchesEndDate
@@ -189,8 +198,8 @@ export default function EventsPage() {
                 <CardHeader>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <CardTitle className="text-lg">{event.name}</CardTitle>
-                      <p className="text-sm text-red-600 mt-1">{event.competency}</p>
+                      <CardTitle className="text-lg">{getEventName(event)}</CardTitle>
+                      <p className="text-sm text-red-600 mt-1">{getCompetency(event)}</p>
                     </div>
                     <span className={`inline-flex self-start rounded-full px-2 py-1 text-xs font-medium ${badge.className}`}>
                       {badge.label}
@@ -198,9 +207,9 @@ export default function EventsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  {event.description && (
+                  {getDescription(event) && (
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {event.description}
+                      {getDescription(event)}
                     </p>
                   )}
                   <div className="space-y-2 text-sm text-gray-500">

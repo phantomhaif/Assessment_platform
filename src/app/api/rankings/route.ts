@@ -10,6 +10,7 @@ type RankedTeamRecord = {
   totalScore: number | null
   event: {
     name: string
+    nameEn?: string | null
     eventStart: Date
   }
 }
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const period = searchParams.get("period") || "all" // all, year, event
     const eventId = searchParams.get("eventId")
+    const locale = searchParams.get("lang") === "en" ? "en" : "ru"
 
     let teams: RankedTeamRecord[] = []
 
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
           event: {
             select: {
               name: true,
+              nameEn: true,
               eventStart: true,
             },
           },
@@ -85,6 +88,7 @@ export async function GET(req: NextRequest) {
           event: {
             select: {
               name: true,
+              nameEn: true,
               eventStart: true,
             },
           },
@@ -108,6 +112,7 @@ export async function GET(req: NextRequest) {
           event: {
             select: {
               name: true,
+              nameEn: true,
               eventStart: true,
             },
           },
@@ -166,7 +171,7 @@ export async function GET(req: NextRequest) {
         number: team.number,
         rank: team.rank,
         totalScore: team.totalScore,
-        eventName: team.event.name,
+        eventName: locale === "en" ? team.event.nameEn || team.event.name : team.event.name,
         eventDate: team.event.eventStart,
       }))
     )

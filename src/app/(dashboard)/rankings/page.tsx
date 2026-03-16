@@ -18,6 +18,7 @@ interface Ranking {
 interface EventOption {
   id: string
   name: string
+  nameEn?: string | null
   status: string
 }
 
@@ -49,7 +50,7 @@ export default function RankingsPage() {
     const fetchRankings = async () => {
       setIsLoading(true)
       try {
-        let url = `/api/rankings?period=${period}`
+        let url = `/api/rankings?period=${period}&lang=${locale}`
         if (period === "event" && eventId) {
           url += `&eventId=${eventId}`
         }
@@ -67,7 +68,7 @@ export default function RankingsPage() {
     }
 
     void fetchRankings()
-  }, [period, eventId])
+  }, [period, eventId, locale])
 
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-6 w-6 text-yellow-500" />
@@ -141,7 +142,7 @@ export default function RankingsPage() {
                   <option value="">{locale === "ru" ? "Выберите мероприятие..." : "Select event..."}</option>
                   {events.map((event) => (
                     <option key={event.id} value={event.id}>
-                      {event.name}
+                      {locale === "en" ? event.nameEn || event.name : event.name}
                     </option>
                   ))}
                 </select>

@@ -58,7 +58,9 @@ export async function GET() {
       event: {
         id: membership.team.event.id,
         name: membership.team.event.name,
+        nameEn: membership.team.event.nameEn,
         competency: membership.team.event.competency,
+        competencyEn: membership.team.event.competencyEn,
         status: membership.team.event.status,
         eventStart: membership.team.event.eventStart,
         eventEnd: membership.team.event.eventEnd,

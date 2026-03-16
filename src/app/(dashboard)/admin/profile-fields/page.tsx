@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Plus, Trash2, GripVertical, X } from "lucide-react"
+import { Plus, Trash2, X } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface ProfileField {
@@ -215,7 +215,6 @@ export default function ProfileFieldsPage() {
             <Card key={field.id}>
               <CardContent className="py-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{field.name}</span>

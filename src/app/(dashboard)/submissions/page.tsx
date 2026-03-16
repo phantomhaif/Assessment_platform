@@ -27,7 +27,9 @@ interface SubmissionItem {
   event: {
     id: string
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
     status: string
     eventStart: string
     eventEnd: string
@@ -221,9 +223,11 @@ export default function SubmissionsPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <CardTitle className="text-lg">
-                      {item.event.name}
+                      {locale === "en" ? item.event.nameEn || item.event.name : item.event.name}
                     </CardTitle>
-                    <p className="mt-1 text-sm text-red-600">{item.event.competency}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {locale === "en" ? item.event.competencyEn || item.event.competency : item.event.competency}
+                    </p>
                   </div>
                   <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                     {statusLabel(item.event.status)}

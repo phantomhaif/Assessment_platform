@@ -15,7 +15,7 @@ export default function Home() {
           <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-3">
             <div className="flex min-w-0 items-center gap-2">
               <Image src="/logo.png" alt="Industry Skills" width={40} height={40} />
-              <span className="truncate font-bold text-base sm:text-xl">Assessment Platform</span>
+              <span className="truncate font-bold text-base sm:text-xl">INDUSTRY SKILLS Платформа оценивания</span>
             </div>
             <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-4">
               <button
@@ -161,7 +161,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* About Platform */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Assessment Platform</h3>
+              <h3 className="font-bold text-gray-900 mb-3">INDUSTRY SKILLS</h3>
               <p className="text-gray-600 text-sm">
                 {t.home.footerText}
               </p>
@@ -229,7 +229,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-300 pt-6 text-center text-gray-500 text-sm">
-            <p>© 2026 Assessment Platform. {locale === "ru" ? "Все права защищены." : "All rights reserved."}</p>
+            <p>© 2026 INDUSTRY SKILLS. {locale === "ru" ? "Все права защищены." : "All rights reserved."}</p>
           </div>
         </div>
       </footer>

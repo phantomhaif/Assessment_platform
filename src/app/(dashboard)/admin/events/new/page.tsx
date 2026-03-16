@@ -19,6 +19,7 @@ export default function NewEventPage() {
     name: "",
     nameEn: "",
     description: "",
+    descriptionEn: "",
     competency: "",
     competencyEn: "",
     eventFormat: "OFFLINE" as "ONLINE" | "OFFLINE",
@@ -136,6 +137,20 @@ export default function NewEventPage() {
                 rows={4}
                 className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 placeholder={t.eventForm.descriptionPlaceholder}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {locale === "ru" ? "Описание (EN)" : "Description (EN)"}
+              </label>
+              <textarea
+                name="descriptionEn"
+                value={formData.descriptionEn}
+                onChange={handleChange}
+                rows={4}
+                className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="Event description in English"
               />
             </div>
           </CardContent>

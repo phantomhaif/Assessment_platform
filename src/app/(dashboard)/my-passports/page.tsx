@@ -16,7 +16,9 @@ interface SkillPassport {
   publishedAt: string
   event: {
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
     eventStart: string
     eventEnd: string
   }
@@ -125,10 +127,12 @@ export default function MyPassportsPage() {
 
               <CardContent className="p-4">
                 <h4 className="font-semibold text-gray-900 mb-1">
-                  {passport.event.name}
+                  {locale === "en" ? passport.event.nameEn || passport.event.name : passport.event.name}
                 </h4>
                 <p className="text-sm text-red-600 mb-2">
-                  {passport.event.competency}
+                  {locale === "en"
+                    ? passport.event.competencyEn || passport.event.competency
+                    : passport.event.competency}
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mb-4">
                   <Calendar className="h-4 w-4 mr-1" />

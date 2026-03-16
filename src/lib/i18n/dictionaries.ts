@@ -28,7 +28,7 @@ export const dictionaries = {
       ctaSubtitle: "Зарегистрируйтесь и примите участие в соревнованиях",
       createAccount: "Создать аккаунт",
       loginAccount: "Войти в аккаунт",
-      footerText: "Assessment Platform - Платформа оценки соревнований профессионального мастерства",
+      footerText: "INDUSTRY SKILLS - Платформа оценивания",
     },
 
     // Common
@@ -159,9 +159,9 @@ export const dictionaries = {
       organizerComment: "Комментарий организатора",
       withdrawApplication: "Отозвать заявку",
       applyDescription: "Для участия в мероприятии подайте заявку. После одобрения вы будете добавлены в команду.",
-      agreeToRegulation: "Я ознакомился и согласен с протоколом мероприятия",
+      agreeToRegulation: "Я ознакомился и согласен с регламентом мероприятия",
       registrationClosed: "Регистрация на это мероприятие закрыта",
-      mustAgreeToRegulation: "Необходимо согласиться с протоколом мероприятия",
+      mustAgreeToRegulation: "Необходимо согласиться с регламентом мероприятия",
       applicationSuccess: "Заявка успешно подана!",
       applicationError: "Ошибка подачи заявки",
       applicationWithdrawn: "Заявка отозвана",
@@ -637,7 +637,7 @@ export const dictionaries = {
       ctaSubtitle: "Sign up and participate in competitions",
       createAccount: "Create Account",
       loginAccount: "Login",
-      footerText: "Assessment Platform - Professional Skills Competition Assessment Platform",
+      footerText: "INDUSTRY SKILLS - Assessment Platform",
     },
 
     // Common

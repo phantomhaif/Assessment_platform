@@ -14,7 +14,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Industry Skills - Assessment Platform",
+  title: "INDUSTRY SKILLS - Платформа оценивания",
   description: "International Championships for Professional Skills Competencies",
   icons: {
     icon: "/favicon.png",

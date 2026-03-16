@@ -4,17 +4,18 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { FileText, Upload, Download, Trash2, X } from "lucide-react"
+import { FileText, Upload, Download, Trash2, X, ArrowUp, ArrowDown } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 export default function AdminDocumentsPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [events, setEvents] = useState<any[]>([])
   const [selectedEventId, setSelectedEventId] = useState("")
   const [documents, setDocuments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
   const [uploadForm, setUploadForm] = useState({
     name: "",
     type: "OTHER",
@@ -103,6 +104,39 @@ export default function AdminDocumentsPage() {
       }
     } catch (error) {
       console.error("Error deleting document:", error)
+    }
+  }
+
+  const handleMoveDocument = async (documentId: string, direction: "up" | "down") => {
+    const currentIndex = documents.findIndex((doc) => doc.id === documentId)
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
+
+    if (currentIndex === -1 || targetIndex < 0 || targetIndex >= documents.length) {
+      return
+    }
+
+    const reordered = [...documents]
+    const [movedDocument] = reordered.splice(currentIndex, 1)
+    reordered.splice(targetIndex, 0, movedDocument)
+
+    setDocuments(reordered)
+    setIsReordering(true)
+
+    try {
+      const response = await fetch(`/api/events/${selectedEventId}/documents`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: reordered.map((doc) => doc.id) }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Reorder error")
+      }
+    } catch (error) {
+      console.error("Error reordering documents:", error)
+      fetchDocuments()
+    } finally {
+      setIsReordering(false)
     }
   }
 
@@ -280,7 +314,25 @@ export default function AdminDocumentsPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2 self-end sm:self-auto">
+                      <div className="flex flex-wrap gap-2 self-end sm:self-auto">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isReordering || documents[0]?.id === doc.id}
+                          onClick={() => handleMoveDocument(doc.id, "up")}
+                          aria-label={locale === "ru" ? "Переместить выше" : "Move up"}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isReordering || documents[documents.length - 1]?.id === doc.id}
+                          onClick={() => handleMoveDocument(doc.id, "down")}
+                          aria-label={locale === "ru" ? "Переместить ниже" : "Move down"}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                           <Button variant="ghost" size="sm">
                             <Download className="h-4 w-4" />

@@ -22,6 +22,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            nameEn: true,
           },
         },
         signatures: {
@@ -46,7 +47,7 @@ export async function GET(
       content: locale === "en" ? protocol.contentEn || protocol.content : protocol.content,
       version: protocol.version,
       eventId: protocol.eventId,
-      eventName: protocol.event.name,
+      eventName: locale === "en" ? protocol.event.nameEn || protocol.event.name : protocol.event.name,
       createdAt: protocol.createdAt,
       isSigned: protocol.signatures.length > 0,
       signedAt: protocol.signatures[0]?.signedAt || null,

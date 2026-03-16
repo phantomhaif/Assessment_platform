@@ -18,7 +18,9 @@ export async function GET() {
         event: {
           select: {
             name: true,
+            nameEn: true,
             competency: true,
+            competencyEn: true,
             eventStart: true,
             eventEnd: true,
           },

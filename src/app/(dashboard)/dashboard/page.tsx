@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Calendar, Users, Award, ClipboardList, ArrowRight } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { format } from "date-fns"
@@ -24,7 +25,9 @@ interface Application {
   event: {
     id: string
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
   }
 }
 
@@ -34,7 +37,9 @@ interface Passport {
   event: {
     id: string
     name: string
+    nameEn?: string | null
     competency: string
+    competencyEn?: string | null
   }
   team: {
     rank: number
@@ -44,7 +49,9 @@ interface Passport {
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   competency: string
+  competencyEn?: string | null
   status: string
   registrationStart: string
   registrationEnd: string
@@ -64,6 +71,12 @@ export default function DashboardPage() {
   const [passports, setPassports] = useState<Passport[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const getEventName = (event: { name: string; nameEn?: string | null }) =>
+    locale === "en" ? event.nameEn || event.name : event.name
+
+  const getCompetencyName = (event: { competency: string; competencyEn?: string | null }) =>
+    locale === "en" ? event.competencyEn || event.competency : event.competency
 
   useEffect(() => {
     fetchData()
@@ -118,7 +131,9 @@ export default function DashboardPage() {
                 event: {
                   id: event.id,
                   name: event.name,
+                  nameEn: event.nameEn,
                   competency: event.competency,
+                  competencyEn: event.competencyEn,
                 },
               })
             }
@@ -180,7 +195,7 @@ export default function DashboardPage() {
 
 
       {!isAdmin && !isExpert && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">{t.dashboard.myApplications}</CardTitle>
@@ -196,8 +211,8 @@ export default function DashboardPage() {
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <p className="font-medium text-gray-900">{app.event.name}</p>
-                          <p className="text-sm text-gray-500">{app.event.competency}</p>
+                          <p className="font-medium text-gray-900">{getEventName(app.event)}</p>
+                          <p className="text-sm text-gray-500">{getCompetencyName(app.event)}</p>
                         </div>
                         {getStatusBadge(app.status)}
                       </div>
@@ -224,8 +239,8 @@ export default function DashboardPage() {
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <p className="font-medium text-gray-900">{passport.event.name}</p>
-                          <p className="text-sm text-gray-500">{passport.event.competency}</p>
+                          <p className="font-medium text-gray-900">{getEventName(passport.event)}</p>
+                          <p className="text-sm text-gray-500">{getCompetencyName(passport.event)}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-red-600">{passport.totalScore.toFixed(1)}</p>
@@ -240,6 +255,23 @@ export default function DashboardPage() {
               ) : (
                 <p className="text-gray-500 text-sm">{t.dashboard.resultsWillAppear}</p>
               )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{t.nav.documents}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-500">
+                {locale === "ru"
+                  ? "Регламенты, расписания и другие материалы по мероприятиям, в которых вы зарегистрированы."
+                  : "Regulations, schedules, and other materials for events you are registered for."}
+              </p>
+              <Link href="/documents">
+                <Button className="w-full" variant="outline">
+                  {locale === "ru" ? "Открыть документы" : "Open Documents"}
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
@@ -274,8 +306,8 @@ export default function DashboardPage() {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{event.name}</p>
-                      <p className="text-sm text-gray-500">{event.competency}</p>
+                      <p className="font-medium text-gray-900">{getEventName(event)}</p>
+                      <p className="text-sm text-gray-500">{getCompetencyName(event)}</p>
                     </div>
                     <div className="text-right text-sm text-gray-500">
                       <p>{format(new Date(event.eventStart), "d MMM", { locale: dateLocale })}</p>
@@ -297,11 +329,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
             {/* About Platform */}
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Assessment Platform</h3>
+              <h3 className="font-bold text-gray-900 mb-3">INDUSTRY SKILLS</h3>
               <p className="text-gray-600 text-sm">
                 {locale === "ru"
-                  ? "Assessment Platform - Платформа оценки соревнований профессионального мастерства"
-                  : "Assessment Platform - Professional Skills Competition Assessment Platform"}
+                  ? "INDUSTRY SKILLS - Платформа оценивания"
+                  : "INDUSTRY SKILLS - Assessment Platform"}
               </p>
             </div>
 
@@ -367,7 +399,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="border-t border-gray-300 pt-4 text-center text-gray-500 text-sm">
-            <p>© 2026 Assessment Platform. {locale === "ru" ? "Все права защищены." : "All rights reserved."}</p>
+            <p>© 2026 INDUSTRY SKILLS. {locale === "ru" ? "Все права защищены." : "All rights reserved."}</p>
           </div>
         </div>
       </footer>

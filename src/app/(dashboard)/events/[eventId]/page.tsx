@@ -16,8 +16,11 @@ import { useI18n } from "@/lib/i18n/context"
 interface Event {
   id: string
   name: string
+  nameEn?: string | null
   description: string | null
+  descriptionEn?: string | null
   competency: string
+  competencyEn?: string | null
   registrationStart: string
   registrationEnd: string
   eventStart: string
@@ -45,7 +48,7 @@ interface Document {
   id: string
   name: string
   type: string
-  access: string
+  access: string[]
   fileUrl: string
   version: number
   createdAt: string
@@ -90,6 +93,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+
+  const eventName = event ? (locale === "en" ? event.nameEn || event.name : event.name) : ""
+  const eventDescription = event
+    ? locale === "en"
+      ? event.descriptionEn || event.description
+      : event.description
+    : null
+  const eventCompetency = event ? (locale === "en" ? event.competencyEn || event.competency : event.competency) : ""
 
   useEffect(() => {
     fetchData()
@@ -142,7 +153,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
         const docsData = await docsRes.json()
         // Filter documents that are visible to participants
         const visibleDocs = docsData.filter((doc: Document) =>
-          doc.access === "PUBLIC" || doc.access === "PARTICIPANTS"
+          Array.isArray(doc.access) && (doc.access.includes("PUBLIC") || doc.access.includes("PARTICIPANTS"))
         )
         setDocuments(visibleDocs)
       }
@@ -310,8 +321,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-          <p className="text-red-600">{event.competency}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{eventName}</h1>
+          <p className="text-red-600">{eventCompetency}</p>
         </div>
       </div>
 
@@ -327,15 +338,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t.events.information}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {event.description && (
-              <p className="text-gray-600">{event.description}</p>
-            )}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{t.events.information}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {eventDescription && (
+                <p className="text-gray-600">{eventDescription}</p>
+              )}
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="h-4 w-4" />
@@ -360,16 +372,54 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               </div>
             </div>
 
-            {teamInfo && (
-              <div className="mt-4 p-3 bg-red-50 rounded-lg">
-                <p className="text-sm font-medium text-red-900">
-                  {t.events.yourTeam}: {teamInfo.name}
-                  {teamInfo.number && ` (#${teamInfo.number})`}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              {teamInfo && (
+                <div className="mt-4 p-3 bg-red-50 rounded-lg">
+                  <p className="text-sm font-medium text-red-900">
+                    {t.events.yourTeam}: {teamInfo.name}
+                    {teamInfo.number && ` (#${teamInfo.number})`}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {documents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {t.events.eventDocuments}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex flex-col gap-3 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex items-start gap-3">
+                        <File className="h-5 w-5 text-gray-500" />
+                        <div>
+                          <p className="font-medium text-gray-900">{doc.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {getDocumentTypeLabel(doc.type)} • {t.events.version} {doc.version}
+                          </p>
+                        </div>
+                      </div>
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          {t.common.download}
+                        </Button>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         <Card>
           <CardHeader>
@@ -502,44 +552,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
           </CardContent>
         </Card>
       </div>
-
-      {/* Documents section */}
-      {documents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {t.events.eventDocuments}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex flex-col gap-3 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-start gap-3">
-                    <File className="h-5 w-5 text-gray-500" />
-                    <div>
-                      <p className="font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {getDocumentTypeLabel(doc.type)} • {t.events.version} {doc.version}
-                      </p>
-                    </div>
-                  </div>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      {t.common.download}
-                    </Button>
-                  </a>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* File upload section for approved participants */}
       {isApproved && (

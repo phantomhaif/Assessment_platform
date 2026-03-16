@@ -38,6 +38,7 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/events", label: t.nav.events, icon: Calendar },
     { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
+    { href: "/documents", label: t.nav.documents, icon: FileText },
     { href: "/submissions", label: locale === "ru" ? "Работы" : "Submissions", icon: Upload },
     { href: "/my-passports", label: t.nav.myPassports, icon: Award },
     { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },

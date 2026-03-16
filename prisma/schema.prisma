@@ -81,6 +81,7 @@ model Event {
   name              String
   nameEn            String?
   description       String?
+  descriptionEn     String?
   competency        String
   competencyEn      String?
   logo              String?
@@ -113,6 +114,7 @@ model EventDocument {
   access    String[]     @default(["PARTICIPANTS"])
   fileUrl   String
   version   Int          @default(1)
+  order     Int          @default(0)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)

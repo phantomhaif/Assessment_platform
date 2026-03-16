@@ -28,9 +28,12 @@ export async function GET(
       return NextResponse.json({ error: "Protocol not found" }, { status: 404 })
     }
 
-    // Get all users who have applied or are assigned to this event
+    // Get all approved users registered for this event
     const applications = await prisma.application.findMany({
-      where: { eventId: protocol.eventId },
+      where: {
+        eventId: protocol.eventId,
+        status: "APPROVED",
+      },
       select: {
         approvedRole: true,
         requestedRole: true,
@@ -64,8 +67,31 @@ export async function GET(
       },
     })
 
+    const currentAssignments = await prisma.protocolAssignment.findMany({
+      where: { protocolId },
+      select: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            organization: true,
+          },
+        },
+      },
+    })
+
     // Combine and deduplicate users
-    const usersMap = new Map()
+    const usersMap = new Map<string, {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+      role: string
+      organization: string | null
+    }>()
 
     applications.forEach((app) => {
       usersMap.set(app.user.id, {
@@ -78,24 +104,9 @@ export async function GET(
       usersMap.set(assignment.expert.id, assignment.expert)
     })
 
-    // Get all users if no specific assignments (fallback)
-    if (usersMap.size === 0) {
-      const allUsers = await prisma.user.findMany({
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          role: true,
-          organization: true,
-        },
-        orderBy: [
-          { role: "asc" },
-          { lastName: "asc" },
-        ],
-      })
-      return NextResponse.json(allUsers)
-    }
+    currentAssignments.forEach((assignment) => {
+      usersMap.set(assignment.user.id, assignment.user)
+    })
 
     const users = Array.from(usersMap.values()).sort((a, b) => {
       if (a.role !== b.role) {

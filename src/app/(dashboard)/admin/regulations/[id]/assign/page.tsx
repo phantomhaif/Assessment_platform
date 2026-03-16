@@ -82,19 +82,19 @@ export default function AssignRegulationPage({
   }
 
   const handleRoleSelect = (role: string) => {
-    if (role === selectedRole) {
-      setSelectedRole("")
-      return
-    }
-
-    setSelectedRole(role)
     const roleUsers = users.filter((u) => u.role === role)
     const newSelectedIds = new Set(selectedUserIds)
+    const allSelected = roleUsers.length > 0 && roleUsers.every((user) => newSelectedIds.has(user.id))
 
     roleUsers.forEach((user) => {
-      newSelectedIds.add(user.id)
+      if (allSelected) {
+        newSelectedIds.delete(user.id)
+      } else {
+        newSelectedIds.add(user.id)
+      }
     })
 
+    setSelectedRole(allSelected || role === selectedRole ? "" : role)
     setSelectedUserIds(newSelectedIds)
   }
 
