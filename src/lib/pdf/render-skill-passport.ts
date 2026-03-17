@@ -125,7 +125,6 @@ function buildPassportHtml(data: SkillPassportData) {
   const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
   const backgroundSrc = backgroundSets[locale]
-  const platformLabel = locale === "ru" ? "Платформа оценивания" : "Assessment Platform"
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
     String(a.code || "").localeCompare(String(b.code || ""), "en", { numeric: true })
@@ -183,13 +182,7 @@ function buildPassportHtml(data: SkillPassportData) {
       object-fit: contain;
       flex-shrink: 0;
     }
-    .industry-brand-text {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: space-between;
-      min-height: 38px;
-    }
+    .industry-brand-text { display: flex; align-items: center; min-height: 38px; }
     .industry-brand-title {
       color: #BE1622;
       font-size: 12px;
@@ -199,13 +192,6 @@ function buildPassportHtml(data: SkillPassportData) {
       text-align: right;
       text-transform: uppercase;
     }
-    .industry-brand-subtitle {
-      color: #64748b;
-      font-size: 9px;
-      font-weight: 500;
-      line-height: 1;
-      text-align: right;
-    }
     .content {
       position: relative;
       z-index: 1;
@@ -213,7 +199,7 @@ function buildPassportHtml(data: SkillPassportData) {
       grid-template-columns: 360px 1px 1fr;
       gap: 18px;
       min-height: 500px;
-      margin-top: 56px;
+      margin-top: 92px;
       padding-bottom: 76px;
     }
     .divider { background: #D5D9DE; }
@@ -254,7 +240,6 @@ function buildPassportHtml(data: SkillPassportData) {
       <img src="${industryLogoSrc}" alt="Industry Skills" />
       <div class="industry-brand-text">
         <div class="industry-brand-title">INDUSTRY<br />SKILLS</div>
-        <div class="industry-brand-subtitle">${escapeHtml(platformLabel)}</div>
       </div>
     </div>
 
