@@ -383,6 +383,49 @@ export default function DashboardPage() {
                     industryskills@iitb.ru
                   </a>
                 </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white/70 p-4">
+                  <p className="font-semibold text-gray-800">
+                    {locale === "ru" ? "Марина Гладкова" : "Marina Gladkova"}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {locale === "ru"
+                      ? "Менеджер по организации соревнований профессионального мастерства Industry Skills"
+                      : "Manager for organizing Industry Skills professional mastery competitions"}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    <a href="mailto:gladkova.m@iitb.ru" className="block hover:text-[#C41E3A] transition-colors">
+                      gladkova.m@iitb.ru
+                    </a>
+                    <a href="tel:+79111954745" className="block hover:text-[#C41E3A] transition-colors">
+                      +7 (911) 195-47-45
+                    </a>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white/70 p-4">
+                  <p className="font-semibold text-gray-800">
+                    {locale === "ru" ? "Тимур Белышев" : "Timur Belyshev"}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {locale === "ru"
+                      ? "Технический эксперт"
+                      : "Technical Expert"}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {locale === "ru"
+                      ? "Инженер тренингового центра компетенций профессионального мастерства Industry Skills"
+                      : "Engineer at the Industry Skills professional mastery competency training center"}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    <a href="mailto:belyshev.t@iitb.ru" className="block hover:text-[#C41E3A] transition-colors">
+                      belyshev.t@iitb.ru
+                    </a>
+                    <a href="tel:+78126440126" className="block hover:text-[#C41E3A] transition-colors">
+                      +7 (812) 644-01-26
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
 
