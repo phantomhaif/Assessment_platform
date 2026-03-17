@@ -69,6 +69,29 @@ export async function POST(
     const body = await req.json().catch(() => ({}))
     const publishPassports = body.publishPassports !== false
 
+    if (publishPassports) {
+      const passportPreparationState = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          passportPreparationStatus: true,
+          passportPreparationTotal: true,
+          passportPreparationCompleted: true,
+        },
+      })
+
+      const passportsReady =
+        passportPreparationState?.passportPreparationStatus === "COMPLETED" &&
+        passportPreparationState.passportPreparationTotal > 0 &&
+        passportPreparationState.passportPreparationCompleted >= passportPreparationState.passportPreparationTotal
+
+      if (!passportsReady) {
+        return NextResponse.json(
+          { error: "Prepare all passports before publishing results with passports enabled" },
+          { status: 400 }
+        )
+      }
+    }
+
     const event = await loadEventResultsSource(eventId)
 
     if (!event) {

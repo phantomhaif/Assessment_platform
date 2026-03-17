@@ -94,6 +94,12 @@ model Event {
   status            EventStatus       @default(DRAFT)
   maxTeamSize       Int               @default(4)
   minTeamSize       Int               @default(1)
+  passportPreparationStatus String?
+  passportPreparationTotal Int        @default(0)
+  passportPreparationCompleted Int    @default(0)
+  passportPreparationError String?
+  passportPreparationStartedAt DateTime?
+  passportPreparationFinishedAt DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   applications      Application[]

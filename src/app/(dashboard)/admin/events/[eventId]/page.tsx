@@ -41,6 +41,12 @@ interface Event {
   eventEnd: string
   maxTeamSize: number
   minTeamSize: number
+  passportPreparationStatus?: string | null
+  passportPreparationTotal?: number
+  passportPreparationCompleted?: number
+  passportPreparationError?: string | null
+  passportPreparationStartedAt?: string | null
+  passportPreparationFinishedAt?: string | null
   _count: {
     teams: number
     applications: number
@@ -70,6 +76,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   useEffect(() => {
     fetchEvent()
   }, [eventId])
+
+  useEffect(() => {
+    if (event?.status !== "SCORING" || event.passportPreparationStatus !== "RUNNING") {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      void fetchEvent()
+    }, 5000)
+
+    return () => window.clearInterval(intervalId)
+  }, [event?.status, event?.passportPreparationStatus])
 
   const fetchEvent = async () => {
     try {
@@ -106,6 +124,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   }
 
   const publishResults = async () => {
+    const passportsReady =
+      !publishPassports ||
+      (event?.passportPreparationStatus === "COMPLETED" &&
+        (event.passportPreparationTotal || 0) > 0 &&
+        (event.passportPreparationCompleted || 0) >= (event.passportPreparationTotal || 0))
+
+    if (!passportsReady) {
+      alert(
+        locale === "ru"
+          ? "Сначала завершите подготовку всех паспортов, а затем публикуйте результаты."
+          : "Finish preparing all passports before publishing results."
+      )
+      return
+    }
+
     try {
       const response = await fetch(`/api/events/${eventId}/publish-results`, {
         method: "POST",
@@ -170,8 +203,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "all" }),
       })
+      const payload = response.ok ? await response.json().catch(() => null) : null
 
       if (response.ok) {
+        setEvent((prev) =>
+          prev
+            ? {
+                ...prev,
+                passportPreparationStatus: "RUNNING",
+                passportPreparationTotal: typeof payload?.total === "number" ? payload.total : prev.passportPreparationTotal,
+                passportPreparationCompleted: 0,
+                passportPreparationError: null,
+              }
+            : prev
+        )
         alert(
           locale === "ru"
             ? "Паспорта для всех участников подготовлены последовательно и сохранены как черновики."
@@ -209,6 +254,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const eventName = getLocalizedEventName(event, locale)
   const eventCompetency = getLocalizedCompetency(event, locale)
   const eventDescription = getLocalizedDescription(event, locale)
+  const preparationTotal = event.passportPreparationTotal || 0
+  const preparationCompleted = event.passportPreparationCompleted || 0
+  const preparationPercent =
+    preparationTotal > 0 ? Math.min(100, Math.round((preparationCompleted / preparationTotal) * 100)) : 0
+  const passportsReadyForPublish =
+    event.passportPreparationStatus === "COMPLETED" &&
+    preparationTotal > 0 &&
+    preparationCompleted >= preparationTotal
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -298,10 +351,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                         : "Publish skill passports together with results"}
                     </span>
                   </label>
-                  <Button onClick={publishResults} className="w-full">
+                  <Button onClick={publishResults} className="w-full" disabled={publishPassports && !passportsReadyForPublish}>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     {t.adminEvent.publishResults}
                   </Button>
+                  {publishPassports && !passportsReadyForPublish && (
+                    <p className="text-xs text-amber-700">
+                      {locale === "ru"
+                        ? "Для публикации вместе с паспортами сначала завершите их подготовку."
+                        : "Complete passport preparation before publishing them together with results."}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -452,6 +512,42 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 ? "Сначала проверьте один тестовый паспорт на двух языках, затем отдельно запустите генерацию для всех участников. Публикация результатов больше не ждёт генерацию PDF."
                 : "First review one sample passport in both languages, then run generation for all participants separately. Publishing results no longer waits for PDF generation."}
             </p>
+            {event.passportPreparationStatus && (
+              <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {locale === "ru" ? "Подготовка паспортов" : "Passport preparation"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {event.passportPreparationStatus === "RUNNING"
+                        ? locale === "ru"
+                          ? "Фоновая генерация идет последовательно по одному паспорту."
+                          : "Background generation is running sequentially one passport at a time."
+                        : event.passportPreparationStatus === "COMPLETED"
+                          ? locale === "ru"
+                            ? "Все паспорта подготовлены."
+                            : "All passports are prepared."
+                          : locale === "ru"
+                            ? "Подготовка завершилась с ошибкой."
+                            : "Preparation finished with an error."}
+                    </p>
+                  </div>
+                  <div className="text-sm font-medium text-gray-700">
+                    {preparationCompleted}/{preparationTotal}
+                  </div>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-[#C41E3A] transition-all"
+                    style={{ width: `${preparationPercent}%` }}
+                  />
+                </div>
+                {event.passportPreparationError && (
+                  <p className="mt-3 text-sm text-red-600">{event.passportPreparationError}</p>
+                )}
+              </div>
+            )}
             {previewTeams.length === 0 ? (
               <p className="text-sm text-gray-500">
                 {locale === "ru" ? "Добавьте оценки, чтобы увидеть предварительный рейтинг." : "Add scores to see the preview ranking."}
