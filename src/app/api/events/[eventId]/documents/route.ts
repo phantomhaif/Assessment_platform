@@ -17,6 +17,7 @@ export async function GET(
   try {
     const session = await auth()
     const { eventId } = await params
+    const requestedLanguage = req.nextUrl.searchParams.get("lang")?.toUpperCase()
 
     const allDocuments = await prisma.eventDocument.findMany({
       where: { eventId },
@@ -32,7 +33,11 @@ export async function GET(
     const documents =
       accessContext.isAdminOrOrganizer
         ? allDocuments
-        : allDocuments.filter((document) => canAccessEventDocument(document.access, accessContext))
+        : allDocuments.filter(
+            (document) =>
+              canAccessEventDocument(document.access, accessContext) &&
+              (!requestedLanguage || document.language === requestedLanguage)
+          )
 
     return NextResponse.json(documents)
   } catch (error) {
@@ -60,6 +65,7 @@ export async function POST(
     const file = formData.get("file") as File
     const name = formData.get("name") as string
     const type = formData.get("type") as string
+    const language = ((formData.get("language") as string) || "RU").toUpperCase()
     const accessString = formData.get("access") as string
     const access = accessString ? JSON.parse(accessString) : ["PARTICIPANTS"]
 
@@ -104,6 +110,7 @@ export async function POST(
         eventId,
         name,
         type: type as any,
+        language: language === "EN" ? "EN" : "RU",
         access: Array.isArray(access) ? access : [access],
         fileUrl: `/api/files/documents/${eventId}/${filename}`,
         version: newVersion,

@@ -164,7 +164,7 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
               required
             />
             <Input
-              label={locale === "ru" ? "Компетенция (EN)" : "Competency (EN)"}
+              label={locale === "ru" ? "Навык (EN)" : "Skill (EN)"}
               name="competencyEn"
               value={formData.competencyEn}
               onChange={handleChange}

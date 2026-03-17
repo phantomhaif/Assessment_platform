@@ -20,6 +20,7 @@ export default function AdminDocumentsPage() {
   const [uploadForm, setUploadForm] = useState({
     name: "",
     type: "OTHER",
+    language: "RU",
     access: ["PARTICIPANTS"] as string[],
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -72,6 +73,7 @@ export default function AdminDocumentsPage() {
       formData.append("file", selectedFile)
       formData.append("name", uploadForm.name)
       formData.append("type", uploadForm.type)
+      formData.append("language", uploadForm.language)
       formData.append("access", JSON.stringify(uploadForm.access))
 
       const response = await fetch(`/api/events/${selectedEventId}/documents`, {
@@ -81,7 +83,7 @@ export default function AdminDocumentsPage() {
 
       if (response.ok) {
         setShowUploadForm(false)
-        setUploadForm({ name: "", type: "OTHER", access: ["PARTICIPANTS"] })
+        setUploadForm({ name: "", type: "OTHER", language: "RU", access: ["PARTICIPANTS"] })
         setSelectedFile(null)
         fetchDocuments()
       }
@@ -227,6 +229,19 @@ export default function AdminDocumentsPage() {
                       </select>
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {locale === "ru" ? "Язык документа" : "Document language"}
+                      </label>
+                      <select
+                        value={uploadForm.language}
+                        onChange={(e) => setUploadForm({ ...uploadForm, language: e.target.value })}
+                        className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm"
+                      >
+                        <option value="RU">{locale === "ru" ? "Русский" : "Russian"}</option>
+                        <option value="EN">{locale === "ru" ? "Английский" : "English"}</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t.documentsAdmin.accessLevel}
                       </label>

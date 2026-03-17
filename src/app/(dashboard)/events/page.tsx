@@ -28,6 +28,11 @@ interface Event {
     teams: number
     applications: number
   }
+  currentApplication?: {
+    status: string
+    requestedRole: "PARTICIPANT" | "EXPERT"
+    approvedRole?: "PARTICIPANT" | "EXPERT" | null
+  } | null
 }
 
 export default function EventsPage() {
@@ -193,6 +198,23 @@ export default function EventsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => {
             const badge = getStatusBadge(event.status)
+            const applicationStatus = event.currentApplication?.status
+            const actionLabel =
+              applicationStatus === "APPROVED"
+                ? locale === "ru"
+                  ? "Вы зарегистрированы"
+                  : "Registered"
+                : applicationStatus === "PENDING"
+                  ? locale === "ru"
+                    ? "Заявка на рассмотрении"
+                    : "Application pending"
+                  : applicationStatus === "REJECTED"
+                    ? locale === "ru"
+                      ? "Заявка отклонена"
+                      : "Application rejected"
+                    : event.status === "REGISTRATION_OPEN"
+                      ? t.events.apply
+                      : t.common.details
             return (
               <Card key={event.id} className="flex flex-col">
                 <CardHeader>
@@ -234,8 +256,11 @@ export default function EventsPage() {
                 </CardContent>
                 <CardFooter>
                   <Link href={`/events/${event.id}`} className="w-full">
-                    <Button className="w-full" variant={event.status === "REGISTRATION_OPEN" ? "default" : "outline"}>
-                      {event.status === "REGISTRATION_OPEN" ? t.events.apply : t.common.details}
+                    <Button
+                      className="w-full"
+                      variant={applicationStatus === "APPROVED" || event.status === "REGISTRATION_OPEN" ? "default" : "outline"}
+                    >
+                      {actionLabel}
                     </Button>
                   </Link>
                 </CardFooter>

@@ -119,11 +119,11 @@ export default function NewEventPage() {
             />
 
             <Input
-              label={locale === "ru" ? "Компетенция (EN)" : "Competency (EN)"}
+              label={locale === "ru" ? "Навык (EN)" : "Skill (EN)"}
               name="competencyEn"
               value={formData.competencyEn}
               onChange={handleChange}
-              placeholder="Competency in English"
+              placeholder="Skill in English"
             />
 
             <div>

@@ -43,8 +43,8 @@ const copy = {
   },
   en: {
     titleMain: "SKILLS PASSPORT",
-    titleSub: "COMPETENCY PASSPORT",
-    competencyLabel: "for competency",
+    titleSub: "SKILL PASSPORT",
+    competencyLabel: "for skill",
     signName: "A.V. KORABLEV",
     signRole1: "CHAIRMAN OF THE CLUSTER CREONOMYCA",
     signRole2: "Academician of St. Petersburg Engineering Academy",

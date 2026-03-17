@@ -12,6 +12,7 @@ interface EventDocument {
   id: string
   name: string
   type: string
+  language: "RU" | "EN"
   access: string[]
   fileUrl: string
   version: number
@@ -38,7 +39,7 @@ export default function DocumentsPage() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await fetch("/api/my-documents")
+        const response = await fetch(`/api/my-documents?lang=${locale}`)
         if (!response.ok) {
           throw new Error("Failed to fetch documents")
         }
@@ -53,7 +54,7 @@ export default function DocumentsPage() {
     }
 
     void fetchDocuments()
-  }, [])
+  }, [locale])
 
   if (isLoading) {
     return (

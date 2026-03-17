@@ -117,6 +117,7 @@ model EventDocument {
   eventId   String
   name      String
   type      DocumentType
+  language  DocumentLanguage @default(RU)
   access    String[]     @default(["PARTICIPANTS"])
   fileUrl   String
   version   Int          @default(1)
@@ -397,6 +398,11 @@ enum DocumentType {
   INFRASTRUCTURE
   SCHEDULE
   OTHER
+}
+
+enum DocumentLanguage {
+  RU
+  EN
 }
 
 

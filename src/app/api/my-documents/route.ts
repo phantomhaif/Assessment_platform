@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { canAccessEventDocument, resolveEventDocumentAccessContext } from "@/lib/event-document-access"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    const requestedLanguage = req.nextUrl.searchParams.get("lang")?.toUpperCase() === "EN" ? "EN" : "RU"
 
     const [applications, memberships, expertAssignments] = await Promise.all([
       prisma.application.findMany({
@@ -64,6 +65,7 @@ export async function GET() {
             id: true,
             name: true,
             type: true,
+            language: true,
             access: true,
             fileUrl: true,
             version: true,
@@ -79,7 +81,11 @@ export async function GET() {
         const accessContext = await resolveEventDocumentAccessContext(event.id, session.user.id, session.user.role)
         return {
           ...event,
-          documents: event.documents.filter((document) => canAccessEventDocument(document.access, accessContext)),
+          documents: event.documents.filter(
+            (document) =>
+              canAccessEventDocument(document.access, accessContext) &&
+              document.language === requestedLanguage.toUpperCase()
+          ),
         }
       })
     )

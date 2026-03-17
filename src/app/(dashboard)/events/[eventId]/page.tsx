@@ -48,6 +48,7 @@ interface Document {
   id: string
   name: string
   type: string
+  language: "RU" | "EN"
   access: string[]
   fileUrl: string
   version: number
@@ -104,14 +105,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
   useEffect(() => {
     fetchData()
-  }, [eventId])
+  }, [eventId, locale])
 
   const fetchData = async () => {
     try {
       const [eventRes, appRes, docsRes] = await Promise.all([
         fetch(`/api/events/${eventId}`),
         fetch(`/api/events/${eventId}/applications`),
-        fetch(`/api/events/${eventId}/documents`),
+        fetch(`/api/events/${eventId}/documents?lang=${locale}`),
       ])
 
       if (eventRes.ok) {
@@ -450,6 +451,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                     : t.roles.participant}
                 </p>
 
+                {application.status === "APPROVED" && (
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                    <p className="text-sm font-medium text-green-800">
+                      {locale === "ru"
+                        ? "Ваша заявка одобрена. Вы зарегистрированы на мероприятие."
+                        : "Your application has been approved. You are registered for the event."}
+                    </p>
+                  </div>
+                )}
+
                 {application.comment && (
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-sm text-gray-600">
@@ -479,7 +490,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                     <p>
                       {locale === "ru"
                         ? "Университеты и колледжи, заявившие своих студентов в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения – дисквалифицируются на участие в соревнованиях сроком на 1 год. Бан распространяется на ту компетенцию, в которой заявились участники, и все соревнования, проводимые организаторами."
-                        : "Universities and colleges that have registered their students as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, will be disqualified from participation for 1 year. The ban applies to the competency in which participants were registered and all competitions conducted by the organizers."}
+                        : "Universities and colleges that have registered their students as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, will be disqualified from participation for 1 year. The ban applies to the skill for which participants were registered and all competitions conducted by the organizers."}
                     </p>
                     <p>
                       {locale === "ru"

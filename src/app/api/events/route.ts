@@ -44,6 +44,19 @@ export async function GET() {
     const events = await prisma.event.findMany({
       where,
       include: {
+        ...(session?.user?.id
+          ? {
+              applications: {
+                where: { userId: session.user.id },
+                select: {
+                  status: true,
+                  requestedRole: true,
+                  approvedRole: true,
+                },
+                take: 1,
+              },
+            }
+          : {}),
         _count: {
           select: {
             teams: true,
@@ -60,7 +73,15 @@ export async function GET() {
       orderBy: { eventStart: "asc" },
     })
 
-    return NextResponse.json(events)
+    return NextResponse.json(
+      events.map((event) => ({
+        ...event,
+        currentApplication: Array.isArray((event as { applications?: unknown[] }).applications)
+          ? (event as { applications?: unknown[] }).applications?.[0] ?? null
+          : null,
+        applications: undefined,
+      }))
+    )
   } catch (error) {
     console.error("Error fetching events:", error)
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
