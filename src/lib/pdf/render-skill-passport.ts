@@ -59,6 +59,7 @@ const backgroundSets = {
   ru: assetDataUrl("public", "templates", "passport-bg", "passport-background-ru.png"),
   en: assetDataUrl("public", "templates", "passport-bg", "passport-background-en.png"),
 } as const
+const industryLogoSrc = assetDataUrl("public", "templates", "passport-logos", "common", "industry-skills.png")
 
 function assetUrl(...segments: string[]) {
   return pathToFileURL(path.join(process.cwd(), ...segments)).href
@@ -124,6 +125,7 @@ function buildPassportHtml(data: SkillPassportData) {
   const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
   const backgroundSrc = backgroundSets[locale]
+  const platformLabel = locale === "ru" ? "Платформа оценивания" : "Assessment Platform"
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
     String(a.code || "").localeCompare(String(b.code || ""), "en", { numeric: true })
@@ -166,6 +168,44 @@ function buildPassportHtml(data: SkillPassportData) {
       object-fit: cover;
       z-index: 0;
     }
+    .industry-brand {
+      position: absolute;
+      top: 22px;
+      right: 26px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 2;
+    }
+    .industry-brand img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .industry-brand-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      min-height: 38px;
+    }
+    .industry-brand-title {
+      color: #BE1622;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: .12em;
+      text-align: right;
+      text-transform: uppercase;
+    }
+    .industry-brand-subtitle {
+      color: #64748b;
+      font-size: 9px;
+      font-weight: 500;
+      line-height: 1;
+      text-align: right;
+    }
     .content {
       position: relative;
       z-index: 1;
@@ -173,7 +213,7 @@ function buildPassportHtml(data: SkillPassportData) {
       grid-template-columns: 360px 1px 1fr;
       gap: 18px;
       min-height: 500px;
-      margin-top: 18px;
+      margin-top: 34px;
       padding-bottom: 76px;
     }
     .divider { background: #D5D9DE; }
@@ -210,6 +250,13 @@ function buildPassportHtml(data: SkillPassportData) {
 <body>
   <section class="passport">
     <img class="passport-background" src="${backgroundSrc}" alt="" />
+    <div class="industry-brand">
+      <img src="${industryLogoSrc}" alt="Industry Skills" />
+      <div class="industry-brand-text">
+        <div class="industry-brand-title">INDUSTRY<br />SKILLS</div>
+        <div class="industry-brand-subtitle">${escapeHtml(platformLabel)}</div>
+      </div>
+    </div>
 
     <div class="content">
       <section class="left-col">
