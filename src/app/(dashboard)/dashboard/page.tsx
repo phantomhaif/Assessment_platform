@@ -332,8 +332,8 @@ export default function DashboardPage() {
               <h3 className="font-bold text-gray-900 mb-3">INDUSTRY SKILLS</h3>
               <p className="text-gray-600 text-sm">
                 {locale === "ru"
-                  ? "INDUSTRY SKILLS - Платформа оценивания"
-                  : "INDUSTRY SKILLS - Assessment Platform"}
+                  ? "INDUSTRY SKILLS - Платформа оценки знаний в ходе соревнований профессионального мастерства"
+                  : "KA - knowledge assessment"}
               </p>
             </div>
 

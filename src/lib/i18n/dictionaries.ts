@@ -28,7 +28,7 @@ export const dictionaries = {
       ctaSubtitle: "Зарегистрируйтесь и примите участие в соревнованиях",
       createAccount: "Создать аккаунт",
       loginAccount: "Войти в аккаунт",
-      footerText: "INDUSTRY SKILLS - Платформа оценивания",
+      footerText: "INDUSTRY SKILLS - Платформа оценки знаний в ходе соревнований профессионального мастерства",
     },
 
     // Common
@@ -611,7 +611,7 @@ export const dictionaries = {
   en: {
     // Home page
     home: {
-      heroTitle: "Professional Skills Competition Assessment Platform",
+      heroTitle: "KA - knowledge assessment",
       heroSubtitle: "Organize competitions, conduct assessments according to WorldSkills standards, and automatically generate Skill Passports for participants",
       startButton: "Get Started",
       eventsButton: "Events",
@@ -637,7 +637,7 @@ export const dictionaries = {
       ctaSubtitle: "Sign up and participate in competitions",
       createAccount: "Create Account",
       loginAccount: "Login",
-      footerText: "INDUSTRY SKILLS - Assessment Platform",
+      footerText: "KA - knowledge assessment",
     },
 
     // Common

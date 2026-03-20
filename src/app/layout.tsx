@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n/context";
+import { getPlatformDescription, getPlatformTitle } from "@/lib/brand";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -14,8 +15,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "INDUSTRY SKILLS - Платформа оценивания",
-  description: "International Championships for Professional Skills Competencies",
+  title: getPlatformTitle("ru"),
+  description: getPlatformDescription("ru"),
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",

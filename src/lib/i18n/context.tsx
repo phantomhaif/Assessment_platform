@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { dictionaries, Locale, Dictionary } from "./dictionaries"
+import { getPlatformDescription, getPlatformTitle } from "@/lib/brand"
 
 interface I18nContextType {
   locale: Locale
@@ -38,6 +39,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }
 
   const t = dictionaries[locale] as Dictionary
+
+  useEffect(() => {
+    if (!mounted) {
+      return
+    }
+
+    document.documentElement.lang = locale
+    document.title = getPlatformTitle(locale)
+
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute("content", getPlatformDescription(locale))
+    }
+  }, [locale, mounted])
 
   // Prevent hydration mismatch
   if (!mounted) {

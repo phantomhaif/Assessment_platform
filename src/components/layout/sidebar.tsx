@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/lib/i18n/context"
+import { getPlatformName } from "@/lib/brand"
 import {
   LayoutDashboard,
   Calendar,
@@ -32,6 +33,7 @@ interface SidebarProps {
 export function Sidebar({ userRole, userName, className, onNavigate }: SidebarProps) {
   const pathname = usePathname()
   const { t, locale } = useI18n()
+  const platformName = getPlatformName(locale)
 
   const participantLinks = [
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
@@ -76,8 +78,8 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     userRole === "ADMIN" || userRole === "ORGANIZER"
       ? adminLinks
       : userRole === "EXPERT"
-      ? expertLinks
-      : participantLinks
+        ? expertLinks
+        : participantLinks
 
   const getRoleName = (role: string) => {
     switch (role) {
@@ -105,8 +107,8 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
               <br />
               SKILLS
             </h1>
-            <p className="text-xs leading-none text-[#64748b]">
-              {locale === "ru" ? "Платформа оценивания" : "Assessment Platform"}
+            <p className="max-w-[150px] text-[10px] leading-tight text-[#64748b]">
+              {platformName}
             </p>
           </div>
         </Link>
