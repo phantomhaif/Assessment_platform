@@ -1,8 +1,14 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useEffect, ReactNode } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { dictionaries, Locale, Dictionary } from "./dictionaries"
 import { getPlatformDescription, getPlatformTitle } from "@/lib/brand"
+import {
+  LOCALE_COOKIE,
+  buildLocalizedPath,
+  getLocaleFromPathname,
+} from "./routing"
 
 interface I18nContextType {
   locale: Locale
@@ -15,36 +21,24 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined)
 const LOCALE_KEY = "preferred_locale"
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("ru")
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    // Load saved locale from localStorage
-    const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null
-    if (savedLocale && (savedLocale === "ru" || savedLocale === "en")) {
-      setLocaleState(savedLocale)
-    } else {
-      // Detect browser language
-      const browserLang = navigator.language.split("-")[0]
-      if (browserLang === "en") {
-        setLocaleState("en")
-      }
-    }
-    setMounted(true)
-  }, [])
+  const pathname = usePathname()
+  const router = useRouter()
+  const locale = getLocaleFromPathname(pathname) ?? "ru"
 
   const setLocale = (newLocale: Locale) => {
-    setLocaleState(newLocale)
     localStorage.setItem(LOCALE_KEY, newLocale)
+    document.cookie = `${LOCALE_COOKIE}=${newLocale}; path=/; samesite=lax`
+
+    const localizedPath = buildLocalizedPath(pathname, newLocale)
+    const queryString = typeof window === "undefined" ? "" : window.location.search.replace(/^\?/, "")
+    router.replace(queryString ? `${localizedPath}?${queryString}` : localizedPath)
   }
 
   const t = dictionaries[locale] as Dictionary
 
   useEffect(() => {
-    if (!mounted) {
-      return
-    }
-
+    localStorage.setItem(LOCALE_KEY, locale)
+    document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; samesite=lax`
     document.documentElement.lang = locale
     document.title = getPlatformTitle(locale)
 
@@ -52,16 +46,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     if (metaDescription) {
       metaDescription.setAttribute("content", getPlatformDescription(locale))
     }
-  }, [locale, mounted])
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <I18nContext.Provider value={{ locale: "ru", setLocale, t: dictionaries.ru as Dictionary }}>
-        {children}
-      </I18nContext.Provider>
-    )
-  }
+  }, [locale])
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
