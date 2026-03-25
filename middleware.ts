@@ -8,6 +8,24 @@ import {
 } from "@/lib/i18n/routing"
 
 const PUBLIC_FILE = /\.[^/]+$/
+const GEO_COUNTRY_HEADERS = [
+  "cf-ipcountry",
+  "x-vercel-ip-country",
+  "cloudfront-viewer-country",
+  "x-country-code",
+  "x-geo-country",
+] as const
+
+function getCountryCode(request: NextRequest): string | null {
+  for (const header of GEO_COUNTRY_HEADERS) {
+    const value = request.headers.get(header)
+    if (value) {
+      return value
+    }
+  }
+
+  return null
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -26,7 +44,8 @@ export function middleware(request: NextRequest) {
   if (!locale) {
     const resolvedLocale = resolveRequestLocale(
       request.cookies.get(LOCALE_COOKIE)?.value,
-      request.headers.get("accept-language")
+      request.headers.get("accept-language"),
+      getCountryCode(request)
     )
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = buildLocalizedPath(pathname, resolvedLocale)
