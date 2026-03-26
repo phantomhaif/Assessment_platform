@@ -121,7 +121,9 @@ export default function SubmissionsPage() {
 
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || "Upload error")
+        throw new Error(
+          data.error || (locale === "ru" ? "Ошибка загрузки файла" : "File upload error")
+        )
       }
 
       setItems((prev) =>
@@ -142,7 +144,13 @@ export default function SubmissionsPage() {
       )
     } catch (uploadError) {
       console.error("Error uploading file:", uploadError)
-      setError(locale === "ru" ? "Ошибка загрузки файла" : "File upload error")
+      setError(
+        uploadError instanceof Error && uploadError.message
+          ? uploadError.message
+          : locale === "ru"
+            ? "Ошибка загрузки файла"
+            : "File upload error"
+      )
     } finally {
       setUploadingKey(null)
     }

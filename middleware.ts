@@ -54,8 +54,14 @@ export function middleware(request: NextRequest) {
 
   const rewrittenUrl = request.nextUrl.clone()
   rewrittenUrl.pathname = stripLocaleFromPathname(pathname)
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-locale", locale)
 
-  const response = NextResponse.rewrite(rewrittenUrl)
+  const response = NextResponse.rewrite(rewrittenUrl, {
+    request: {
+      headers: requestHeaders,
+    },
+  })
   response.cookies.set(LOCALE_COOKIE, locale, { path: "/", sameSite: "lax" })
   return response
 }

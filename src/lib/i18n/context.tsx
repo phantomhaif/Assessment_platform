@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { dictionaries, Locale, Dictionary } from "./dictionaries"
 import { getPlatformDescription, getPlatformTitle } from "@/lib/brand"
 import {
+  DEFAULT_LOCALE,
   LOCALE_COOKIE,
   buildLocalizedPath,
   getLocaleFromPathname,
@@ -20,10 +21,16 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
 const LOCALE_KEY = "preferred_locale"
 
-export function I18nProvider({ children }: { children: ReactNode }) {
+export function I18nProvider({
+  children,
+  initialLocale = DEFAULT_LOCALE,
+}: {
+  children: ReactNode
+  initialLocale?: Locale
+}) {
   const pathname = usePathname()
   const router = useRouter()
-  const locale = getLocaleFromPathname(pathname) ?? "ru"
+  const locale = getLocaleFromPathname(pathname) ?? initialLocale
 
   const setLocale = (newLocale: Locale) => {
     localStorage.setItem(LOCALE_KEY, newLocale)

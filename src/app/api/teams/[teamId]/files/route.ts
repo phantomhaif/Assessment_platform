@@ -10,6 +10,7 @@ import { existsSync } from "fs"
 const UPLOADS_BASE = process.env.NODE_ENV === "production"
   ? "/app/uploads"
   : path.join(process.cwd(), "public", "uploads")
+const TEAM_FILE_MAX_SIZE = 150 * 1024 * 1024
 
 // GET - fetch all files for a team
 export async function GET(
@@ -107,6 +108,13 @@ export async function POST(
 
     if (!file || !moduleCode) {
       return NextResponse.json({ error: "File and module code required" }, { status: 400 })
+    }
+
+    if (file.size > TEAM_FILE_MAX_SIZE) {
+      return NextResponse.json(
+        { error: "File size exceeds 150 MB limit" },
+        { status: 400 }
+      )
     }
 
     // Delete existing file for this module
