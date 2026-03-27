@@ -40,8 +40,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Seed script uses bcryptjs directly
 COPY --from=deps /app/node_modules/bcryptjs ./node_modules/bcryptjs
 
-# Upload directory
-RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
+# Writable runtime directories for uploads and Next.js image cache
+RUN mkdir -p /app/uploads /app/.next/cache && chown -R nextjs:nodejs /app/uploads /app/.next
 
 USER nextjs
 

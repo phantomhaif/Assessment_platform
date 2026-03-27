@@ -3,8 +3,8 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import JSZip from "jszip"
 import path from "path"
-import { existsSync } from "fs"
-import { readFile } from "fs/promises"
+import { createReadStream, existsSync } from "fs"
+import { Readable } from "stream"
 
 const UPLOADS_BASE =
   process.env.NODE_ENV === "production"
@@ -103,17 +103,24 @@ export async function GET(req: NextRequest) {
 
         if (!moduleFolder) continue
 
-        const buffer = await readFile(fullFilePath)
-        moduleFolder.file(sanitizePathSegment(file.fileName), buffer)
+        moduleFolder.file(sanitizePathSegment(file.fileName), createReadStream(fullFilePath), {
+          binary: true,
+        })
       }
     }
 
-    const archive = await zip.generateAsync({ type: "arraybuffer", compression: "DEFLATE" })
-    const archiveBlob = new Blob([archive], { type: "application/zip" })
+    const archiveStream = zip.generateNodeStream({
+      type: "nodebuffer",
+      streamFiles: true,
+      compression: "STORE",
+    })
+    const webStream = Readable.toWeb(
+      archiveStream as unknown as Readable
+    ) as unknown as ReadableStream<Uint8Array>
     const filename = `${sanitizePathSegment(event.name)}-team-submissions.zip`
     const asciiFilename = filename.normalize("NFKD").replace(/[^\x20-\x7E]/g, "_")
 
-    return new NextResponse(archiveBlob, {
+    return new NextResponse(webStream, {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
