@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trophy, Medal, Award } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
+import { getLocalizedCompetency, getLocalizedEventName } from "@/lib/events"
 
 interface Ranking {
   rank: number
@@ -19,11 +20,21 @@ interface EventOption {
   id: string
   name: string
   nameEn?: string | null
+  competency: string
+  competencyEn?: string | null
   status: string
 }
 
+interface CompetencyOption {
+  key: string
+  label: string
+}
+
+const RESULTS_STATUSES = new Set(["RESULTS_PUBLISHED", "ARCHIVED"])
+
 export default function RankingsPage() {
   const [period, setPeriod] = useState<"all" | "year" | "event">("all")
+  const [competency, setCompetency] = useState("")
   const [eventId, setEventId] = useState("")
   const [events, setEvents] = useState<EventOption[]>([])
   const [rankings, setRankings] = useState<Ranking[]>([])
@@ -34,41 +45,106 @@ export default function RankingsPage() {
     const fetchEvents = async () => {
       try {
         const response = await fetch("/api/events")
-        if (!response.ok) return
+        if (!response.ok) {
+          setIsLoading(false)
+          return
+        }
 
         const data = await response.json()
-        setEvents(data.filter((event: EventOption) => ["RESULTS_PUBLISHED", "ARCHIVED"].includes(event.status)))
+        const publishedEvents = data.filter((event: EventOption) => RESULTS_STATUSES.has(event.status))
+        setEvents(publishedEvents)
+
+        if (publishedEvents.length > 0) {
+          setCompetency((current) => current || publishedEvents[0].competency)
+        } else {
+          setIsLoading(false)
+        }
       } catch (error) {
         console.error("Error fetching events:", error)
+        setIsLoading(false)
       }
     }
 
     void fetchEvents()
   }, [])
 
+  const competencyOptions = events.reduce<CompetencyOption[]>((items, event) => {
+    if (!items.some((item) => item.key === event.competency)) {
+      items.push({
+        key: event.competency,
+        label: getLocalizedCompetency(event, locale),
+      })
+    }
+    return items
+  }, [])
+
+  const competencyEvents = events.filter((event) => event.competency === competency)
+
+  useEffect(() => {
+    if (period !== "event") {
+      if (eventId) {
+        setEventId("")
+      }
+      return
+    }
+
+    if (competencyEvents.length === 0) {
+      if (eventId) {
+        setEventId("")
+      }
+      return
+    }
+
+    if (!competencyEvents.some((event) => event.id === eventId)) {
+      setEventId(competencyEvents[0]?.id || "")
+    }
+  }, [period, competencyEvents, eventId])
+
   useEffect(() => {
     const fetchRankings = async () => {
+      if (!competency) {
+        setRankings([])
+        setIsLoading(false)
+        return
+      }
+
+      if (period === "event" && !eventId) {
+        setRankings([])
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
+
       try {
-        let url = `/api/rankings?period=${period}&lang=${locale}`
+        const params = new URLSearchParams({
+          period,
+          lang: locale,
+          competency,
+        })
+
         if (period === "event" && eventId) {
-          url += `&eventId=${eventId}`
+          params.set("eventId", eventId)
         }
 
-        const response = await fetch(url)
-        if (!response.ok) return
+        const response = await fetch(`/api/rankings?${params.toString()}`)
+        if (!response.ok) {
+          setRankings([])
+          return
+        }
 
         const data = await response.json()
         setRankings(data)
       } catch (error) {
         console.error("Error fetching rankings:", error)
+        setRankings([])
       } finally {
         setIsLoading(false)
       }
     }
 
     void fetchRankings()
-  }, [period, eventId, locale])
+  }, [period, competency, eventId, locale])
 
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-6 w-6 text-yellow-500" />
@@ -84,6 +160,10 @@ export default function RankingsPage() {
     return "bg-white"
   }
 
+  const selectedCompetencyLabel =
+    competencyOptions.find((option) => option.key === competency)?.label ||
+    (locale === "ru" ? "Компетенция" : "Competency")
+
   if (isLoading && rankings.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -97,19 +177,41 @@ export default function RankingsPage() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
           <Trophy className="h-7 w-7 text-red-600" />
-          {locale === "ru" ? "Рейтинг команд" : "Team Rankings"}
+          {locale === "ru" ? "Рейтинг по компетенциям" : "Rankings by Competency"}
         </h1>
         <p className="mt-1 text-gray-500">
           {locale === "ru"
-            ? "Общий зачёт по сумме баллов команд с одинаковым названием."
-            : "Aggregate standings by total score for teams with the same name."}
+            ? "Результаты формируются отдельно по каждой компетенции. Общий рейтинг по всем компетенциям не отображается."
+            : "Standings are calculated separately for each competency. There is no cross-competency overall ranking."}
         </p>
       </div>
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="flex-1">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {locale === "ru" ? "Компетенция" : "Competency"}
+              </label>
+              <select
+                value={competency}
+                onChange={(event) => {
+                  setCompetency(event.target.value)
+                  if (period === "event") {
+                    setEventId("")
+                  }
+                }}
+                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                {competencyOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 {locale === "ru" ? "Период" : "Period"}
               </label>
@@ -124,25 +226,24 @@ export default function RankingsPage() {
                 className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="all">{locale === "ru" ? "Все время" : "All time"}</option>
-                <option value="year">{locale === "ru" ? "За последний год" : "Last 12 months"}</option>
-                <option value="event">{locale === "ru" ? "Конкретный чемпионат" : "Specific event"}</option>
+                <option value="year">{locale === "ru" ? "Последние 12 месяцев" : "Last 12 months"}</option>
+                <option value="event">{locale === "ru" ? "Конкретное мероприятие" : "Specific event"}</option>
               </select>
             </div>
 
             {period === "event" && (
-              <div className="flex-1">
+              <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  {locale === "ru" ? "Чемпионат" : "Event"}
+                  {locale === "ru" ? "Мероприятие" : "Event"}
                 </label>
                 <select
                   value={eventId}
                   onChange={(event) => setEventId(event.target.value)}
                   className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  <option value="">{locale === "ru" ? "Выберите мероприятие..." : "Select event..."}</option>
-                  {events.map((event) => (
+                  {competencyEvents.map((event) => (
                     <option key={event.id} value={event.id}>
-                      {locale === "en" ? event.nameEn || event.name : event.name}
+                      {getLocalizedEventName(event, locale)}
                     </option>
                   ))}
                 </select>
@@ -152,16 +253,22 @@ export default function RankingsPage() {
         </CardContent>
       </Card>
 
-      {period === "event" && !eventId ? (
+      {competencyOptions.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            {locale === "ru" ? "Выберите чемпионат" : "Select an event"}
+            {locale === "ru" ? "Для опубликованных результатов пока нет компетенций." : "No competencies with published results yet."}
+          </CardContent>
+        </Card>
+      ) : period === "event" && competencyEvents.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center text-gray-500">
+            {locale === "ru" ? "По выбранной компетенции нет опубликованных мероприятий." : "No published events for the selected competency."}
           </CardContent>
         </Card>
       ) : rankings.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
-            {locale === "ru" ? "Нет данных для отображения" : "No data available"}
+            {locale === "ru" ? "Нет данных для отображения." : "No data available."}
           </CardContent>
         </Card>
       ) : (
@@ -169,7 +276,7 @@ export default function RankingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              {locale === "ru" ? "Таблица рейтинга" : "Rankings Table"}
+              {selectedCompetencyLabel}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -180,9 +287,7 @@ export default function RankingsPage() {
                   className={`flex flex-col gap-4 rounded-lg border p-4 transition-colors hover:shadow-md sm:flex-row sm:items-center sm:justify-between ${getMedalColor(ranking.rank)}`}
                 >
                   <div className="flex flex-1 items-start gap-4">
-                    <div className="flex w-12 items-center justify-center">
-                      {getMedalIcon(ranking.rank)}
-                    </div>
+                    <div className="flex w-12 items-center justify-center">{getMedalIcon(ranking.rank)}</div>
                     <div className="flex-1">
                       <div className="flex items-start gap-3">
                         <span className="w-8 text-2xl font-bold text-gray-400">#{ranking.rank}</span>
@@ -199,8 +304,10 @@ export default function RankingsPage() {
                               {ranking.eventsCount}{" "}
                               {locale === "ru"
                                 ? ranking.eventsCount === 1
-                                  ? "чемпионат"
-                                  : "чемпионатов"
+                                  ? "мероприятие"
+                                  : ranking.eventsCount < 5
+                                    ? "мероприятия"
+                                    : "мероприятий"
                                 : ranking.eventsCount === 1
                                   ? "event"
                                   : "events"}

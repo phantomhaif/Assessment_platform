@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
+import { EventStatus, type Prisma } from "@prisma/client"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-type RankedTeamRecord = {
-  id: string
-  name: string
-  number: number | null
-  rank: number | null
-  totalScore: number | null
+const teamInclude = {
   event: {
-    name: string
-    nameEn?: string | null
-    eventStart: Date
-  }
-}
+    select: {
+      name: true,
+      nameEn: true,
+      eventStart: true,
+    },
+  },
+} satisfies Prisma.TeamInclude
+
+type RankedTeamRecord = Prisma.TeamGetPayload<{
+  include: typeof teamInclude
+}>
 
 type AggregatedRanking = {
   rank: number
@@ -21,6 +23,15 @@ type AggregatedRanking = {
   totalScore: number
   eventsCount: number
   teams: RankedTeamRecord[]
+}
+
+const RESULTS_STATUSES: EventStatus[] = [EventStatus.RESULTS_PUBLISHED, EventStatus.ARCHIVED]
+
+function loadRankedTeams(args: Omit<Prisma.TeamFindManyArgs, "include" | "select">) {
+  return prisma.team.findMany({
+    ...args,
+    include: teamInclude,
+  }) as unknown as Promise<RankedTeamRecord[]>
 }
 
 export async function GET(req: NextRequest) {
@@ -31,103 +42,64 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const period = searchParams.get("period") || "all" // all, year, event
+    const period = searchParams.get("period") || "all"
     const eventId = searchParams.get("eventId")
+    const competency = searchParams.get("competency")?.trim()
     const locale = searchParams.get("lang") === "en" ? "en" : "ru"
+
+    if (!competency) {
+      return NextResponse.json([])
+    }
 
     let teams: RankedTeamRecord[] = []
 
     if (period === "event" && eventId) {
-      // Ranking for specific event
-      teams = await prisma.team.findMany({
+      teams = await loadRankedTeams({
         where: {
           eventId,
-          totalScore: {
-            not: null,
-          },
+          totalScore: { not: null },
           event: {
-            status: {
-              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
-            },
+            competency,
+            status: { in: RESULTS_STATUSES },
           },
         },
-        include: {
-          event: {
-            select: {
-              name: true,
-              nameEn: true,
-              eventStart: true,
-            },
-          },
-        },
-        orderBy: [
-          { rank: "asc" },
-          { totalScore: "desc" },
-        ],
+        orderBy: [{ rank: "asc" }, { totalScore: "desc" }],
       })
     } else if (period === "year") {
-      // Ranking for the last 365 days
       const yearStart = new Date()
       yearStart.setDate(yearStart.getDate() - 365)
 
-      teams = await prisma.team.findMany({
+      teams = await loadRankedTeams({
         where: {
+          totalScore: { not: null },
           event: {
-            eventStart: {
-              gte: yearStart,
-            },
-            status: {
-              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
-            },
-          },
-          totalScore: {
-            not: null,
-          },
-        },
-        include: {
-          event: {
-            select: {
-              name: true,
-              nameEn: true,
-              eventStart: true,
-            },
+            competency,
+            eventStart: { gte: yearStart },
+            status: { in: RESULTS_STATUSES },
           },
         },
         orderBy: { totalScore: "desc" },
       })
     } else {
-      // Ranking for all events
-      teams = await prisma.team.findMany({
+      teams = await loadRankedTeams({
         where: {
+          totalScore: { not: null },
           event: {
-            status: {
-              in: ["RESULTS_PUBLISHED", "ARCHIVED"],
-            },
-          },
-          totalScore: {
-            not: null,
-          },
-        },
-        include: {
-          event: {
-            select: {
-              name: true,
-              nameEn: true,
-              eventStart: true,
-            },
+            competency,
+            status: { in: RESULTS_STATUSES },
           },
         },
         orderBy: { totalScore: "desc" },
       })
     }
 
-    // Calculate cumulative scores for teams with same name (for "all" and "year" periods)
     if (period !== "event") {
       const teamScores = new Map<string, { name: string; teams: RankedTeamRecord[]; totalScore: number }>()
 
-      teams.forEach((team) => {
+      for (const team of teams) {
         const normalizedName = team.name.trim().replace(/\s+/g, " ").toLowerCase()
         const existing = teamScores.get(normalizedName)
+
         if (existing) {
           existing.teams.push(team)
           existing.totalScore += team.totalScore || 0
@@ -138,9 +110,8 @@ export async function GET(req: NextRequest) {
             totalScore: team.totalScore || 0,
           })
         }
-      })
+      }
 
-      // Convert to array and sort by cumulative score
       const rankings: AggregatedRanking[] = Array.from(teamScores.values())
         .map((data) => ({
           rank: 0,
@@ -151,7 +122,6 @@ export async function GET(req: NextRequest) {
         }))
         .sort((a, b) => b.totalScore - a.totalScore)
 
-      // Add ranks
       let currentRank = 1
       rankings.forEach((item, index) => {
         if (index > 0 && rankings[index - 1].totalScore !== item.totalScore) {
@@ -163,7 +133,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(rankings)
     }
 
-    // For event-specific ranking, return teams as is
     return NextResponse.json(
       teams.map((team) => ({
         id: team.id,

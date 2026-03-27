@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/lib/i18n/context"
 import { getPlatformName } from "@/lib/brand"
+import { BrandLockup } from "@/components/layout/brand-lockup"
 import {
   LayoutDashboard,
   Calendar,
@@ -101,16 +102,13 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
       <div className="border-b border-gray-200 p-5">
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image src="/logo.png" alt="Industry Skills" width={52} height={52} className="flex-shrink-0" />
-          <div className="flex h-[52px] flex-col justify-between">
-            <h1 className="font-black uppercase leading-tight tracking-wider text-[#C41E3A]" style={{ fontSize: "14px" }}>
-              INDUSTRY
-              <br />
-              SKILLS
-            </h1>
-            <p className="max-w-[150px] text-[10px] leading-tight text-[#64748b]">
-              {platformName}
-            </p>
-          </div>
+          <BrandLockup
+            locale={locale}
+            subtitle={platformName}
+            className="h-[52px]"
+            titleClassName="text-[14px]"
+            subtitleClassName="max-w-[150px] text-[10px] leading-tight"
+          />
         </Link>
       </div>
 
