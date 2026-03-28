@@ -105,9 +105,9 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
           <BrandLockup
             locale={locale}
             subtitle={platformName}
-            className="h-[52px]"
-            titleClassName="text-[14px]"
-            subtitleClassName="max-w-[150px] text-[10px] leading-tight"
+            className={locale === "ru" ? "relative top-[3px] h-[52px] justify-end gap-1" : "h-[52px]"}
+            titleClassName={locale === "ru" ? "text-[13px] leading-none tracking-[0.05em]" : "text-[14px]"}
+            subtitleClassName={cn("max-w-[148px] leading-[1.08]", locale === "ru" ? "text-[9px]" : "text-[10px]")}
           />
         </Link>
       </div>
