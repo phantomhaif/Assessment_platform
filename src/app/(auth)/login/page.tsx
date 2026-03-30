@@ -56,7 +56,7 @@ export default function LoginPage() {
           <div className="mb-8">
             <div className="mb-6 flex items-center gap-4">
               <Image src="/logo.png" alt="Industry Skills" width={64} height={64} className="flex-shrink-0" />
-              <h1 className="text-3xl font-black uppercase tracking-widest text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              <h1 className="text-3xl font-black uppercase tracking-widest text-[#C41E3A]" style={{ fontFamily: "var(--font-heading)" }}>
                 INDUSTRY
                 <br />
                 SKILLS
@@ -96,7 +96,7 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
             <Image src="/logo.png" alt="Industry Skills" width={44} height={44} className="flex-shrink-0" />
-            <h1 className="text-xl font-black uppercase tracking-widest text-[#0f172a]" style={{ fontFamily: "var(--font-heading)" }}>
+            <h1 className="text-xl font-black uppercase tracking-widest text-[#C41E3A]" style={{ fontFamily: "var(--font-heading)" }}>
               INDUSTRY SKILLS
             </h1>
           </div>
