@@ -198,7 +198,7 @@ function buildPassportHtml(data: SkillPassportData) {
       grid-template-columns: 360px 1px 1fr;
       gap: 18px;
       min-height: 500px;
-      margin-top: 56px;
+      margin-top: 76px;
       padding-bottom: 76px;
     }
     .divider { background: #D5D9DE; }
