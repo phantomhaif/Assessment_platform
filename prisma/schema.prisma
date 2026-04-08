@@ -85,6 +85,8 @@ model Event {
   competency        String
   competencyEn      String?
   logo              String?
+  passportBackgroundRu String?
+  passportBackgroundEn String?
   eventFormat       EventFormat       @default(OFFLINE)
   location          String?
   registrationStart DateTime

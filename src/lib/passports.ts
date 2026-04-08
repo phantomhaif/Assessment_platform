@@ -2,7 +2,8 @@ import { existsSync } from "fs"
 import { mkdir, readFile, rm, writeFile } from "fs/promises"
 import path from "path"
 import { renderSkillPassportPdf, type PassportLocale, type SkillPassportData } from "@/lib/pdf/render-skill-passport"
-
+import { prisma } from "@/lib/prisma"
+import { UPLOADS_BASE } from "@/lib/uploads"
 type ScoreGroup = {
   number?: number
   name?: string
@@ -35,6 +36,8 @@ export type SkillPassportRecord = {
     nameEn?: string | null
     competency: string
     competencyEn?: string | null
+    passportBackgroundRu?: string | null
+    passportBackgroundEn?: string | null
     eventStart: Date
     eventEnd: Date
     assessmentSchema?: {
@@ -50,10 +53,7 @@ export type SkillPassportRecord = {
   } | null
 }
 
-const UPLOADS_BASE = process.env.NODE_ENV === "production"
-  ? "/app/uploads"
-  : path.join(process.cwd(), "public", "uploads")
-const PASSPORT_CACHE_VERSION = "v3"
+const PASSPORT_CACHE_VERSION = "v4"
 
 function capitalize(value: string) {
   if (!value) return value
@@ -183,6 +183,10 @@ export function buildSkillPassportData(
       locale === "en"
         ? toEnglishText(passport.event.competencyEn, passport.event.competency)
         : passport.event.competency,
+    passportBackgroundUrl:
+      locale === "en"
+        ? passport.event.passportBackgroundEn || passport.event.passportBackgroundRu || undefined
+        : passport.event.passportBackgroundRu || passport.event.passportBackgroundEn || undefined,
     dateRange: formatPassportDateRange(
       new Date(passport.event.eventStart),
       new Date(passport.event.eventEnd),
@@ -213,6 +217,15 @@ export function getPassportPdfFileUrl(passportId: string, locale: PassportLocale
 
 export async function removePassportPdfCache(passportId: string): Promise<void> {
   await rm(getPassportPdfDir(passportId), { recursive: true, force: true })
+}
+
+export async function removeEventPassportPdfCaches(eventId: string): Promise<void> {
+  const passports = await prisma.skillPassport.findMany({
+    where: { eventId },
+    select: { id: true },
+  })
+
+  await Promise.all(passports.map((passport) => removePassportPdfCache(passport.id)))
 }
 
 export async function ensurePassportPdf(

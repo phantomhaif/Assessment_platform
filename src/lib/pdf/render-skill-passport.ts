@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import puppeteer from "puppeteer-core"
+import { getUploadsFilePathFromApiUrl } from "@/lib/uploads"
 
 export type PassportLocale = "ru" | "en"
 
@@ -23,6 +24,7 @@ export interface SkillPassportData {
   competency: string
   dateRange: string
   totalScore: number
+  passportBackgroundUrl?: string
   locale?: PassportLocale
   skillGroups: ScoreRowData[]
   modules: ScoreRowData[]
@@ -77,6 +79,29 @@ function assetDataUrl(...segments: string[]) {
   return `data:${mimeType};base64,${base64}`
 }
 
+function filePathToDataUrl(filePath: string) {
+  const ext = path.extname(filePath).toLowerCase()
+  const mimeType =
+    ext === ".png" ? "image/png" :
+    ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" :
+    ext === ".svg" ? "image/svg+xml" :
+    ext === ".webp" ? "image/webp" :
+    "application/octet-stream"
+  const base64 = readFileSync(filePath).toString("base64")
+  return `data:${mimeType};base64,${base64}`
+}
+
+function resolveBackgroundSrc(locale: PassportLocale, passportBackgroundUrl?: string) {
+  if (passportBackgroundUrl) {
+    const filePath = getUploadsFilePathFromApiUrl(passportBackgroundUrl)
+    if (filePath && existsSync(filePath)) {
+      return filePathToDataUrl(filePath)
+    }
+  }
+
+  return backgroundSets[locale]
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -124,7 +149,7 @@ function buildPassportHtml(data: SkillPassportData) {
   const eventName = (data.eventName || "-").replace(/\s+/g, " ").trim()
   const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
-  const backgroundSrc = backgroundSets[locale]
+  const backgroundSrc = resolveBackgroundSrc(locale, data.passportBackgroundUrl)
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
     String(a.code || "").localeCompare(String(b.code || ""), "en", { numeric: true })

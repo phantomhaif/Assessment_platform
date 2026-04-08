@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { removeEventPassportPdfCaches } from "@/lib/passports"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(
@@ -76,11 +77,18 @@ export async function PATCH(
 
     const { eventId } = await params
     const body = await req.json()
+    const shouldInvalidatePassportCache =
+      Object.prototype.hasOwnProperty.call(body, "passportBackgroundRu") ||
+      Object.prototype.hasOwnProperty.call(body, "passportBackgroundEn")
 
     const event = await prisma.event.update({
       where: { id: eventId },
       data: body,
     })
+
+    if (shouldInvalidatePassportCache) {
+      await removeEventPassportPdfCaches(eventId)
+    }
 
     return NextResponse.json(event)
   } catch (error) {

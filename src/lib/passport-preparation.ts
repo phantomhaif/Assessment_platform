@@ -35,6 +35,8 @@ function buildPassportRecord(
       nameEn: event.nameEn,
       competency: event.competency,
       competencyEn: event.competencyEn,
+      passportBackgroundRu: event.passportBackgroundRu,
+      passportBackgroundEn: event.passportBackgroundEn,
       eventStart: event.eventStart,
       eventEnd: event.eventEnd,
       assessmentSchema: {
