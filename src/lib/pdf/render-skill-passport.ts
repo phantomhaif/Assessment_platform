@@ -61,7 +61,6 @@ const backgroundSets = {
   ru: assetDataUrl("public", "templates", "passport-bg", "passport-background-ru.png"),
   en: assetDataUrl("public", "templates", "passport-bg", "passport-background-en.png"),
 } as const
-const industryLogoSrc = assetDataUrl("public", "templates", "passport-logos", "common", "industry-skills.png")
 
 function assetUrl(...segments: string[]) {
   return pathToFileURL(path.join(process.cwd(), ...segments)).href
@@ -192,31 +191,6 @@ function buildPassportHtml(data: SkillPassportData) {
       object-fit: cover;
       z-index: 0;
     }
-    .industry-brand {
-      position: absolute;
-      top: 22px;
-      right: 26px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 2;
-    }
-    .industry-brand img {
-      width: 38px;
-      height: 38px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-    .industry-brand-text { display: flex; align-items: center; min-height: 38px; }
-    .industry-brand-title {
-      color: #BE1622;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: .95;
-      letter-spacing: .12em;
-      text-align: right;
-      text-transform: uppercase;
-    }
     .content {
       position: relative;
       z-index: 1;
@@ -224,36 +198,36 @@ function buildPassportHtml(data: SkillPassportData) {
       grid-template-columns: 360px 1px 1fr;
       gap: 18px;
       min-height: 500px;
-      margin-top: 92px;
+      margin-top: 56px;
       padding-bottom: 76px;
     }
     .divider { background: #D5D9DE; }
     .left-col { padding-top: 8px; padding-right: 8px; }
     .right-col { padding-top: 6px; }
-    .title-main { color: #BE1622; font-size: 32px; line-height: .98; font-weight: 700; margin: 0; }
-    .title-sub { margin: 4px 0 0; color: #BE1622; font-size: 14px; font-weight: 400; text-transform: uppercase; }
-    .person { margin-top: 18px; font-size: 16px; font-weight: 700; line-height: 1.22; }
-    .organization { margin-top: 8px; font-size: 11.5px; line-height: 1.3; max-width: 280px; }
+    .title-main { color: #BE1622; font-size: 35px; line-height: .98; font-weight: 700; margin: 0; }
+    .title-sub { margin: 6px 0 0; color: #BE1622; font-size: 15px; font-weight: 400; text-transform: uppercase; }
+    .person { margin-top: 20px; font-size: 18px; font-weight: 700; line-height: 1.24; }
+    .organization { margin-top: 10px; font-size: 12.5px; line-height: 1.35; max-width: 300px; }
     .event-block { margin-top: 46px; max-width: 270px; }
-    .event-name { color: #BE1622; font-size: 15px; font-weight: 700; line-height: 1.15; margin: 0; }
-    .competency-label { margin: 10px 0 0; font-size: 13px; font-weight: 500; color: #010101; }
-    .competency-pill { margin-top: 8px; background: #BE1622; border-radius: 4px; padding: 8px 12px; min-height: 38px; color: #fff; font-size: 16px; font-weight: 600; line-height: 1.15; }
-    .date { margin-top: 12px; font-size: 11px; color: #010101; }
+    .event-name { color: #BE1622; font-size: 17px; font-weight: 700; line-height: 1.18; margin: 0; }
+    .competency-label { margin: 12px 0 0; font-size: 14px; font-weight: 500; color: #010101; }
+    .competency-pill { margin-top: 10px; background: #BE1622; border-radius: 4px; padding: 10px 12px; min-height: 42px; color: #fff; font-size: 17px; font-weight: 600; line-height: 1.18; }
+    .date { margin-top: 14px; font-size: 12px; color: #010101; }
     .signature { margin-top: 44px; max-width: 280px; }
-    .signature-name { font-size: 12px; font-weight: 700; line-height: 1.15; color: #010101; }
-    .signature-role { margin-top: 3px; font-size: 9.5px; font-weight: 500; line-height: 1.2; color: #010101; }
+    .signature-name { font-size: 13px; font-weight: 700; line-height: 1.18; color: #010101; }
+    .signature-role { margin-top: 4px; font-size: 10.5px; font-weight: 500; line-height: 1.22; color: #010101; }
     .signature-line { margin-top: 26px; width: 110px; border-top: 1px solid #8C8C8C; }
     .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-    .results-title { max-width: 150px; font-size: 22px; font-weight: 700; line-height: 1.1; white-space: pre-line; margin: 0; }
-    .total-wrap { text-align: right; min-width: 92px; }
-    .total-value { color: #BE1622; font-size: 38px; font-weight: 700; line-height: .95; margin: 0; }
-    .total-label { margin-top: 4px; color: #1E1E1E; font-size: 10.5px; font-weight: 700; }
-    .section-title { margin: 8px 0 6px; font-family: "Roboto", Arial, sans-serif; font-size: 9px; font-weight: 700; line-height: 1.25; color: #1E1E1E; }
+    .results-title { max-width: 170px; font-size: 24px; font-weight: 700; line-height: 1.1; white-space: pre-line; margin: 0; }
+    .total-wrap { text-align: right; min-width: 102px; }
+    .total-value { color: #BE1622; font-size: 42px; font-weight: 700; line-height: .95; margin: 0; }
+    .total-label { margin-top: 5px; color: #1E1E1E; font-size: 11.5px; font-weight: 700; }
+    .section-title { margin: 10px 0 7px; font-family: "Roboto", Arial, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.28; color: #1E1E1E; }
     .rows { display: grid; gap: 4px; }
-    .row { display: grid; grid-template-columns: 18px 186px 1fr 56px; align-items: end; gap: 4px; min-height: 16px; font-family: "Roboto", Arial, sans-serif; }
-    .row-prefix, .row-label, .row-score { font-size: 8.6px; line-height: 1.12; color: #1E1E1E; }
+    .row { display: grid; grid-template-columns: 20px 198px 1fr 66px; align-items: end; gap: 5px; min-height: 19px; font-family: "Roboto", Arial, sans-serif; }
+    .row-prefix, .row-label, .row-score { font-size: 10.2px; line-height: 1.16; color: #1E1E1E; }
     .row-label { overflow-wrap: anywhere; }
-    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 3px; min-width: 24px; }
+    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 4px; min-width: 24px; }
     .row-score { text-align: right; }
     .row-score strong { font-weight: 700; }
   </style>
@@ -261,12 +235,6 @@ function buildPassportHtml(data: SkillPassportData) {
 <body>
   <section class="passport">
     <img class="passport-background" src="${backgroundSrc}" alt="" />
-    <div class="industry-brand">
-      <img src="${industryLogoSrc}" alt="Industry Skills" />
-      <div class="industry-brand-text">
-        <div class="industry-brand-title">INDUSTRY<br />SKILLS</div>
-      </div>
-    </div>
 
     <div class="content">
       <section class="left-col">
