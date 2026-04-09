@@ -195,11 +195,11 @@ function buildPassportHtml(data: SkillPassportData) {
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 360px 1px 1fr;
-      gap: 18px;
+      grid-template-columns: 346px 1px 1fr;
+      gap: 16px;
       min-height: 500px;
-      margin-top: 76px;
-      padding-bottom: 76px;
+      margin-top: 92px;
+      padding-bottom: 64px;
     }
     .divider { background: #D5D9DE; }
     .left-col { padding-top: 8px; padding-right: 8px; }
@@ -207,25 +207,25 @@ function buildPassportHtml(data: SkillPassportData) {
     .title-main { color: #BE1622; font-size: 35px; line-height: .98; font-weight: 700; margin: 0; }
     .title-sub { margin: 6px 0 0; color: #BE1622; font-size: 15px; font-weight: 400; text-transform: uppercase; }
     .person { margin-top: 20px; font-size: 18px; font-weight: 700; line-height: 1.24; }
-    .organization { margin-top: 10px; font-size: 12.5px; line-height: 1.35; max-width: 300px; }
-    .event-block { margin-top: 46px; max-width: 270px; }
+    .organization { margin-top: 10px; font-size: 12.5px; line-height: 1.35; max-width: 316px; }
+    .event-block { margin-top: 50px; max-width: 296px; }
     .event-name { color: #BE1622; font-size: 17px; font-weight: 700; line-height: 1.18; margin: 0; }
     .competency-label { margin: 12px 0 0; font-size: 14px; font-weight: 500; color: #010101; }
     .competency-pill { margin-top: 10px; background: #BE1622; border-radius: 4px; padding: 10px 12px; min-height: 42px; color: #fff; font-size: 17px; font-weight: 600; line-height: 1.18; }
     .date { margin-top: 14px; font-size: 12px; color: #010101; }
-    .signature { margin-top: 44px; max-width: 280px; }
+    .signature { margin-top: 40px; max-width: 334px; }
     .signature-name { font-size: 13px; font-weight: 700; line-height: 1.18; color: #010101; }
-    .signature-role { margin-top: 4px; font-size: 10.5px; font-weight: 500; line-height: 1.22; color: #010101; }
+    .signature-role { margin-top: 4px; font-size: 10.1px; font-weight: 500; line-height: 1.18; color: #010101; }
     .signature-line { margin-top: 26px; width: 110px; border-top: 1px solid #8C8C8C; }
-    .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-    .results-title { max-width: 170px; font-size: 24px; font-weight: 700; line-height: 1.1; white-space: pre-line; margin: 0; }
-    .total-wrap { text-align: right; min-width: 102px; }
-    .total-value { color: #BE1622; font-size: 42px; font-weight: 700; line-height: .95; margin: 0; }
-    .total-label { margin-top: 5px; color: #1E1E1E; font-size: 11.5px; font-weight: 700; }
-    .section-title { margin: 10px 0 7px; font-family: "Roboto", Arial, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.28; color: #1E1E1E; }
-    .rows { display: grid; gap: 4px; }
-    .row { display: grid; grid-template-columns: 20px 198px 1fr 66px; align-items: end; gap: 5px; min-height: 19px; font-family: "Roboto", Arial, sans-serif; }
-    .row-prefix, .row-label, .row-score { font-size: 10.2px; line-height: 1.16; color: #1E1E1E; }
+    .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+    .results-title { max-width: 188px; font-size: 26px; font-weight: 700; line-height: 1.08; white-space: pre-line; margin: 0; }
+    .total-wrap { text-align: right; min-width: 116px; }
+    .total-value { color: #BE1622; font-size: 48px; font-weight: 700; line-height: .92; margin: 0; }
+    .total-label { margin-top: 6px; color: #1E1E1E; font-size: 12.2px; font-weight: 700; line-height: 1.15; }
+    .section-title { margin: 12px 0 8px; font-family: "Roboto", Arial, sans-serif; font-size: 12px; font-weight: 700; line-height: 1.28; color: #1E1E1E; }
+    .rows { display: grid; gap: 5px; }
+    .row { display: grid; grid-template-columns: 22px 232px 1fr 78px; align-items: end; gap: 6px; min-height: 21px; font-family: "Roboto", Arial, sans-serif; }
+    .row-prefix, .row-label, .row-score { font-size: 11.2px; line-height: 1.17; color: #1E1E1E; }
     .row-label { overflow-wrap: anywhere; }
     .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 4px; min-width: 24px; }
     .row-score { text-align: right; }

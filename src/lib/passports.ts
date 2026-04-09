@@ -53,7 +53,7 @@ export type SkillPassportRecord = {
   } | null
 }
 
-const PASSPORT_CACHE_VERSION = "v4"
+const PASSPORT_CACHE_VERSION = "v5"
 
 function capitalize(value: string) {
   if (!value) return value
