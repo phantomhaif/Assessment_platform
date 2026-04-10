@@ -225,24 +225,24 @@ function buildPassportHtml(data: SkillPassportData) {
     }
     .title-main { color: #BE1622; font-size: 35px; line-height: .98; font-weight: 700; margin: 0; }
     .title-sub { margin: 6px 0 0; color: #BE1622; font-size: 15px; font-weight: 600; text-transform: uppercase; }
-    .person { margin-top: 20px; font-size: 18px; font-weight: 700; line-height: 1.24; }
-    .organization { margin-top: 10px; font-size: 14px; line-height: 1.18; max-width: 456px; }
+    .person { margin-top: 20px; font-size: 19px; font-weight: 700; line-height: 1.24; }
+    .organization { margin-top: 10px; font-size: 15px; line-height: 1.2; max-width: 456px; }
     .event-block { margin-top: 58px; max-width: 452px; }
-    .event-name { color: #BE1622; font-size: 17px; font-weight: 700; line-height: 1.18; margin: 0; }
-    .competency-label { margin: 12px 0 0; font-size: 14px; font-weight: 500; color: #010101; }
-    .competency-pill { margin-top: 10px; background: #BE1622; border-radius: 4px; padding: 10px 12px; min-height: 42px; color: #fff; font-size: 17px; font-weight: 600; line-height: 1.18; }
-    .date { margin-top: 14px; font-size: 14px; line-height: 1.18; color: #010101; }
+    .event-name { color: #BE1622; font-size: 18px; font-weight: 700; line-height: 1.2; margin: 0; }
+    .competency-label { margin: 12px 0 0; font-size: 15px; font-weight: 500; color: #010101; }
+    .competency-pill { margin-top: 10px; background: #BE1622; border-radius: 4px; padding: 10px 12px; min-height: 42px; color: #fff; font-size: 18px; font-weight: 600; line-height: 1.18; }
+    .date { margin-top: 14px; font-size: 15px; line-height: 1.2; color: #010101; }
     .signature { margin-top: 50px; max-width: 456px; }
-    .signature-name { font-size: 13px; font-weight: 700; line-height: 1.18; color: #010101; }
-    .signature-role { margin-top: 4px; font-size: 14px; font-weight: 500; line-height: 1.12; color: #010101; }
+    .signature-name { font-size: 14px; font-weight: 700; line-height: 1.2; color: #010101; }
+    .signature-role { margin-top: 4px; font-size: 15px; font-weight: 500; line-height: 1.14; color: #010101; }
     .signature-line { margin-top: 26px; width: 110px; border-top: 1px solid #8C8C8C; }
     .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
-    .results-title { max-width: 190px; font-size: 24px; font-weight: 700; line-height: 1.06; white-space: pre-line; margin: 0; }
+    .results-title { max-width: 190px; font-size: 25px; font-weight: 700; line-height: 1.06; white-space: pre-line; margin: 0; }
     .total-wrap { text-align: right; min-width: 116px; }
     .total-value { color: #BE1622; font-size: 48px; font-weight: 700; line-height: .92; margin: 0; }
-    .total-label { margin-top: 6px; color: #1E1E1E; font-size: 14px; font-weight: 700; line-height: 1.15; }
-    .section-title { margin: 10px 0 6px; font-family: "Roboto", Arial, sans-serif; font-size: 13.25px; font-weight: 700; line-height: 1.12; color: #1E1E1E; }
-    .rows { display: grid; gap: 4px; }
+    .total-label { margin-top: 6px; color: #1E1E1E; font-size: 15px; font-weight: 700; line-height: 1.15; }
+    .section-title { margin: 10px 0 6px; font-family: "Roboto", Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 1.14; color: #1E1E1E; }
+    .rows { display: grid; gap: 5px; }
     .row {
       display: grid;
       grid-template-columns: 22px minmax(0, 1fr) 68px;
@@ -256,7 +256,7 @@ function buildPassportHtml(data: SkillPassportData) {
       min-width: 0;
       --leader-offset: 0px;
     }
-    .row-prefix, .row-label, .row-score { font-size: 13px; line-height: 1.08; color: #1E1E1E; }
+    .row-prefix, .row-label, .row-score { font-size: 13.75px; line-height: 1.12; color: #1E1E1E; }
     .row-label { display: block; overflow-wrap: anywhere; }
     .row-dots {
       position: absolute;
