@@ -130,8 +130,10 @@ function renderRows(items: ScoreRowData[], locale: PassportLocale, mode: "skill"
       return `
         <div class="row">
           <span class="row-prefix">${escapeHtml(prefix)}</span>
-          <span class="row-label">${escapeHtml((item.name || "-").replace(/\s+/g, " ").trim())}</span>
-          <span class="row-dots"></span>
+          <span class="row-main">
+            <span class="row-label">${escapeHtml((item.name || "-").replace(/\s+/g, " ").trim())}</span>
+            <span class="row-dots"></span>
+          </span>
           <span class="row-score"><strong>${escapeHtml(formatScore(item.score ?? 0, locale))}</strong>/${escapeHtml(formatScore(item.maxScore ?? 0, locale))}</span>
         </div>
       `
@@ -243,15 +245,21 @@ function buildPassportHtml(data: SkillPassportData) {
     .rows { display: grid; gap: 4px; }
     .row {
       display: grid;
-      grid-template-columns: 22px minmax(0, 1.36fr) minmax(16px, 0.28fr) 68px;
+      grid-template-columns: 22px minmax(0, 1fr) 68px;
       align-items: end;
       gap: 5px;
       min-height: 16px;
       font-family: "Roboto", Arial, sans-serif;
     }
+    .row-main {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      min-width: 0;
+    }
     .row-prefix, .row-label, .row-score { font-size: 13px; line-height: 1.08; color: #1E1E1E; }
-    .row-label { overflow-wrap: anywhere; }
-    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 3px; min-width: 18px; }
+    .row-label { min-width: 0; overflow-wrap: anywhere; }
+    .row-dots { flex: 1 1 auto; border-bottom: 1px dotted #9DA5AC; margin-bottom: 3px; min-width: 18px; }
     .row-score { text-align: right; }
     .row-score strong { font-weight: 700; }
   </style>
