@@ -216,10 +216,10 @@ function buildPassportHtml(data: SkillPassportData) {
     }
     .right-col {
       position: absolute;
-      top: 98px;
+      top: 96px;
       right: 38px;
       width: calc(50% - 54px);
-      padding-left: 28px;
+      padding-left: 24px;
     }
     .title-main { color: #BE1622; font-size: 35px; line-height: .98; font-weight: 700; margin: 0; }
     .title-sub { margin: 6px 0 0; color: #BE1622; font-size: 15px; font-weight: 600; text-transform: uppercase; }
@@ -234,24 +234,24 @@ function buildPassportHtml(data: SkillPassportData) {
     .signature-name { font-size: 13px; font-weight: 700; line-height: 1.18; color: #010101; }
     .signature-role { margin-top: 4px; font-size: 14px; font-weight: 500; line-height: 1.12; color: #010101; }
     .signature-line { margin-top: 26px; width: 110px; border-top: 1px solid #8C8C8C; }
-    .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 12px; }
-    .results-title { max-width: 198px; font-size: 26px; font-weight: 700; line-height: 1.08; white-space: pre-line; margin: 0; }
+    .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
+    .results-title { max-width: 190px; font-size: 24px; font-weight: 700; line-height: 1.06; white-space: pre-line; margin: 0; }
     .total-wrap { text-align: right; min-width: 116px; }
     .total-value { color: #BE1622; font-size: 48px; font-weight: 700; line-height: .92; margin: 0; }
     .total-label { margin-top: 6px; color: #1E1E1E; font-size: 14px; font-weight: 700; line-height: 1.15; }
-    .section-title { margin: 12px 0 8px; font-family: "Roboto", Arial, sans-serif; font-size: 15px; font-weight: 700; line-height: 1.16; color: #1E1E1E; }
-    .rows { display: grid; gap: 6px; }
+    .section-title { margin: 8px 0 5px; font-family: "Roboto", Arial, sans-serif; font-size: 13.25px; font-weight: 700; line-height: 1.12; color: #1E1E1E; }
+    .rows { display: grid; gap: 3px; }
     .row {
       display: grid;
-      grid-template-columns: 24px minmax(0, 1.3fr) minmax(26px, 0.45fr) 76px;
+      grid-template-columns: 22px minmax(0, 1.36fr) minmax(16px, 0.28fr) 68px;
       align-items: end;
-      gap: 7px;
-      min-height: 22px;
+      gap: 5px;
+      min-height: 16px;
       font-family: "Roboto", Arial, sans-serif;
     }
-    .row-prefix, .row-label, .row-score { font-size: 15.5px; line-height: 1.14; color: #1E1E1E; }
+    .row-prefix, .row-label, .row-score { font-size: 13px; line-height: 1.08; color: #1E1E1E; }
     .row-label { overflow-wrap: anywhere; }
-    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 4px; min-width: 24px; }
+    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 3px; min-width: 18px; }
     .row-score { text-align: right; }
     .row-score strong { font-weight: 700; }
   </style>
