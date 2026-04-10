@@ -130,8 +130,10 @@ function renderRows(items: ScoreRowData[], locale: PassportLocale, mode: "skill"
       return `
         <div class="row">
           <span class="row-prefix">${escapeHtml(prefix)}</span>
-          <span class="row-label">${escapeHtml((item.name || "-").replace(/\s+/g, " ").trim())}</span>
-          <span class="row-dots"></span>
+          <span class="row-main">
+            <span class="row-label">${escapeHtml((item.name || "-").replace(/\s+/g, " ").trim())}</span>
+            <span class="row-dots"></span>
+          </span>
           <span class="row-score"><strong>${escapeHtml(formatScore(item.score ?? 0, locale))}</strong>/${escapeHtml(formatScore(item.maxScore ?? 0, locale))}</span>
         </div>
       `
@@ -243,15 +245,27 @@ function buildPassportHtml(data: SkillPassportData) {
     .rows { display: grid; gap: 4px; }
     .row {
       display: grid;
-      grid-template-columns: 22px minmax(0, 1.36fr) minmax(16px, 0.28fr) 68px;
+      grid-template-columns: 22px minmax(0, 1fr) 68px;
       align-items: end;
       gap: 5px;
       min-height: 16px;
       font-family: "Roboto", Arial, sans-serif;
     }
+    .row-main {
+      position: relative;
+      min-width: 0;
+      --leader-offset: 0px;
+    }
     .row-prefix, .row-label, .row-score { font-size: 13px; line-height: 1.08; color: #1E1E1E; }
-    .row-label { overflow-wrap: anywhere; }
-    .row-dots { border-bottom: 1px dotted #9DA5AC; margin-bottom: 3px; min-width: 18px; }
+    .row-label { display: block; overflow-wrap: anywhere; }
+    .row-dots {
+      position: absolute;
+      left: var(--leader-offset);
+      right: 0;
+      bottom: 3px;
+      border-bottom: 1px dotted #9DA5AC;
+    }
+    .row-main.no-dots .row-dots { display: none; }
     .row-score { text-align: right; }
     .row-score strong { font-weight: 700; }
   </style>
@@ -367,6 +381,31 @@ export async function renderSkillPassportPdf(data: SkillPassportData): Promise<U
           }
         })
       )
+
+      document.querySelectorAll<HTMLElement>(".row-main").forEach((rowMain) => {
+        const label = rowMain.querySelector<HTMLElement>(".row-label")
+        if (!label) return
+
+        const range = document.createRange()
+        range.selectNodeContents(label)
+        const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0)
+        if (!rects.length) {
+          rowMain.classList.add("no-dots")
+          return
+        }
+
+        const rowRect = rowMain.getBoundingClientRect()
+        const lastRect = rects[rects.length - 1]
+        const leaderOffset = Math.ceil(lastRect.right - rowRect.left + 4)
+        const available = Math.floor(rowRect.width - leaderOffset)
+
+        if (available < 18) {
+          rowMain.classList.add("no-dots")
+          return
+        }
+
+        rowMain.style.setProperty("--leader-offset", `${leaderOffset}px`)
+      })
     })
 
     const pdf = await page.pdf({
