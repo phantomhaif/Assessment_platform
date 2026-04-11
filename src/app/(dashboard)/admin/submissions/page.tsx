@@ -140,20 +140,12 @@ export default function AdminSubmissionsPage() {
 
     setIsExporting(true)
     try {
-      const response = await fetch(`/api/admin/team-files/export?eventId=${selectedEventId}`)
-      if (!response.ok) {
-        throw new Error("Export failed")
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
-      link.href = url
+      link.href = `/api/admin/team-files/export?eventId=${encodeURIComponent(selectedEventId)}`
       link.download = `${(data ? getLocalizedEventName(data.event, locale) : "team-submissions") || "team-submissions"}.zip`
       document.body.appendChild(link)
       link.click()
       link.remove()
-      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error("Error exporting team files:", error)
     } finally {

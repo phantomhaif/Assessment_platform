@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma"
 import JSZip from "jszip"
 import path from "path"
 import { createReadStream, existsSync } from "fs"
-import { Readable } from "stream"
 
 const UPLOADS_BASE =
   process.env.NODE_ENV === "production"
@@ -109,20 +108,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const archiveStream = zip.generateNodeStream({
+    const archiveBuffer = await zip.generateAsync({
       type: "nodebuffer",
       streamFiles: true,
       compression: "STORE",
     })
-    const webStream = Readable.toWeb(
-      archiveStream as unknown as Readable
-    ) as unknown as ReadableStream<Uint8Array>
     const filename = `${sanitizePathSegment(event.name)}-team-submissions.zip`
     const asciiFilename = filename.normalize("NFKD").replace(/[^\x20-\x7E]/g, "_")
 
-    return new NextResponse(webStream, {
+    return new NextResponse(new Uint8Array(archiveBuffer), {
       headers: {
         "Content-Type": "application/zip",
+        "Content-Length": String(archiveBuffer.length),
         "Content-Disposition": `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
       },
     })
