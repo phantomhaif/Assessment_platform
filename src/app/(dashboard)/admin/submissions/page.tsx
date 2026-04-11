@@ -67,6 +67,19 @@ interface AdminSubmissionsResponse {
   teams: TeamItem[]
 }
 
+interface ExportStatus {
+  id: string
+  name: string
+  teamFilesExportStatus: string | null
+  teamFilesExportTotal: number
+  teamFilesExportCompleted: number
+  teamFilesExportError: string | null
+  teamFilesExportStartedAt: string | null
+  teamFilesExportFinishedAt: string | null
+  teamFilesExportCachedAt: string | null
+  ready: boolean
+}
+
 export default function AdminSubmissionsPage() {
   const { locale } = useI18n()
   const dateLocale = locale === "ru" ? ru : enUS
@@ -77,8 +90,10 @@ export default function AdminSubmissionsPage() {
   const [events, setEvents] = useState<EventOption[]>([])
   const [selectedEventId, setSelectedEventId] = useState(initialEventId)
   const [data, setData] = useState<AdminSubmissionsResponse | null>(null)
+  const [exportStatus, setExportStatus] = useState<ExportStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
+  const [shouldAutoDownload, setShouldAutoDownload] = useState(false)
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -107,6 +122,22 @@ export default function AdminSubmissionsPage() {
     void fetchEvents()
   }, [initialEventId, selectedEventId])
 
+  const fetchExportStatus = async (eventId: string) => {
+    try {
+      const response = await fetch(`/api/admin/team-files/export?eventId=${encodeURIComponent(eventId)}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch export status")
+      }
+
+      const result = await response.json()
+      setExportStatus(result)
+      return result as ExportStatus
+    } catch (error) {
+      console.error("Error fetching export status:", error)
+      return null
+    }
+  }
+
   useEffect(() => {
     if (selectedEventId) {
       const fetchSubmissions = async () => {
@@ -119,9 +150,11 @@ export default function AdminSubmissionsPage() {
 
           const result = await response.json()
           setData(result)
+          await fetchExportStatus(selectedEventId)
         } catch (error) {
           console.error("Error fetching team files:", error)
           setData(null)
+          setExportStatus(null)
         } finally {
           setIsLoading(false)
         }
@@ -131,24 +164,91 @@ export default function AdminSubmissionsPage() {
       router.replace(`/admin/submissions?eventId=${selectedEventId}`)
     } else {
       setData(null)
+      setExportStatus(null)
       setIsLoading(false)
     }
   }, [selectedEventId, router])
 
+  useEffect(() => {
+    if (!selectedEventId || exportStatus?.teamFilesExportStatus !== "RUNNING") {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      void fetchExportStatus(selectedEventId)
+    }, 4000)
+
+    return () => window.clearInterval(intervalId)
+  }, [selectedEventId, exportStatus?.teamFilesExportStatus])
+
+  useEffect(() => {
+    if (!selectedEventId || !shouldAutoDownload || !exportStatus?.ready) {
+      return
+    }
+
+    const link = document.createElement("a")
+    link.href = `/api/admin/team-files/export?eventId=${encodeURIComponent(selectedEventId)}&download=1`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    setShouldAutoDownload(false)
+    setIsExporting(false)
+  }, [selectedEventId, shouldAutoDownload, exportStatus?.ready])
+
+  useEffect(() => {
+    if (exportStatus?.teamFilesExportStatus === "FAILED") {
+      setShouldAutoDownload(false)
+      setIsExporting(false)
+    }
+  }, [exportStatus?.teamFilesExportStatus])
+
+  const startDownload = () => {
+    if (!selectedEventId) return
+
+    const link = document.createElement("a")
+    link.href = `/api/admin/team-files/export?eventId=${encodeURIComponent(selectedEventId)}&download=1`
+    link.download = `${(data ? getLocalizedEventName(data.event, locale) : "team-submissions") || "team-submissions"}.zip`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
   const handleExport = async () => {
     if (!selectedEventId) return
 
+    if (exportStatus?.ready) {
+      startDownload()
+      return
+    }
+
     setIsExporting(true)
+    setShouldAutoDownload(true)
+
     try {
-      const link = document.createElement("a")
-      link.href = `/api/admin/team-files/export?eventId=${encodeURIComponent(selectedEventId)}`
-      link.download = `${(data ? getLocalizedEventName(data.event, locale) : "team-submissions") || "team-submissions"}.zip`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
+      const response = await fetch(`/api/admin/team-files/export?eventId=${encodeURIComponent(selectedEventId)}`, {
+        method: "POST",
+      })
+      const payload = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Export start failed")
+      }
+
+      if (payload?.status) {
+        setExportStatus(payload.status)
+      } else {
+        await fetchExportStatus(selectedEventId)
+      }
+
+      if (payload?.ready) {
+        startDownload()
+        setShouldAutoDownload(false)
+        setIsExporting(false)
+      }
     } catch (error) {
       console.error("Error exporting team files:", error)
-    } finally {
+      setShouldAutoDownload(false)
       setIsExporting(false)
     }
   }
@@ -159,12 +259,62 @@ export default function AdminSubmissionsPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} ${locale === "ru" ? "МБ" : "MB"}`
   }
 
+  const formatEta = (seconds: number) => {
+    const rounded = Math.max(1, Math.round(seconds))
+    if (rounded < 60) {
+      return locale === "ru" ? `около ${rounded} сек.` : `about ${rounded}s`
+    }
+
+    const minutes = Math.floor(rounded / 60)
+    const remainSeconds = rounded % 60
+
+    if (remainSeconds === 0) {
+      return locale === "ru" ? `около ${minutes} мин.` : `about ${minutes} min`
+    }
+
+    return locale === "ru"
+      ? `около ${minutes} мин. ${remainSeconds} сек.`
+      : `about ${minutes} min ${remainSeconds}s`
+  }
+
   const stats = useMemo(() => {
     const teamsCount = data?.teams.length ?? 0
     const modulesCount = data?.modules.length ?? 0
     const filesCount = data?.teams.reduce((sum, team) => sum + team.files.length, 0) ?? 0
     return { teamsCount, modulesCount, filesCount }
   }, [data])
+
+  const exportPercent =
+    exportStatus && exportStatus.teamFilesExportTotal > 0
+      ? Math.min(100, Math.round((exportStatus.teamFilesExportCompleted / exportStatus.teamFilesExportTotal) * 100))
+      : 0
+
+  const exportEtaSeconds = useMemo(() => {
+    if (
+      !exportStatus ||
+      exportStatus.teamFilesExportStatus !== "RUNNING" ||
+      !exportStatus.teamFilesExportStartedAt ||
+      exportStatus.teamFilesExportCompleted <= 0 ||
+      exportStatus.teamFilesExportCompleted >= exportStatus.teamFilesExportTotal
+    ) {
+      return null
+    }
+
+    const elapsedMs = Date.now() - new Date(exportStatus.teamFilesExportStartedAt).getTime()
+    if (elapsedMs <= 0) {
+      return null
+    }
+
+    const msPerStep = elapsedMs / exportStatus.teamFilesExportCompleted
+    const remainingSteps = exportStatus.teamFilesExportTotal - exportStatus.teamFilesExportCompleted
+
+    return Math.round((msPerStep * remainingSteps) / 1000)
+  }, [
+    exportStatus?.teamFilesExportStartedAt,
+    exportStatus?.teamFilesExportStatus,
+    exportStatus?.teamFilesExportCompleted,
+    exportStatus?.teamFilesExportTotal,
+  ])
 
   if (isLoading) {
     return (
@@ -191,10 +341,84 @@ export default function AdminSubmissionsPage() {
         {selectedEventId && (
           <Button onClick={handleExport} isLoading={isExporting} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
-            {locale === "ru" ? "Скачать ZIP" : "Download ZIP"}
+            {exportStatus?.ready
+              ? locale === "ru"
+                ? "Скачать ZIP"
+                : "Download ZIP"
+              : locale === "ru"
+                ? "Подготовить ZIP"
+                : "Prepare ZIP"}
           </Button>
         )}
       </div>
+
+      {selectedEventId && exportStatus && (
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {locale === "ru" ? "Архив работ команд" : "Team submissions archive"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {exportStatus.teamFilesExportStatus === "RUNNING"
+                    ? locale === "ru"
+                      ? "Сервер собирает ZIP и обновляет прогресс по мере упаковки."
+                      : "The server is building the ZIP and updating progress while packing files."
+                    : exportStatus.ready
+                      ? locale === "ru"
+                        ? "Готовый архив уже лежит в кэше и будет скачан сразу."
+                        : "The archive is cached and ready for immediate download."
+                      : exportStatus.teamFilesExportStatus === "FAILED"
+                        ? locale === "ru"
+                          ? "Подготовка архива завершилась с ошибкой."
+                          : "Archive preparation failed."
+                        : locale === "ru"
+                          ? "Архив еще не подготовлен. Нажмите кнопку, чтобы собрать его в фоне."
+                          : "The archive is not prepared yet. Start background generation with the button."}
+                </p>
+              </div>
+              <div className="text-sm font-medium text-gray-700">
+                {exportStatus.teamFilesExportCompleted}/{exportStatus.teamFilesExportTotal}
+              </div>
+            </div>
+
+            <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-[#C41E3A] transition-all"
+                style={{ width: `${exportPercent}%` }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {locale === "ru" ? "Прогресс:" : "Progress:"} {exportPercent}%
+              </span>
+              <span>
+                {exportStatus.teamFilesExportStatus === "RUNNING" && exportEtaSeconds
+                  ? locale === "ru"
+                    ? `Осталось ${formatEta(exportEtaSeconds)}`
+                    : `${formatEta(exportEtaSeconds)} remaining`
+                  : exportStatus.ready
+                    ? locale === "ru"
+                      ? "Архив готов к скачиванию"
+                      : "Archive is ready to download"
+                    : exportStatus.teamFilesExportStatus === "FAILED"
+                      ? locale === "ru"
+                        ? "Подготовка не завершена"
+                        : "Preparation did not complete"
+                      : locale === "ru"
+                        ? "Ожидает запуска"
+                        : "Waiting to start"}
+              </span>
+            </div>
+
+            {exportStatus.teamFilesExportError && (
+              <p className="text-sm text-red-600">{exportStatus.teamFilesExportError}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-4">
@@ -272,7 +496,7 @@ export default function AdminSubmissionsPage() {
           {data.teams.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center text-gray-500">
-                {locale === "ru" ? "Для этого мероприятия ещё нет команд." : "There are no teams for this event yet."}
+                {locale === "ru" ? "Для этого мероприятия еще нет команд." : "There are no teams for this event yet."}
               </CardContent>
             </Card>
           ) : (
@@ -304,7 +528,7 @@ export default function AdminSubmissionsPage() {
                     {data.modules.length === 0 ? (
                       <p className="text-sm text-gray-500">
                         {locale === "ru"
-                          ? "Схема оценивания для этого мероприятия ещё не загружена."
+                          ? "Схема оценивания для этого мероприятия еще не загружена."
                           : "Assessment schema is not configured for this event yet."}
                       </p>
                     ) : (

@@ -102,6 +102,13 @@ model Event {
   passportPreparationError String?
   passportPreparationStartedAt DateTime?
   passportPreparationFinishedAt DateTime?
+  teamFilesExportStatus String?
+  teamFilesExportTotal Int           @default(0)
+  teamFilesExportCompleted Int       @default(0)
+  teamFilesExportError String?
+  teamFilesExportStartedAt DateTime?
+  teamFilesExportFinishedAt DateTime?
+  teamFilesExportCachedAt DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   applications      Application[]

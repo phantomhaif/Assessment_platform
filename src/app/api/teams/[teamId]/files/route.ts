@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { notifyTeamFileActivity } from "@/lib/notifications"
+import { invalidateTeamFilesExportCache } from "@/lib/team-files-export"
 import { writeFile, mkdir, unlink } from "fs/promises"
 import path from "path"
 import { existsSync } from "fs"
@@ -175,6 +176,8 @@ export async function POST(
       action,
     })
 
+    await invalidateTeamFilesExportCache(teamMember.team.event.id)
+
     return NextResponse.json(teamFile)
   } catch (error) {
     console.error("Error uploading file:", error)
@@ -249,6 +252,15 @@ export async function DELETE(
       fileName: file.fileName,
       action: "deleted",
     })
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { eventId: true },
+    })
+
+    if (team?.eventId) {
+      await invalidateTeamFilesExportCache(team.eventId)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
