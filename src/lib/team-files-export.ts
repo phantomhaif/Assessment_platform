@@ -254,3 +254,7 @@ export async function startBackgroundTeamFilesExport(eventId: string) {
 export async function readTeamFilesExportArchive(eventId: string) {
   return readFile(getArchivePath(eventId))
 }
+
+export function getTeamFilesExportArchivePath(eventId: string) {
+  return getArchivePath(eventId)
+}

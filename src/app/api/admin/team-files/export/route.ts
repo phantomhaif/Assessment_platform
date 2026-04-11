@@ -1,9 +1,12 @@
+import { createReadStream } from "node:fs"
+import { stat } from "node:fs/promises"
+import { Readable } from "node:stream"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import {
+  getTeamFilesExportArchivePath,
   getTeamFilesExportStatus,
-  readTeamFilesExportArchive,
   startBackgroundTeamFilesExport,
 } from "@/lib/team-files-export"
 
@@ -69,13 +72,14 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const archiveBuffer = await readTeamFilesExportArchive(eventId)
+    const archivePath = getTeamFilesExportArchivePath(eventId)
+    const archiveStats = await stat(archivePath)
     const { filename, asciiFilename } = buildDownloadFilename(status.name)
 
-    return new NextResponse(new Uint8Array(archiveBuffer), {
+    return new NextResponse(Readable.toWeb(createReadStream(archivePath)) as ReadableStream, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Length": String(archiveBuffer.length),
+        "Content-Length": String(archiveStats.size),
         "Content-Disposition": `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
       },
     })
