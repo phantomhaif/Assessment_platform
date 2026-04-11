@@ -1,7 +1,6 @@
 const fs = require("node:fs")
 const fsp = require("node:fs/promises")
 const path = require("node:path")
-const JSZip = require("jszip")
 
 const STATUS_RUNNING = "RUNNING"
 const STATUS_COMPLETED = "COMPLETED"
@@ -18,6 +17,7 @@ async function main() {
     throw new Error("Manifest path is required")
   }
 
+  const JSZip = require("jszip")
   const manifestRaw = await fsp.readFile(manifestPath, "utf8")
   const manifest = JSON.parse(manifestRaw)
   const zip = new JSZip()
