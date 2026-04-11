@@ -1,22 +1,42 @@
 import { existsSync } from "node:fs"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
-import JSZip from "jszip"
+import { spawn } from "node:child_process"
 import { prisma } from "@/lib/prisma"
-import { UPLOADS_BASE, getUploadsPath } from "@/lib/uploads"
+import { getUploadsPath } from "@/lib/uploads"
 
-const TEAM_FILES_EXPORT_STATUS = {
-  RUNNING: "RUNNING",
-  COMPLETED: "COMPLETED",
-  FAILED: "FAILED",
-} as const
+const STATUS_RUNNING = "RUNNING"
+const STATUS_COMPLETED = "COMPLETED"
+const STATUS_FAILED = "FAILED"
+const ARCHIVE_FILE_NAME = "team-submissions.zip"
+const STATUS_FILE_NAME = "status.json"
+const MANIFEST_FILE_NAME = "manifest.json"
+const STALE_RUNNING_MS = 1000 * 60 * 60 * 2
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __teamFilesExportJobs: Set<string> | undefined
+type WorkerStatusFile = {
+  status: string | null
+  total: number
+  completed: number
+  error: string | null
+  startedAt: string | null
+  finishedAt: string | null
+  cachedAt: string | null
 }
 
-const runningJobs = globalThis.__teamFilesExportJobs ?? (globalThis.__teamFilesExportJobs = new Set<string>())
+type ExportEntry = {
+  fullFilePath: string
+  zipFolderPath: string[]
+  outputFileName: string
+}
+
+type ExportManifest = {
+  archivePath: string
+  statusPath: string
+  total: number
+  rootFolderName: string
+  startedAt: string
+  entries: ExportEntry[]
+}
 
 const sanitizePathSegment = (value: string) =>
   value.replace(/[<>:"/\\|?*\u0000-\u001F]/g, "_").trim() || "unnamed"
@@ -26,69 +46,48 @@ function getArchiveDir(eventId: string) {
 }
 
 function getArchivePath(eventId: string) {
-  return path.join(getArchiveDir(eventId), "team-submissions.zip")
+  return path.join(getArchiveDir(eventId), ARCHIVE_FILE_NAME)
 }
 
-type ExportStatusRecord = {
-  teamFilesExportStatus: string | null
-  teamFilesExportTotal: number
-  teamFilesExportCompleted: number
-  teamFilesExportError: string | null
-  teamFilesExportStartedAt: Date | null
-  teamFilesExportFinishedAt: Date | null
-  teamFilesExportCachedAt: Date | null
+function getStatusPath(eventId: string) {
+  return path.join(getArchiveDir(eventId), STATUS_FILE_NAME)
 }
 
-export async function getTeamFilesExportStatus(eventId: string) {
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: {
-      id: true,
-      name: true,
-      teamFilesExportStatus: true,
-      teamFilesExportTotal: true,
-      teamFilesExportCompleted: true,
-      teamFilesExportError: true,
-      teamFilesExportStartedAt: true,
-      teamFilesExportFinishedAt: true,
-      teamFilesExportCachedAt: true,
-    },
-  })
+function getManifestPath(eventId: string) {
+  return path.join(getArchiveDir(eventId), MANIFEST_FILE_NAME)
+}
 
-  if (!event) {
+function getWorkerScriptPath() {
+  return path.join(process.cwd(), "public", "workers", "team-files-export-worker.cjs")
+}
+
+async function readStatusFile(eventId: string): Promise<WorkerStatusFile | null> {
+  const statusPath = getStatusPath(eventId)
+
+  if (!existsSync(statusPath)) {
     return null
   }
 
-  const archivePath = getArchivePath(eventId)
-  const ready =
-    event.teamFilesExportStatus === TEAM_FILES_EXPORT_STATUS.COMPLETED &&
-    !!event.teamFilesExportCachedAt &&
-    existsSync(archivePath)
-
-  return {
-    ...event,
-    ready,
+  try {
+    const raw = await readFile(statusPath, "utf8")
+    return JSON.parse(raw) as WorkerStatusFile
+  } catch {
+    return null
   }
 }
 
-export async function invalidateTeamFilesExportCache(eventId: string) {
-  await rm(getArchiveDir(eventId), { recursive: true, force: true })
-
-  await prisma.event.update({
-    where: { id: eventId },
-    data: {
-      teamFilesExportStatus: null,
-      teamFilesExportTotal: 0,
-      teamFilesExportCompleted: 0,
-      teamFilesExportError: null,
-      teamFilesExportStartedAt: null,
-      teamFilesExportFinishedAt: null,
-      teamFilesExportCachedAt: null,
-    },
-  }).catch(() => undefined)
+async function writeStatusFile(eventId: string, status: WorkerStatusFile) {
+  await mkdir(getArchiveDir(eventId), { recursive: true })
+  await writeFile(getStatusPath(eventId), JSON.stringify(status), "utf8")
 }
 
-type LoadedEvent = Awaited<ReturnType<typeof loadTeamFilesExportSource>>
+function isStaleRunningStatus(status: WorkerStatusFile | null) {
+  if (!status || status.status !== STATUS_RUNNING || !status.startedAt) {
+    return false
+  }
+
+  return Date.now() - new Date(status.startedAt).getTime() > STALE_RUNNING_MS
+}
 
 async function loadTeamFilesExportSource(eventId: string) {
   return prisma.event.findUnique({
@@ -117,15 +116,9 @@ async function loadTeamFilesExportSource(eventId: string) {
   })
 }
 
-type ExportEntry = {
-  fullFilePath: string
-  zipFolderPath: string[]
-  outputFileName: string
-}
-
-function collectExportEntries(event: NonNullable<LoadedEvent>) {
-  const entries: ExportEntry[] = []
+function collectExportEntries(event: NonNullable<Awaited<ReturnType<typeof loadTeamFilesExportSource>>>) {
   const schemaModules = event.assessmentSchema?.modules ?? []
+  const entries: ExportEntry[] = []
 
   for (const team of event.teams) {
     const teamFolderName = sanitizePathSegment(team.number ? `${team.number}_${team.name}` : team.name)
@@ -137,7 +130,7 @@ function collectExportEntries(event: NonNullable<LoadedEvent>) {
 
     for (const file of team.files) {
       const relativeFilePath = file.fileUrl.replace(/^\/api\/files\//, "")
-      const fullFilePath = path.join(UPLOADS_BASE, relativeFilePath)
+      const fullFilePath = getUploadsPath(relativeFilePath)
 
       if (!existsSync(fullFilePath)) {
         continue
@@ -158,123 +151,104 @@ function collectExportEntries(event: NonNullable<LoadedEvent>) {
   return entries
 }
 
+export async function invalidateTeamFilesExportCache(eventId: string) {
+  await rm(getArchiveDir(eventId), { recursive: true, force: true })
+}
+
+export async function getTeamFilesExportStatus(eventId: string) {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  if (!event) {
+    return null
+  }
+
+  const status = await readStatusFile(eventId)
+  const archiveExists = existsSync(getArchivePath(eventId))
+  const ready = status?.status === STATUS_COMPLETED && archiveExists
+
+  return {
+    id: event.id,
+    name: event.name,
+    teamFilesExportStatus: status?.status ?? null,
+    teamFilesExportTotal: status?.total ?? 0,
+    teamFilesExportCompleted: status?.completed ?? 0,
+    teamFilesExportError: status?.error ?? null,
+    teamFilesExportStartedAt: status?.startedAt ?? null,
+    teamFilesExportFinishedAt: status?.finishedAt ?? null,
+    teamFilesExportCachedAt: status?.cachedAt ?? null,
+    ready,
+  }
+}
+
 export async function startBackgroundTeamFilesExport(eventId: string) {
-  const currentStatus = await getTeamFilesExportStatus(eventId)
+  const currentStatus = await readStatusFile(eventId)
+  const archiveExists = existsSync(getArchivePath(eventId))
 
-  if (!currentStatus) {
-    throw new Error("Event not found")
+  if (currentStatus?.status === STATUS_COMPLETED && archiveExists) {
+    return { started: false, reason: "ready" as const, total: currentStatus.total }
   }
 
-  if (currentStatus.ready) {
-    return { started: false, reason: "ready" as const, total: currentStatus.teamFilesExportTotal }
-  }
-
-  if (runningJobs.has(eventId) || currentStatus.teamFilesExportStatus === TEAM_FILES_EXPORT_STATUS.RUNNING) {
-    return { started: false, reason: "already-running" as const, total: currentStatus.teamFilesExportTotal }
+  if (currentStatus?.status === STATUS_RUNNING && !isStaleRunningStatus(currentStatus)) {
+    return { started: false, reason: "already-running" as const, total: currentStatus.total }
   }
 
   const event = await loadTeamFilesExportSource(eventId)
-
   if (!event) {
     throw new Error("Event not found")
   }
 
   const entries = collectExportEntries(event)
-  const totalSteps = entries.length + 1
+  const total = entries.length + 1
+  const archiveDir = getArchiveDir(eventId)
+  const archivePath = getArchivePath(eventId)
+  const statusPath = getStatusPath(eventId)
+  const manifestPath = getManifestPath(eventId)
 
-  await rm(getArchiveDir(eventId), { recursive: true, force: true })
+  await rm(archiveDir, { recursive: true, force: true })
+  await mkdir(archiveDir, { recursive: true })
 
-  await prisma.event.update({
-    where: { id: eventId },
-    data: {
-      teamFilesExportStatus: TEAM_FILES_EXPORT_STATUS.RUNNING,
-      teamFilesExportTotal: totalSteps,
-      teamFilesExportCompleted: 0,
-      teamFilesExportError: null,
-      teamFilesExportStartedAt: new Date(),
-      teamFilesExportFinishedAt: null,
-      teamFilesExportCachedAt: null,
-    },
+  const startedAt = new Date().toISOString()
+
+  await writeStatusFile(eventId, {
+    status: STATUS_RUNNING,
+    total,
+    completed: 0,
+    error: null,
+    startedAt,
+    finishedAt: null,
+    cachedAt: null,
   })
 
-  runningJobs.add(eventId)
-
-  setTimeout(() => {
-    void runBackgroundTeamFilesExport(eventId)
-  }, 0)
-
-  return { started: true, total: totalSteps }
-}
-
-async function updateProgress(eventId: string, data: Partial<ExportStatusRecord>) {
-  await prisma.event.update({
-    where: { id: eventId },
-    data,
-  })
-}
-
-async function runBackgroundTeamFilesExport(eventId: string) {
-  try {
-    const event = await loadTeamFilesExportSource(eventId)
-
-    if (!event) {
-      throw new Error("Event not found")
-    }
-
-    const entries = collectExportEntries(event)
-    const zip = new JSZip()
-    const totalSteps = entries.length + 1
-    let completed = 0
-
-    for (const entry of entries) {
-      const fileBuffer = await readFile(entry.fullFilePath)
-      const folder = zip.folder(entry.zipFolderPath.join("/"))
-
-      if (folder) {
-        folder.file(entry.outputFileName, fileBuffer)
-      }
-
-      completed += 1
-      await updateProgress(eventId, {
-        teamFilesExportCompleted: completed,
-        teamFilesExportTotal: totalSteps,
-        teamFilesExportError: null,
-      })
-    }
-
-    if (entries.length === 0) {
-      zip.folder(sanitizePathSegment(event.name))
-    }
-
-    const archiveBuffer = await zip.generateAsync({
-      type: "nodebuffer",
-      streamFiles: true,
-      compression: "STORE",
-    })
-
-    await mkdir(getArchiveDir(eventId), { recursive: true })
-    await writeFile(getArchivePath(eventId), archiveBuffer)
-
-    await updateProgress(eventId, {
-      teamFilesExportStatus: TEAM_FILES_EXPORT_STATUS.COMPLETED,
-      teamFilesExportTotal: totalSteps,
-      teamFilesExportCompleted: totalSteps,
-      teamFilesExportError: null,
-      teamFilesExportFinishedAt: new Date(),
-      teamFilesExportCachedAt: new Date(),
-    })
-  } catch (error) {
-    console.error("Background team files export failed:", error)
-
-    await updateProgress(eventId, {
-      teamFilesExportStatus: TEAM_FILES_EXPORT_STATUS.FAILED,
-      teamFilesExportError: error instanceof Error ? error.message : "Unknown error",
-      teamFilesExportFinishedAt: new Date(),
-      teamFilesExportCachedAt: null,
-    }).catch(() => undefined)
-  } finally {
-    runningJobs.delete(eventId)
+  const manifest: ExportManifest = {
+    archivePath,
+    statusPath,
+    total,
+    rootFolderName: sanitizePathSegment(event.name),
+    startedAt,
+    entries,
   }
+
+  await writeFile(manifestPath, JSON.stringify(manifest), "utf8")
+
+  const workerScriptPath = getWorkerScriptPath()
+  if (!existsSync(workerScriptPath)) {
+    throw new Error("ZIP worker script not found")
+  }
+
+  const child = spawn(process.execPath, [workerScriptPath, manifestPath], {
+    detached: true,
+    stdio: "ignore",
+  })
+
+  child.unref()
+
+  return { started: true, total }
 }
 
 export async function readTeamFilesExportArchive(eventId: string) {
