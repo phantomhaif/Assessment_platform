@@ -31,8 +31,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only admins, organizers, and experts can view scores
-    if (!["ADMIN", "ORGANIZER", "EXPERT"].includes(session.user.role)) {
+    // Only admins can view scores
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -101,8 +101,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user is admin, organizer, or expert
-    if (!["ADMIN", "ORGANIZER", "EXPERT"].includes(session.user.role)) {
+    // Only admins can submit scores
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
