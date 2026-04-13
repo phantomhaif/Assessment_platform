@@ -246,6 +246,10 @@ export const dictionaries = {
       totalApplications: "Всего заявок",
       participant: "Участник",
       submissionDate: "Дата подачи",
+      filterByStatus: "Статус",
+      filterByRole: "Роль",
+      allStatuses: "Все статусы",
+      allRoles: "Все роли",
     },
 
     // Profile
@@ -855,6 +859,10 @@ export const dictionaries = {
       totalApplications: "Total applications",
       participant: "Participant",
       submissionDate: "Submission date",
+      filterByStatus: "Status",
+      filterByRole: "Role",
+      allStatuses: "All statuses",
+      allRoles: "All roles",
     },
 
     // Profile

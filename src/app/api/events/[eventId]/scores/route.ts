@@ -31,6 +31,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Only admins, organizers, and experts can view scores
+    if (!["ADMIN", "ORGANIZER", "EXPERT"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const { eventId } = await params
     const { searchParams } = new URL(req.url)
     const teamId = searchParams.get("teamId")

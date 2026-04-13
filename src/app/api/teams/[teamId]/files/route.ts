@@ -27,7 +27,7 @@ export async function GET(
     const { teamId } = await params
 
     // Check if user is team member or admin/organizer
-    const isAdmin = session.user.role === "ADMIN" || session.user.role === "ORGANIZER" || session.user.role === "EXPERT"
+    const isAdmin = session.user.role === "ADMIN" || session.user.role === "ORGANIZER"
 
     if (!isAdmin) {
       const isMember = await prisma.teamMember.findFirst({

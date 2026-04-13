@@ -45,6 +45,8 @@ export default function AdminApplicationsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [manualRole, setManualRole] = useState<"PARTICIPANT" | "EXPERT">("PARTICIPANT")
   const [roleSelections, setRoleSelections] = useState<Record<string, "PARTICIPANT" | "EXPERT">>({})
+  const [statusFilter, setStatusFilter] = useState<string>("")
+  const [roleFilter, setRoleFilter] = useState<string>("")
   const { t, locale } = useI18n()
 
   useEffect(() => {
@@ -163,6 +165,13 @@ export default function AdminApplicationsPage() {
     if (role === "EXPERT") return t.roles.expert
     return t.roles.participant
   }
+
+  const filteredApplications = applications.filter(a => {
+    if (statusFilter && a.status !== statusFilter) return false
+    const role = a.approvedRole ?? a.requestedRole
+    if (roleFilter && role !== roleFilter) return false
+    return true
+  })
 
   const pendingCount = applications.filter(a => a.status === "PENDING").length
   const approvedCount = applications.filter(a => a.status === "APPROVED").length
@@ -308,7 +317,44 @@ export default function AdminApplicationsPage() {
             </Card>
           </div>
 
-          {applications.length === 0 ? (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t.applications.filterByStatus}
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">{t.applications.allStatuses}</option>
+                    <option value="PENDING">{t.applications.pending}</option>
+                    <option value="APPROVED">{t.applications.approved}</option>
+                    <option value="REJECTED">{t.applications.rejected}</option>
+                    <option value="WITHDRAWN">{t.applications.withdrawn}</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t.applications.filterByRole}
+                  </label>
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">{t.applications.allRoles}</option>
+                    <option value="PARTICIPANT">{t.roles.participant}</option>
+                    <option value="EXPERT">{t.roles.expert}</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {filteredApplications.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -319,7 +365,7 @@ export default function AdminApplicationsPage() {
             <Card>
               <CardContent className="p-4 md:hidden">
                 <div className="space-y-3">
-                  {applications.map((app) => {
+                  {filteredApplications.map((app) => {
                     const badge = getStatusBadge(app.status)
                     return (
                       <div key={app.id} className="space-y-3 rounded-xl border border-gray-200 p-4">
@@ -420,7 +466,7 @@ export default function AdminApplicationsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {applications.map((app) => {
+                    {filteredApplications.map((app) => {
                       const badge = getStatusBadge(app.status)
                       return (
                         <tr key={app.id} className="hover:bg-gray-50">

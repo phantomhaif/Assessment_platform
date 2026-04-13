@@ -44,9 +44,10 @@ export function Header({ onMenuClick }: HeaderProps) {
     }
   }
 
-  const greeting = locale === "ru"
-    ? `Добро пожаловать, ${session?.user?.name}`
-    : `Welcome, ${session?.user?.name}`
+  const userName = session?.user?.name || ""
+  const greetingFull = locale === "ru"
+    ? `Добро пожаловать, ${userName}`
+    : `Welcome, ${userName}`
 
   return (
     <header className="flex min-h-16 items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2 md:px-6">
@@ -60,8 +61,9 @@ export function Header({ onMenuClick }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </button>
         )}
-        <h2 className="truncate text-xs font-semibold text-gray-900 sm:text-sm md:text-lg">
-          {greeting}
+        <h2 className="truncate font-semibold text-gray-900 text-sm md:text-lg">
+          <span className="md:hidden">{userName}</span>
+          <span className="hidden md:inline">{greetingFull}</span>
         </h2>
       </div>
 
