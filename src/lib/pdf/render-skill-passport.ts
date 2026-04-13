@@ -64,7 +64,7 @@ const backgroundSets = {
 
 const signatureSets = {
   ru: assetDataUrl("public", "templates", "passport-signatures", "electronic-signature-ru.svg"),
-  en: assetDataUrl("public", "templates", "passport-signatures", "electronic-signature-en.svg"),
+  en: assetDataUrl("public", "templates", "passport-signatures", "electronic-signature-en.png"),
 } as const
 
 function assetUrl(...segments: string[]) {
