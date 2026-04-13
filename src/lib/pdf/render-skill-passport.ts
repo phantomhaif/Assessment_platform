@@ -62,6 +62,11 @@ const backgroundSets = {
   en: assetDataUrl("public", "templates", "passport-bg", "passport-background-en.png"),
 } as const
 
+const signatureSets = {
+  ru: assetDataUrl("public", "templates", "passport-signatures", "electronic-signature-ru.svg"),
+  en: assetDataUrl("public", "templates", "passport-signatures", "electronic-signature-en.svg"),
+} as const
+
 function assetUrl(...segments: string[]) {
   return pathToFileURL(path.join(process.cwd(), ...segments)).href
 }
@@ -151,6 +156,7 @@ function buildPassportHtml(data: SkillPassportData) {
   const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
   const backgroundSrc = resolveBackgroundSrc(locale, data.passportBackgroundUrl)
+  const signatureSrc = signatureSets[locale]
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
   const sortedModules = [...(data.modules || [])].sort((a, b) =>
     String(a.code || "").localeCompare(String(b.code || ""), "en", { numeric: true })
@@ -200,28 +206,19 @@ function buildPassportHtml(data: SkillPassportData) {
       padding-top: 100px;
       padding-bottom: 34px;
     }
-    .divider {
-      position: absolute;
-      top: 100px;
-      bottom: 34px;
-      left: 50%;
-      width: 1px;
-      transform: translateX(-0.5px);
-      background: #D5D9DE;
-    }
     .left-col {
       position: absolute;
       top: 110px;
       left: 38px;
-      width: calc(50% - 54px);
-      padding-right: 4px;
+      width: calc(50% - 42px);
+      padding-right: 8px;
     }
     .right-col {
       position: absolute;
       top: 108px;
       right: 38px;
-      width: calc(50% - 54px);
-      padding-left: 24px;
+      width: calc(50% - 42px);
+      padding-left: 12px;
     }
     .title-main { color: #BE1622; font-size: 35px; line-height: .98; font-weight: 700; margin: 0; }
     .title-sub { margin: 6px 0 0; color: #BE1622; font-size: 15px; font-weight: 600; text-transform: uppercase; }
@@ -235,7 +232,7 @@ function buildPassportHtml(data: SkillPassportData) {
     .signature { margin-top: 50px; max-width: 456px; }
     .signature-name { font-size: 14px; font-weight: 700; line-height: 1.2; color: #010101; }
     .signature-role { margin-top: 4px; font-size: 15px; font-weight: 500; line-height: 1.14; color: #010101; }
-    .signature-line { margin-top: 26px; width: 110px; border-top: 1px solid #8C8C8C; }
+    .signature-stamp { display: block; margin-top: 18px; width: 182px; max-width: 100%; height: auto; }
     .right-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
     .results-title { max-width: 190px; font-size: 25px; font-weight: 700; line-height: 1.06; white-space: pre-line; margin: 0; }
     .total-wrap { text-align: right; min-width: 116px; }
@@ -293,11 +290,9 @@ function buildPassportHtml(data: SkillPassportData) {
           <div class="signature-name">${escapeHtml(text.signName)}</div>
           <div class="signature-role">${escapeHtml(text.signRole1)}</div>
           <div class="signature-role">${escapeHtml(text.signRole2)}</div>
-          <div class="signature-line"></div>
+          <img class="signature-stamp" src="${signatureSrc}" alt="" />
         </div>
       </section>
-
-      <div class="divider"></div>
 
       <section class="right-col">
         <div class="right-head">
