@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n/context"
 interface SkillPassport {
   id: string
   totalScore: number
-  moduleScores: { code: string; name: string; score: number; maxScore: number }[]
+  moduleScores: { code: string; name: string; nameEn?: string | null; score: number; maxScore: number }[]
   skillGroupScores: { number: number; name: string; score: number; maxScore: number }[]
   publishedAt: string
   event: {
@@ -171,7 +171,7 @@ export default function MyPassportsPage() {
                   {passport.moduleScores.slice(0, 3).map((module) => (
                     <div key={module.code} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-gray-600">
-                        {module.code}. {module.name}
+                        {module.code}. {locale === "en" ? module.nameEn || module.name : module.name}
                       </span>
                       <span className="font-medium">
                         {module.score}/{module.maxScore}

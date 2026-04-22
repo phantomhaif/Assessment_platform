@@ -59,6 +59,7 @@ interface Module {
   id: string
   code: string
   name: string
+  nameEn?: string | null
 }
 
 interface TeamFile {
@@ -102,6 +103,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       : event.description
     : null
   const eventCompetency = event ? (locale === "en" ? event.competencyEn || event.competency : event.competency) : ""
+  const getModuleName = (module: Module) => (locale === "en" ? module.nameEn || module.name : module.name)
 
   useEffect(() => {
     fetchData()
@@ -596,7 +598,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
-                              {t.events.module} {module.code}: {module.name}
+                              {t.events.module} {module.code}: {getModuleName(module)}
                             </p>
                             {existingFile && (
                               <p className="text-sm text-green-600 mt-1">

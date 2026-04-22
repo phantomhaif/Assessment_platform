@@ -28,6 +28,7 @@ interface Module {
   id: string
   code: string
   name: string
+  nameEn?: string | null
   maxScore: number
   subCriteria: SubCriterion[]
 }
@@ -73,6 +74,7 @@ export default function AdminScoringPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
   const { t, locale } = useI18n()
+  const getModuleName = (module: Module) => (locale === "en" ? module.nameEn || module.name : module.name)
 
   useEffect(() => {
     fetchEvents()
@@ -497,7 +499,7 @@ export default function AdminScoringPage() {
                     )}
                     <div>
                       <CardTitle className="text-lg">
-                        {t.scoring.module} {module.code}: {module.name}
+                        {t.scoring.module} {module.code}: {getModuleName(module)}
                       </CardTitle>
                       <p className="text-sm text-gray-500 mt-1">
                         {t.scoring.earned}: {calculateModuleScore(module).toFixed(1)} / {module.maxScore} {t.scoring.points}

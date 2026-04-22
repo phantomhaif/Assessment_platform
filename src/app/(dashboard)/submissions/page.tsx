@@ -12,6 +12,7 @@ interface ModuleItem {
   id: string
   code: string
   name: string
+  nameEn?: string | null
 }
 
 interface TeamFile {
@@ -53,6 +54,7 @@ export default function SubmissionsPage() {
   const [success, setSuccess] = useState("")
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const getModuleName = (module: ModuleItem) => (locale === "en" ? module.nameEn || module.name : module.name)
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -286,7 +288,7 @@ export default function SubmissionsPage() {
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
                               <p className="font-medium text-gray-900">
-                                {locale === "ru" ? "Модуль" : "Module"} {module.code}: {module.name}
+                                {locale === "ru" ? "Модуль" : "Module"} {module.code}: {getModuleName(module)}
                               </p>
                               {existingFile ? (
                                 <div className="mt-1 space-y-1 text-sm text-gray-600">

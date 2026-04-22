@@ -21,6 +21,7 @@ interface ModuleItem {
   id: string
   code: string
   name: string
+  nameEn?: string | null
 }
 
 interface TeamFile {
@@ -94,6 +95,7 @@ export default function AdminSubmissionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [shouldAutoDownload, setShouldAutoDownload] = useState(false)
+  const getModuleName = (module: ModuleItem) => (locale === "en" ? module.nameEn || module.name : module.name)
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -541,7 +543,7 @@ export default function AdminSubmissionsPage() {
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="min-w-0">
                                   <p className="font-medium text-gray-900">
-                                    {locale === "ru" ? "Модуль" : "Module"} {module.code}: {module.name}
+                                    {locale === "ru" ? "Модуль" : "Module"} {module.code}: {getModuleName(module)}
                                   </p>
                                   {file ? (
                                     <div className="mt-1 space-y-1 text-sm text-gray-600">
