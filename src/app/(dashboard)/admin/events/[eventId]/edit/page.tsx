@@ -8,6 +8,7 @@ import { ArrowLeft, ImagePlus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { OrganizerManager } from "@/components/forms/organizer-manager"
 import { useI18n } from "@/lib/i18n/context"
 
 type EventFormData = {
@@ -510,6 +511,10 @@ export default function EditEventPage({ params }: { params: Promise<{ eventId: s
           </Button>
         </div>
       </form>
+
+      <div className="mt-6">
+        <OrganizerManager eventId={eventId} />
+      </div>
     </div>
   )
 }

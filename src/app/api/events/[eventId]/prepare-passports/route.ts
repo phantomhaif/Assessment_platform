@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { canManageEvent } from "@/lib/authz"
 import { computeEventResults, loadEventResultsSource } from "@/lib/event-results"
 import {
   getPassportPreparationStatus,
@@ -17,11 +18,10 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const status = await getPassportPreparationStatus(eventId)
 
     return NextResponse.json(status)
@@ -41,11 +41,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const body = await req.json().catch(() => ({}))
     const mode = body.mode === "all" ? "all" : "sample"
 

@@ -52,6 +52,10 @@ function buildPassportRecord(
   } satisfies SkillPassportRecord
 }
 
+function isPassportEligibleMember(member: ComputedMember) {
+  return member.role !== "EXPERT" && member.user.role !== "EXPERT"
+}
+
 async function preparePassportForMember(eventId: string, event: LoadedEvent, team: ComputedTeam, member: ComputedMember) {
   const passport = await prisma.skillPassport.upsert({
     where: {
@@ -102,7 +106,8 @@ export async function prepareSamplePassport(eventId: string) {
   }
 
   const results = computeEventResults(event)
-  const sample = results.flatMap((team) => team.members.map((member) => ({ team, member })))[0]
+  const sample = results
+    .flatMap((team) => team.members.filter(isPassportEligibleMember).map((member) => ({ team, member })))[0]
 
   if (!sample) {
     throw new Error("No participants with results")
@@ -149,7 +154,9 @@ export async function startBackgroundPassportPreparation(eventId: string) {
   }
 
   const results = computeEventResults(event)
-  const members = results.flatMap((team) => team.members.map((member) => ({ team, member })))
+  const members = results.flatMap((team) =>
+    team.members.filter(isPassportEligibleMember).map((member) => ({ team, member }))
+  )
 
   if (members.length === 0) {
     throw new Error("No participants with results")
@@ -185,7 +192,9 @@ async function runBackgroundPassportPreparation(eventId: string) {
     }
 
     const results = computeEventResults(event)
-    const members = results.flatMap((team) => team.members.map((member) => ({ team, member })))
+    const members = results.flatMap((team) =>
+      team.members.filter(isPassportEligibleMember).map((member) => ({ team, member }))
+    )
 
     let completed = 0
 

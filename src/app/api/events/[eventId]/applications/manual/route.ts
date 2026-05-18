@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 
 function normalizeApplicationRole(value: unknown) {
   return value === "EXPERT" ? "EXPERT" : "PARTICIPANT"
@@ -16,11 +17,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const { userId, requestedRole } = await req.json()
 
     if (!userId) {

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { ensurePassportPdf, readPassportPdf, type SkillPassportRecord } from "@/lib/passports"
 import type { PassportLocale } from "@/lib/pdf/render-skill-passport"
+import { canManageEvent, isAdmin } from "@/lib/authz"
 
 export async function GET(
   req: NextRequest,
@@ -47,11 +48,26 @@ export async function GET(
       return NextResponse.json({ error: "Passport not found" }, { status: 404 })
     }
 
-    if (
-      passport.userId !== session.user.id &&
-      session.user.role !== "ADMIN" &&
-      session.user.role !== "ORGANIZER"
-    ) {
+    const canManage =
+      isAdmin(session.user.role) ||
+      (session.user.role === "ORGANIZER" &&
+        (await canManageEvent(session, passport.eventId)))
+    if (!canManage && session.user.role === "EXPERT" && passport.userId === session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const expertAccess = !canManage && session.user.role === "EXPERT"
+      ? await prisma.teamMember.findFirst({
+          where: {
+            teamId: passport.teamId || undefined,
+            userId: session.user.id,
+            role: "EXPERT",
+          },
+          select: { id: true },
+        })
+      : null
+
+    if (passport.userId !== session.user.id && !canManage && (!expertAccess || passport.user.role === "EXPERT")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

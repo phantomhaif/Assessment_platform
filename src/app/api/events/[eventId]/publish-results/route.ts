@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { computeEventResults, loadEventResultsSource } from "@/lib/event-results"
+import { canManageEvent } from "@/lib/authz"
 
 export async function GET(
   req: NextRequest,
@@ -13,11 +14,10 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const event = await loadEventResultsSource(eventId)
 
     if (!event) {
@@ -61,11 +61,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const body = await req.json().catch(() => ({}))
     const publishPassports = body.publishPassports !== false
 

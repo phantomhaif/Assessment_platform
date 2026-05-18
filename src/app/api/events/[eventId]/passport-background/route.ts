@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { removeEventPassportPdfCaches } from "@/lib/passports"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 import { getApiFileUrl, getUploadsFilePathFromApiUrl, getUploadsPath } from "@/lib/uploads"
 
 type BackgroundLocale = "ru" | "en"
@@ -20,14 +21,14 @@ function getOtherFieldName(locale: BackgroundLocale) {
   return locale === "en" ? "passportBackgroundRu" : "passportBackgroundEn"
 }
 
-async function authorize() {
+async function authorize(eventId: string) {
   const session = await auth()
 
   if (!session?.user?.id) {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
 
-  if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+  if (!(await canManageEvent(session, eventId))) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
   }
 
@@ -39,12 +40,12 @@ export async function POST(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
-    const authResult = await authorize()
+    const { eventId } = await params
+    const authResult = await authorize(eventId)
     if ("error" in authResult) {
       return authResult.error
     }
 
-    const { eventId } = await params
     const formData = await req.formData()
     const file = formData.get("file") as File | null
     const locale = normalizeLocale((formData.get("locale") as string | null) || "ru")
@@ -128,12 +129,12 @@ export async function DELETE(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
-    const authResult = await authorize()
+    const { eventId } = await params
+    const authResult = await authorize(eventId)
     if ("error" in authResult) {
       return authResult.error
     }
 
-    const { eventId } = await params
     const locale = normalizeLocale(req.nextUrl.searchParams.get("locale"))
     const fieldName = getFieldName(locale)
     const otherFieldName = getOtherFieldName(locale)

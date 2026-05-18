@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { Bell, User, Menu } from "lucide-react"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useI18n } from "@/lib/i18n/context"
@@ -50,28 +51,28 @@ export function Header({ onMenuClick }: HeaderProps) {
     : `Welcome, ${userName}`
 
   return (
-    <header className="flex min-h-16 items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2 md:px-6">
+    <header className="topbar">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {onMenuClick && (
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            className="rounded-lg p-2 text-[#8ea0b5] transition-colors hover:bg-white/[0.06] hover:text-white md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
         )}
-        <h2 className="truncate font-semibold text-gray-900 text-sm md:text-lg">
+        <h2 className="topbar-greeting truncate">
           <span className="md:hidden">{userName}</span>
           <span className="hidden md:inline">{greetingFull}</span>
         </h2>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 md:gap-4">
+      <div className="topbar-actions shrink-0">
         <LanguageSwitcher />
         <Link
           href="/notifications"
-          className="relative inline-flex rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+          className="icon-btn relative"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -81,10 +82,20 @@ export function Header({ onMenuClick }: HeaderProps) {
           )}
         </Link>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-            <User className="h-5 w-5 text-red-600" />
+          <div className="user-avatar !h-8 !w-8">
+            {session?.user?.photo ? (
+              <Image
+                src={session.user.photo}
+                alt=""
+                width={32}
+                height={32}
+                className="h-full w-full rounded-[5px] object-cover"
+              />
+            ) : (
+              <User className="h-5 w-5 text-[#ff8da3]" />
+            )}
           </div>
-          <span className="hidden sm:inline text-sm font-medium text-gray-700">
+          <span className="hidden text-sm font-medium text-[#b8c5d5] sm:inline">
             {getRoleName(session?.user?.role)}
           </span>
         </div>

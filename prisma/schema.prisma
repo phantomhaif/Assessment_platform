@@ -9,48 +9,70 @@ datasource db {
 }
 
 model User {
-  id                     String                @id @default(cuid())
-  email                  String                @unique
+  id                     String               @id @default(cuid())
+  email                  String               @unique
   passwordHash           String
   emailVerified          DateTime?
   firstName              String
   lastName               String
   middleName             String?
   organization           String?
+  organizationId         String?
   position               String?
   phone                  String?
   photo                  String?
-  role                   UserRole              @default(PARTICIPANT)
-  agreedToTerms          Boolean               @default(false)
-  agreedToDataProcessing Boolean               @default(false)
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
+  role                   UserRole             @default(PARTICIPANT)
+  agreedToTerms          Boolean              @default(false)
+  agreedToDataProcessing Boolean              @default(false)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
   applications           Application[]
+  createdOrganizations   Organization[]       @relation("OrganizationCreatedBy")
+  eventFeedbacks         EventFeedback[]
   expertAssignments      ExpertAssignment[]
   protocolAssignments    ProtocolAssignment[]
   protocolSignatures     ProtocolSignature[]
   scores                 Score[]
   skillPassports         SkillPassport[]
+  organizationRef        Organization?        @relation("UserOrganization", fields: [organizationId], references: [id])
   uploadedFiles          TeamFile[]
+  uploadedTeamPhotos     TeamPhoto[]
+  updatedTeamFlags       TeamAdminFlag[]      @relation("TeamAdminFlagUpdatedBy")
   teamMemberships        TeamMember[]
   customFieldValues      ProfileFieldValue[]
   notifications          Notification[]
+  organizedEvents        Event[]              @relation("EventOrganizers")
 
   @@map("users")
 }
 
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String?
+  country     String?
+  isApproved  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   User?    @relation("OrganizationCreatedBy", fields: [createdById], references: [id])
+  users       User[]   @relation("UserOrganization")
+
+  @@index([name])
+  @@map("organizations")
+}
+
 model ProfileField {
-  id          String              @id @default(cuid())
-  name        String
-  nameEn      String?
-  type        ProfileFieldType    @default(TEXT)
-  required    Boolean             @default(false)
-  order       Int                 @default(0)
-  options     String[]            @default([])
-  optionsEn   String[]            @default([])
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  values      ProfileFieldValue[]
+  id        String              @id @default(cuid())
+  name      String
+  nameEn    String?
+  type      ProfileFieldType    @default(TEXT)
+  required  Boolean             @default(false)
+  order     Int                 @default(0)
+  options   String[]            @default([])
+  optionsEn String[]            @default([])
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  values    ProfileFieldValue[]
 
   @@map("profile_fields")
 }
@@ -77,63 +99,65 @@ enum ProfileFieldType {
 }
 
 model Event {
-  id                String            @id @default(cuid())
-  name              String
-  nameEn            String?
-  description       String?
-  descriptionEn     String?
-  competency        String
-  competencyEn      String?
-  logo              String?
-  passportBackgroundRu String?
-  passportBackgroundEn String?
-  eventFormat       EventFormat       @default(OFFLINE)
-  location          String?
-  registrationStart DateTime
-  registrationEnd   DateTime
-  eventStart        DateTime
-  eventEnd          DateTime
-  status            EventStatus       @default(DRAFT)
-  maxTeamSize       Int               @default(4)
-  minTeamSize       Int               @default(1)
-  passportPreparationStatus String?
-  passportPreparationTotal Int        @default(0)
-  passportPreparationCompleted Int    @default(0)
-  passportPreparationError String?
-  passportPreparationStartedAt DateTime?
+  id                            String            @id @default(cuid())
+  name                          String
+  nameEn                        String?
+  description                   String?
+  descriptionEn                 String?
+  competency                    String
+  competencyEn                  String?
+  logo                          String?
+  passportBackgroundRu          String?
+  passportBackgroundEn          String?
+  eventFormat                   EventFormat       @default(OFFLINE)
+  location                      String?
+  registrationStart             DateTime
+  registrationEnd               DateTime
+  eventStart                    DateTime
+  eventEnd                      DateTime
+  status                        EventStatus       @default(DRAFT)
+  maxTeamSize                   Int               @default(4)
+  minTeamSize                   Int               @default(1)
+  passportPreparationStatus     String?
+  passportPreparationTotal      Int               @default(0)
+  passportPreparationCompleted  Int               @default(0)
+  passportPreparationError      String?
+  passportPreparationStartedAt  DateTime?
   passportPreparationFinishedAt DateTime?
-  teamFilesExportStatus String?
-  teamFilesExportTotal Int           @default(0)
-  teamFilesExportCompleted Int       @default(0)
-  teamFilesExportError String?
-  teamFilesExportStartedAt DateTime?
-  teamFilesExportFinishedAt DateTime?
-  teamFilesExportCachedAt DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  applications      Application[]
-  assessmentSchema  AssessmentSchema?
-  documents         EventDocument[]
-  protocols         Protocol[]
-  skillPassports    SkillPassport[]
-  teams             Team[]
+  teamFilesExportStatus         String?
+  teamFilesExportTotal          Int               @default(0)
+  teamFilesExportCompleted      Int               @default(0)
+  teamFilesExportError          String?
+  teamFilesExportStartedAt      DateTime?
+  teamFilesExportFinishedAt     DateTime?
+  teamFilesExportCachedAt       DateTime?
+  createdAt                     DateTime          @default(now())
+  updatedAt                     DateTime          @updatedAt
+  applications                  Application[]
+  assessmentSchema              AssessmentSchema?
+  documents                     EventDocument[]
+  feedbacks                     EventFeedback[]
+  protocols                     Protocol[]
+  skillPassports                SkillPassport[]
+  teams                         Team[]
+  organizers                    User[]            @relation("EventOrganizers")
 
   @@map("events")
 }
 
 model EventDocument {
-  id        String       @id @default(cuid())
+  id        String           @id @default(cuid())
   eventId   String
   name      String
   type      DocumentType
   language  DocumentLanguage @default(RU)
-  access    String[]     @default(["PARTICIPANTS"])
+  access    String[]         @default(["PARTICIPANTS"])
   fileUrl   String
-  version   Int          @default(1)
-  order     Int          @default(0)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  version   Int              @default(1)
+  order     Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  event     Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@map("event_documents")
 }
@@ -167,8 +191,10 @@ model Team {
   updatedAt      DateTime        @updatedAt
   scores         Score[]
   skillPassports SkillPassport[]
+  adminFlags     TeamAdminFlag[]
   files          TeamFile[]
   members        TeamMember[]
+  photos         TeamPhoto[]
   event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, name])
@@ -201,6 +227,57 @@ model TeamFile {
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
 
   @@map("team_files")
+}
+
+model TeamPhoto {
+  id           String   @id @default(cuid())
+  teamId       String
+  uploadedById String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  caption      String?
+  createdAt    DateTime @default(now())
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+
+  @@index([teamId, createdAt])
+  @@map("team_photos")
+}
+
+model TeamAdminFlag {
+  id          String   @id @default(cuid())
+  teamId      String
+  key         String
+  value       Boolean  @default(false)
+  note        String?
+  updatedById String
+  updatedAt   DateTime @updatedAt
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  updatedBy   User     @relation("TeamAdminFlagUpdatedBy", fields: [updatedById], references: [id])
+
+  @@unique([teamId, key])
+  @@map("team_admin_flags")
+}
+
+model EventFeedback {
+  id             String   @id @default(cuid())
+  eventId        String
+  userId         String
+  rating         Int
+  pros           String?  @db.Text
+  cons           String?  @db.Text
+  suggestions    String?  @db.Text
+  wouldRecommend Boolean?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@map("event_feedback")
 }
 
 model Notification {
@@ -322,18 +399,18 @@ model ExpertAssignment {
 }
 
 model Protocol {
-  id          String                @id @default(cuid())
+  id          String               @id @default(cuid())
   eventId     String
   title       String
   titleEn     String?
-  content     String                @db.Text
-  contentEn   String?               @db.Text
-  version     Int                   @default(1)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  content     String               @db.Text
+  contentEn   String?              @db.Text
+  version     Int                  @default(1)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
   signatures  ProtocolSignature[]
   assignments ProtocolAssignment[]
-  event       Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event       Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@map("protocols")
 }
@@ -414,7 +491,6 @@ enum DocumentLanguage {
   EN
 }
 
-
 enum ApplicationStatus {
   PENDING
   APPROVED
@@ -424,6 +500,7 @@ enum ApplicationStatus {
 
 enum TeamMemberRole {
   MEMBER
+  EXPERT
 }
 
 enum CriterionType {

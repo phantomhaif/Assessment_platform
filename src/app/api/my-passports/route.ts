@@ -9,6 +9,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    if (session.user.role === "EXPERT") {
+      return NextResponse.json([])
+    }
+
     const passports = await prisma.skillPassport.findMany({
       where: {
         userId: session.user.id,

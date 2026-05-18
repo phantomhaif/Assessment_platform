@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { removeEventPassportPdfCaches } from "@/lib/passports"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent, isAdmin } from "@/lib/authz"
 
 export async function GET(
   req: NextRequest,
@@ -71,12 +72,21 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { eventId } = await params
     const body = await req.json()
+
+    // Only the admin may (re)assign organizers; strip relation/ownership
+    // fields from the generic update payload for everyone else.
+    if (!isAdmin(session.user.role)) {
+      delete body.organizers
+      delete body.organizerIds
+    }
+
     const shouldInvalidatePassportCache =
       Object.prototype.hasOwnProperty.call(body, "passportBackgroundRu") ||
       Object.prototype.hasOwnProperty.call(body, "passportBackgroundEn")

@@ -77,6 +77,23 @@ interface TeamInfo {
   number: number | null
 }
 
+interface TeamPhoto {
+  id: string
+  fileName: string
+  fileUrl: string
+  fileSize: number
+  caption: string | null
+  createdAt: string
+}
+
+interface EventFeedback {
+  rating: number
+  pros: string | null
+  cons: string | null
+  suggestions: string | null
+  wouldRecommend: boolean | null
+}
+
 export default function EventDetailPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = use(params)
   const { t, locale } = useI18n()
@@ -86,10 +103,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const [documents, setDocuments] = useState<Document[]>([])
   const [modules, setModules] = useState<Module[]>([])
   const [teamFiles, setTeamFiles] = useState<TeamFile[]>([])
+  const [teamPhotos, setTeamPhotos] = useState<TeamPhoto[]>([])
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null)
+  const [feedback, setFeedback] = useState<EventFeedback | null>(null)
+  const [feedbackForm, setFeedbackForm] = useState({
+    rating: 5,
+    pros: "",
+    cons: "",
+    suggestions: "",
+    wouldRecommend: true,
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingModule, setUploadingModule] = useState<string | null>(null)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [isSavingFeedback, setIsSavingFeedback] = useState(false)
   const [agreedToRegulation, setAgreedToRegulation] = useState(false)
   const [requestedRole, setRequestedRole] = useState<"PARTICIPANT" | "EXPERT">("PARTICIPANT")
   const [error, setError] = useState("")
@@ -111,6 +139,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
   const fetchData = async () => {
     try {
+      let loadedEvent: Event | null = null
       const [eventRes, appRes, docsRes] = await Promise.all([
         fetch(`/api/events/${eventId}`),
         fetch(`/api/events/${eventId}/applications`),
@@ -119,6 +148,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
 
       if (eventRes.ok) {
         const eventData = await eventRes.json()
+        loadedEvent = eventData
         setEvent(eventData)
       }
 
@@ -143,6 +173,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
               const filesData = await filesRes.json()
               setTeamFiles(filesData)
             }
+
+            const photosRes = await fetch(`/api/teams/${teamData.id}/photos`)
+            if (photosRes.ok) {
+              const photosData = await photosRes.json()
+              setTeamPhotos(photosData)
+            }
           }
 
           if (modulesRes.ok) {
@@ -155,6 +191,23 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       if (docsRes.ok) {
         const docsData = await docsRes.json()
         setDocuments(docsData)
+      }
+
+      if (loadedEvent && ["RESULTS_PUBLISHED", "ARCHIVED"].includes(loadedEvent.status)) {
+          const feedbackRes = await fetch(`/api/events/${eventId}/feedback`)
+          if (feedbackRes.ok) {
+            const feedbackData = await feedbackRes.json()
+            setFeedback(feedbackData)
+            if (feedbackData) {
+              setFeedbackForm({
+                rating: feedbackData.rating,
+                pros: feedbackData.pros || "",
+                cons: feedbackData.cons || "",
+                suggestions: feedbackData.suggestions || "",
+                wouldRecommend: feedbackData.wouldRecommend ?? true,
+              })
+            }
+          }
       }
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -259,6 +312,79 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
     }
   }
 
+  const handlePhotoUpload = async (file: File) => {
+    if (!teamInfo) return
+
+    setIsUploadingPhoto(true)
+    setError("")
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch(`/api/teams/${teamInfo.id}/photos`, {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || (locale === "ru" ? "Ошибка загрузки фото" : "Photo upload error"))
+      }
+
+      setTeamPhotos(prev => [data, ...prev])
+      setSuccess(locale === "ru" ? "Фото добавлено в отчёт" : "Photo added to the report")
+    } catch (error) {
+      setError(error instanceof Error ? error.message : locale === "ru" ? "Ошибка загрузки фото" : "Photo upload error")
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
+
+  const handleDeletePhoto = async (photoId: string) => {
+    if (!teamInfo || !confirm(locale === "ru" ? "Удалить фото из отчёта?" : "Delete photo from the report?")) return
+
+    try {
+      const response = await fetch(`/api/teams/${teamInfo.id}/photos/${photoId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        setTeamPhotos(prev => prev.filter(photo => photo.id !== photoId))
+        setSuccess(locale === "ru" ? "Фото удалено" : "Photo deleted")
+      }
+    } catch {
+      setError(locale === "ru" ? "Ошибка удаления фото" : "Photo deletion error")
+    }
+  }
+
+  const handleFeedbackSubmit = async () => {
+    setIsSavingFeedback(true)
+    setError("")
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feedbackForm),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || (locale === "ru" ? "Ошибка сохранения отзыва" : "Feedback save error"))
+      }
+
+      setFeedback(data)
+      setSuccess(locale === "ru" ? "Спасибо, отзыв сохранён" : "Thank you, feedback saved")
+    } catch (error) {
+      setError(error instanceof Error ? error.message : locale === "ru" ? "Ошибка сохранения отзыва" : "Feedback save error")
+    } finally {
+      setIsSavingFeedback(false)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string }> = {
       PENDING: { label: t.applications.pending, className: "bg-yellow-100 text-yellow-700" },
@@ -309,7 +435,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   }
 
   const isApproved = application?.status === "APPROVED"
-  const canUploadFiles = isApproved && ["IN_PROGRESS", "SCORING"].includes(event.status)
+  const approvedRole = application?.approvedRole || application?.requestedRole
+  const canUploadFiles = isApproved && approvedRole !== "EXPERT" && ["IN_PROGRESS", "SCORING"].includes(event.status)
+  const canUploadPhotos = isApproved && ["IN_PROGRESS", "SCORING", "RESULTS_PUBLISHED", "ARCHIVED"].includes(event.status)
+  const canLeaveFeedback = isApproved && ["RESULTS_PUBLISHED", "ARCHIVED"].includes(event.status)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -491,13 +620,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                   <div className="text-sm text-amber-800 space-y-2">
                     <p>
                       {locale === "ru"
-                        ? "Университеты и колледжи, заявившие своих студентов в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения – дисквалифицируются на участие в соревнованиях сроком на 1 год. Бан распространяется на ту компетенцию, в которой заявились участники, и все соревнования, проводимые организаторами."
-                        : "Universities and colleges that have registered their students as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, will be disqualified from participation for 1 year. The ban applies to the skill for which participants were registered and all competitions conducted by the organizers."}
+                        ? "Образовательные учреждения, заявившие своих студентов в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения или фактического отсутствия команды в полном составе хотя бы на одном из этапов Чемпионата – дисквалифицируются на участие во всех соревнованиях Industry Skills по всем компетенциям сроком на 1 год."
+                        : "Educational institutions that have registered their students as competition participants will be disqualified from participating in all Industry Skills competitions across all skills for a period of 1 year if they withdraw their application within one month before the start of the competition, during the competition period, or if the full team fails to attend at least one stage of the Championship."}
                     </p>
                     <p>
                       {locale === "ru"
-                        ? "Корпоративным командам, заявившим своих сотрудников в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения – регистрационный взнос не возмещается."
-                        : "For corporate teams that have registered their employees as competition participants, in case of withdrawal within one month before the start of the competition and during the competition period, the registration fee is non-refundable."}
+                        ? "Дисквалификация происходит путём направления официального письма на почту тимлидера, указанного в заявке, или другого уполномоченного лица организации по усмотрению организаторов."
+                        : "Disqualification is carried out by sending an official letter to the email of the team leader specified in the application, or to another authorized representative of the organization at the organizers' discretion."}
+                    </p>
+                    <p>
+                      {locale === "ru"
+                        ? "Корпоративным командам, заявившим своих сотрудников в качестве участников соревнований, в случае отзыва заявки в течение месяца до начала соревнований и в период их проведения или фактического отсутствия команды хотя бы на одном из этапов Чемпионата – регистрационный взнос не возмещается."
+                        : "Corporate teams that have registered their employees as competition participants will not be refunded the registration fee if they withdraw their application within one month before the start of the competition, during the competition period, or if the team fails to attend at least one stage of the Championship."}
                     </p>
                     <p className="font-medium">
                       {locale === "ru"
@@ -655,6 +789,140 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {isApproved && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              {locale === "ru" ? "Фотоотчёт команды" : "Team photo report"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {canUploadPhotos ? (
+              <div>
+                <input
+                  id="team-photo-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) void handlePhotoUpload(file)
+                    event.currentTarget.value = ""
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  isLoading={isUploadingPhoto}
+                  onClick={() => document.getElementById("team-photo-upload")?.click()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {locale === "ru" ? "Добавить фото" : "Add photo"}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                {locale === "ru"
+                  ? "Фотоотчёт будет доступен во время или после чемпионата."
+                  : "The photo report is available during or after the event."}
+              </p>
+            )}
+
+            {teamPhotos.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {teamPhotos.map((photo) => (
+                  <div key={photo.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <a href={photo.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={photo.fileUrl} alt={photo.fileName} className="aspect-square w-full object-cover" />
+                    </a>
+                    <div className="p-2">
+                      <p className="truncate text-xs text-gray-500">{photo.fileName}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 w-full text-red-600 hover:bg-red-50"
+                        onClick={() => handleDeletePhoto(photo.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                {locale === "ru" ? "Фото пока не загружены." : "No photos uploaded yet."}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {canLeaveFeedback && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {locale === "ru" ? "Поделитесь впечатлениями о Чемпионате" : "Share your event feedback"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {feedback && (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                {locale === "ru" ? "Ваш отзыв уже сохранён. Его можно обновить." : "Your feedback is saved. You can update it."}
+              </div>
+            )}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {locale === "ru" ? "Оценка" : "Rating"}
+              </label>
+              <select
+                value={feedbackForm.rating}
+                onChange={(event) => setFeedbackForm(prev => ({ ...prev, rating: Number(event.target.value) }))}
+                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                {[5, 4, 3, 2, 1].map((rating) => (
+                  <option key={rating} value={rating}>
+                    {rating}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <textarea
+              value={feedbackForm.pros}
+              onChange={(event) => setFeedbackForm(prev => ({ ...prev, pros: event.target.value }))}
+              rows={3}
+              placeholder={locale === "ru" ? "Что понравилось" : "What worked well"}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+            <textarea
+              value={feedbackForm.cons}
+              onChange={(event) => setFeedbackForm(prev => ({ ...prev, cons: event.target.value }))}
+              rows={3}
+              placeholder={locale === "ru" ? "Что можно улучшить" : "What can be improved"}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+            <textarea
+              value={feedbackForm.suggestions}
+              onChange={(event) => setFeedbackForm(prev => ({ ...prev, suggestions: event.target.value }))}
+              rows={3}
+              placeholder={locale === "ru" ? "Предложения" : "Suggestions"}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+            <Checkbox
+              name="wouldRecommend"
+              checked={feedbackForm.wouldRecommend}
+              onChange={(event) => setFeedbackForm(prev => ({ ...prev, wouldRecommend: event.target.checked }))}
+              label={locale === "ru" ? "Порекомендую коллегам" : "I would recommend it to colleagues"}
+            />
+            <Button onClick={handleFeedbackSubmit} isLoading={isSavingFeedback}>
+              {locale === "ru" ? "Сохранить отзыв" : "Save feedback"}
+            </Button>
           </CardContent>
         </Card>
       )}

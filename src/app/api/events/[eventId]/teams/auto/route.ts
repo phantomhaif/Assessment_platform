@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 
 function normalizeOrgKey(value: string | null | undefined) {
   return (value || "").trim().replace(/\s+/g, " ").toLowerCase()
@@ -21,11 +22,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (!["ADMIN", "ORGANIZER"].includes(session.user.role)) {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },

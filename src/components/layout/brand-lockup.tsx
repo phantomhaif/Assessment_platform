@@ -22,7 +22,7 @@ export function BrandLockup({
     <div className={cn("flex min-w-0 flex-col justify-between", className)}>
       <div
         className={cn(
-          "font-black uppercase tracking-wider text-[#C41E3A]",
+          "font-black uppercase tracking-wider text-[#f3314f]",
           isRussian ? "whitespace-nowrap leading-none" : "leading-tight",
           titleClassName
         )}
@@ -37,7 +37,7 @@ export function BrandLockup({
           </>
         )}
       </div>
-      <p className={cn("text-[#64748b]", subtitleClassName)}>{subtitle}</p>
+      <p className={cn("text-[#7d8da1]", subtitleClassName)}>{subtitle}</p>
     </div>
   )
 }

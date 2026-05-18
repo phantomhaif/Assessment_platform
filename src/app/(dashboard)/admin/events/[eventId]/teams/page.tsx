@@ -44,6 +44,7 @@ interface User {
   lastName: string
   email: string
   organization: string | null
+  eventRole?: "MEMBER" | "EXPERT"
 }
 
 interface EventApplication {
@@ -102,14 +103,14 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
       const response = await fetch(`/api/events/${eventId}/applications`)
       if (response.ok) {
         const data = await response.json()
-        const approvedParticipants = (Array.isArray(data) ? data : [])
+        const approvedUsers = (Array.isArray(data) ? data : [])
           .filter((application: EventApplication) => application.status === "APPROVED")
-          .filter((application: EventApplication) =>
-            (application.approvedRole ?? application.requestedRole) !== "EXPERT"
-          )
-          .map((application: EventApplication) => application.user)
+          .map((application: EventApplication) => ({
+            ...application.user,
+            eventRole: ((application.approvedRole ?? application.requestedRole) === "EXPERT" ? "EXPERT" : "MEMBER") as "EXPERT" | "MEMBER",
+          }))
 
-        setUsers(approvedParticipants)
+        setUsers(approvedUsers)
       }
     } catch (error) {
       console.error("Error fetching users:", error)
@@ -218,6 +219,14 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
     } finally {
       setIsCreating(false)
     }
+  }
+
+  const getMemberRoleLabel = (role: string) => {
+    if (role === "EXPERT") {
+      return locale === "ru" ? "Эксперт" : "Expert"
+    }
+
+    return t.teams.member
   }
 
   const handleAutoFormTeams = async () => {
@@ -453,10 +462,11 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                               {user.lastName} {user.firstName}
                             </p>
                             <p className="text-xs text-gray-500">{user.email}</p>
+                            <p className="mt-1 text-xs text-gray-400">{getMemberRoleLabel(user.eventRole || "MEMBER")}</p>
                           </div>
                           <Button
                             size="sm"
-                            onClick={() => handleAddMember(team.id, user.id, "MEMBER")}
+                            onClick={() => handleAddMember(team.id, user.id, user.eventRole || "MEMBER")}
                             disabled={isAddingMember}
                           >
                             {t.applications.add}
@@ -475,8 +485,38 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                 {team.members.length === 0 ? (
                   <p className="text-sm text-gray-500">{t.teams.noMembers}</p>
                 ) : (
-                  <div className="space-y-2">
-                    {team.members.map((member) => (
+                  <div className="space-y-3">
+                    {team.members.filter((member) => member.role === "EXPERT").map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex flex-col gap-2 rounded border border-amber-200 bg-amber-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            <Link
+                              href={`/admin/users/${member.user.id}/profile`}
+                              className="text-[#92400E] hover:underline"
+                            >
+                              {member.user.lastName} {member.user.firstName}
+                            </Link>
+                          </p>
+                          <p className="text-sm text-amber-800">{member.user.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded bg-amber-200 px-2 py-1 text-xs font-medium text-amber-900">
+                            {getMemberRoleLabel(member.role)}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveMember(team.id, member.id)}
+                          >
+                            <X className="h-4 w-4 text-amber-700 hover:text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {team.members.filter((member) => member.role !== "EXPERT").map((member) => (
                       <div
                         key={member.id}
                         className="flex flex-col gap-2 rounded bg-gray-50 p-2 sm:flex-row sm:items-center sm:justify-between"
@@ -494,7 +534,7 @@ export default function EventTeamsPage({ params }: { params: Promise<{ eventId: 
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                            {t.teams.member}
+                            {getMemberRoleLabel(member.role)}
                           </span>
                           <Button
                             variant="ghost"

@@ -55,6 +55,22 @@ interface Event {
   teams: RankedTeam[]
 }
 
+interface AdminFeedback {
+  id: string
+  rating: number
+  pros: string | null
+  cons: string | null
+  suggestions: string | null
+  wouldRecommend: boolean | null
+  createdAt: string
+  user: {
+    firstName: string
+    lastName: string
+    email: string
+    role: string
+  }
+}
+
 const getMedalEmoji = (rank: number) => {
   if (rank === 1) return "🥇"
   if (rank === 2) return "🥈"
@@ -69,6 +85,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [previewTeams, setPreviewTeams] = useState<RankedTeam[]>([])
+  const [feedbacks, setFeedbacks] = useState<AdminFeedback[]>([])
+  const [averageRating, setAverageRating] = useState<number | null>(null)
   const [publishPassports, setPublishPassports] = useState(true)
   const [isPreparingSamplePassport, setIsPreparingSamplePassport] = useState(false)
   const [isGeneratingAllPassports, setIsGeneratingAllPassports] = useState(false)
@@ -95,6 +113,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       if (response.ok) {
         const data = await response.json()
         setEvent(data)
+        if (["RESULTS_PUBLISHED", "ARCHIVED"].includes(data.status)) {
+          void fetchFeedbacks()
+        } else {
+          setFeedbacks([])
+          setAverageRating(null)
+        }
         if (data.status === "SCORING") {
           fetchPreview()
         } else {
@@ -157,6 +181,19 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
       }
     } catch (error) {
       console.error("Error publishing results:", error)
+    }
+  }
+
+  const fetchFeedbacks = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/feedback`)
+      if (response.ok) {
+        const data = await response.json()
+        setFeedbacks(data.feedbacks || [])
+        setAverageRating(data.averageRating ?? null)
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error)
     }
   }
 
@@ -444,17 +481,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
         </Card>
       )}
 
-      {event.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t.common.description}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">{event.description}</p>
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">{t.adminEvent.assessmentSchema}</CardTitle>
@@ -620,7 +646,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                     <tr
                       key={team.id}
                       className={`border-b border-gray-100 ${
-                        team.rank <= 3 ? "bg-amber-50" : ""
+                        team.rank <= 3 ? "bg-[#0f1118]" : ""
                       }`}
                     >
                       <td className="py-3 px-4">
@@ -635,7 +661,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="font-medium text-gray-900">{team.name}</span>
+                        <span className={`font-medium ${team.rank <= 3 ? "text-[#f5f7fb]" : "text-gray-900"}`}>{team.name}</span>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">
@@ -657,6 +683,56 @@ export default function EventDetailPage({ params }: { params: Promise<{ eventId:
                 </tbody>
               </table>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {["RESULTS_PUBLISHED", "ARCHIVED"].includes(event.status) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {locale === "ru" ? "Отзывы участников" : "Participant feedback"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-gray-400">{locale === "ru" ? "Ответов" : "Responses"}</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{feedbacks.length}</p>
+              </div>
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-gray-400">{locale === "ru" ? "Средняя оценка" : "Average rating"}</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">
+                  {averageRating === null ? "—" : averageRating.toFixed(1)}
+                </p>
+              </div>
+            </div>
+            {feedbacks.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                {locale === "ru" ? "Отзывы пока не отправлены." : "No feedback submitted yet."}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {feedbacks.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {item.user.lastName} {item.user.firstName}
+                        </p>
+                        <p className="text-sm text-gray-500">{item.user.email}</p>
+                      </div>
+                      <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+                        {item.rating}/5
+                      </span>
+                    </div>
+                    {[item.pros, item.cons, item.suggestions].filter(Boolean).map((text, index) => (
+                      <p key={index} className="mt-3 whitespace-pre-wrap text-sm text-gray-700">{text}</p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

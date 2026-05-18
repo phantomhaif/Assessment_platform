@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 import { z } from "zod"
 
 const judgementOptionSchema = z.object({
@@ -54,11 +55,14 @@ export async function PUT(
 ) {
   try {
     const session = await auth()
-    if (!session || !["ADMIN", "ORGANIZER"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { eventId, criterionId } = await params
+    if (!(await canManageEvent(session, eventId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
     const body = await req.json()
     const data = updateCriterionSchema.parse(body)
 
@@ -111,11 +115,14 @@ export async function DELETE(
 ) {
   try {
     const session = await auth()
-    if (!session || !["ADMIN", "ORGANIZER"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { eventId, criterionId } = await params
+    if (!(await canManageEvent(session, eventId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     await prisma.criterion.delete({
       where: { id: criterionId },

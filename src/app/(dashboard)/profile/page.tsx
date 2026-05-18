@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Camera, Trash2 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useI18n } from "@/lib/i18n/context"
+import { PhotoCropModal } from "@/components/ui/photo-crop-modal"
 
 interface ProfileField {
   id: string
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [profileFields, setProfileFields] = useState<ProfileField[]>([])
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({})
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   const [profile, setProfile] = useState<UserProfile>({
     firstName: "",
@@ -125,9 +127,15 @@ export default function ProfilePage() {
     setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }))
   }
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = ""
     if (!file) return
+    setCropFile(file)
+  }
+
+  const uploadCroppedPhoto = async (file: File) => {
+    setCropFile(null)
 
     const formData = new FormData()
     formData.append("file", file)
@@ -181,6 +189,11 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      <PhotoCropModal
+        file={cropFile}
+        onCancel={() => setCropFile(null)}
+        onCropped={uploadCroppedPhoto}
+      />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t.profile.title}</h1>
         <p className="text-gray-500 mt-1">{t.profile.subtitle}</p>
@@ -226,7 +239,7 @@ export default function ProfilePage() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handlePhotoUpload}
+                    onChange={handlePhotoSelect}
                   />
                 </label>
               </div>
@@ -237,11 +250,11 @@ export default function ProfilePage() {
             </div>
 
             {/* Требования к фотографии */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="font-medium text-gray-900 mb-2">
+            <div className="rounded-lg border border-white/[0.09] bg-white/[0.035] p-4">
+              <p className="mb-2 font-medium text-[#e8ecf2]">
                 {locale === "ru" ? "Требования к фотографии:" : "Photo Requirements:"}
               </p>
-              <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+              <ol className="list-inside list-decimal space-y-1 text-sm text-[#b8c5d5]">
                 <li>
                   {locale === "ru"
                     ? "Портрет крупным планом по плечи. Фотография 3 на 4."
@@ -257,7 +270,7 @@ export default function ProfilePage() {
                     ? "При отсутствии брендированной одежды организации необходима фотография в одежде официально-делового стиля."
                     : "If organization branded clothing is unavailable, a photo in formal business attire is required."}
                 </li>
-                <li className="text-red-600 font-medium">
+                <li className="font-medium text-[#ff8da3]">
                   {locale === "ru"
                     ? "Не допускаются фотографии в головных уборах и верхней одежде."
                     : "Photos with headwear and outerwear are not allowed."}

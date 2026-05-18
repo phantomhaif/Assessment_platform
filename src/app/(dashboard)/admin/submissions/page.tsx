@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { enUS, ru } from "date-fns/locale"
-import { Download, FileText, FolderOpen, Calendar } from "lucide-react"
+import { Download, FileText, FolderOpen, Calendar, Camera } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useI18n } from "@/lib/i18n/context"
@@ -48,9 +48,25 @@ interface TeamItem {
       firstName: string
       lastName: string
       email: string
+      photo: string | null
     }
   }[]
   files: TeamFile[]
+  photos: {
+    id: string
+    fileName: string
+    fileUrl: string
+    fileSize: number
+    mimeType: string
+    caption: string | null
+    createdAt: string
+  }[]
+  adminFlags: {
+    key: string
+    value: boolean
+    note: string | null
+    updatedAt: string
+  }[]
 }
 
 interface AdminSubmissionsResponse {
@@ -95,6 +111,7 @@ export default function AdminSubmissionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [shouldAutoDownload, setShouldAutoDownload] = useState(false)
+  const [showMissingFirst, setShowMissingFirst] = useState(true)
   const getModuleName = (module: ModuleItem) => (locale === "en" ? module.nameEn || module.name : module.name)
 
   useEffect(() => {
@@ -255,6 +272,42 @@ export default function AdminSubmissionsPage() {
     }
   }
 
+  const updateObsFlag = async (teamId: string, value: boolean) => {
+    if (!data) return
+
+    setData({
+      ...data,
+      teams: data.teams.map((team) =>
+        team.id === teamId
+          ? {
+              ...team,
+              adminFlags: [{ key: "obs_submitted", value, note: null, updatedAt: new Date().toISOString() }],
+            }
+          : team
+      ),
+    })
+
+    try {
+      const response = await fetch(`/api/admin/teams/${teamId}/flags`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "obs_submitted", value }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update flag")
+      }
+    } catch (error) {
+      console.error("Error updating OBS flag:", error)
+      if (selectedEventId) {
+        const response = await fetch(`/api/admin/team-files?eventId=${selectedEventId}`)
+        if (response.ok) {
+          setData(await response.json())
+        }
+      }
+    }
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} ${locale === "ru" ? "Б" : "B"}`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ${locale === "ru" ? "КБ" : "KB"}`
@@ -285,6 +338,27 @@ export default function AdminSubmissionsPage() {
     const filesCount = data?.teams.reduce((sum, team) => sum + team.files.length, 0) ?? 0
     return { teamsCount, modulesCount, filesCount }
   }, [data])
+
+  const sortedTeams = useMemo(() => {
+    if (!data) return []
+
+    const getMissingModulesCount = (team: TeamItem) =>
+      data.modules.filter((module) => !team.files.some((file) => file.moduleCode === module.code)).length
+
+    return [...data.teams].sort((left, right) => {
+      if (showMissingFirst) {
+        const leftMissing = getMissingModulesCount(left)
+        const rightMissing = getMissingModulesCount(right)
+        if (leftMissing !== rightMissing) return rightMissing - leftMissing
+      }
+
+      const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER
+      const rightNumber = right.number ?? Number.MAX_SAFE_INTEGER
+      if (leftNumber !== rightNumber) return leftNumber - rightNumber
+
+      return left.name.localeCompare(right.name, locale === "ru" ? "ru" : "en")
+    })
+  }, [data, locale, showMissingFirst])
 
   const exportPercent =
     exportStatus && exportStatus.teamFilesExportTotal > 0
@@ -503,7 +577,36 @@ export default function AdminSubmissionsPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {data.teams.map((team) => (
+              <Card>
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {locale === "ru" ? "Порядок команд" : "Team order"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {locale === "ru"
+                        ? "Можно поднять наверх команды, у которых не загружены работы по модулям."
+                        : "Move teams with missing module uploads to the top."}
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-3 text-sm font-medium text-gray-800">
+                    <input
+                      type="checkbox"
+                      checked={showMissingFirst}
+                      onChange={(event) => setShowMissingFirst(event.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    />
+                    {locale === "ru" ? "Сначала несданные" : "Missing first"}
+                  </label>
+                </CardContent>
+              </Card>
+
+              {sortedTeams.map((team) => {
+                  const uploadedModules = new Set(team.files.map((file) => file.moduleCode))
+                  const missingModulesCount = data.modules.filter((module) => !uploadedModules.has(module.code)).length
+                  const obsSubmitted = team.adminFlags.some((flag) => flag.key === "obs_submitted" && flag.value)
+
+                  return (
                 <Card key={team.id}>
                   <CardHeader className="space-y-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -515,10 +618,22 @@ export default function AdminSubmissionsPage() {
                         <p className="mt-1 text-sm text-gray-500">
                           {team.members.length} {locale === "ru" ? "участник(ов)" : "member(s)"}
                         </p>
+                        {data.modules.length > 0 && (
+                          <p className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                            missingModulesCount > 0
+                              ? "bg-rose-100 text-rose-700"
+                              : "bg-green-100 text-green-700"
+                          }`}>
+                            {locale === "ru" ? "Загружено" : "Uploaded"} {data.modules.length - missingModulesCount}/{data.modules.length}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                         {team.members.slice(0, 4).map((member) => (
-                          <span key={member.id} className="rounded-full bg-gray-100 px-2 py-1">
+                          <span key={member.id} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1">
+                            {member.user.photo ? (
+                              <img src={member.user.photo} alt="" className="h-5 w-4 rounded-sm object-cover" />
+                            ) : null}
                             {member.user.lastName} {member.user.firstName}
                           </span>
                         ))}
@@ -539,7 +654,14 @@ export default function AdminSubmissionsPage() {
                           const file = team.files.find((teamFile) => teamFile.moduleCode === module.code)
 
                           return (
-                            <div key={module.id} className="rounded-xl border border-gray-200 p-4">
+                            <div
+                              key={module.id}
+                              className={`rounded-xl border p-4 ${
+                                file
+                                  ? "border-gray-200"
+                                  : "border-rose-200 bg-rose-50/70"
+                              }`}
+                            >
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="min-w-0">
                                   <p className="font-medium text-gray-900">
@@ -558,8 +680,8 @@ export default function AdminSubmissionsPage() {
                                       </p>
                                     </div>
                                   ) : (
-                                    <p className="mt-1 text-sm text-gray-500">
-                                      {locale === "ru" ? "Работа не загружена." : "No file uploaded."}
+                                    <p className="mt-2 inline-flex rounded-full bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700">
+                                      {locale === "ru" ? "Не загружено" : "Not uploaded"}
                                     </p>
                                   )}
                                 </div>
@@ -576,11 +698,38 @@ export default function AdminSubmissionsPage() {
                             </div>
                           )
                         })}
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                          <label className="flex items-center gap-3 text-sm font-medium text-gray-800">
+                            <input
+                              type="checkbox"
+                              checked={obsSubmitted}
+                              onChange={(event) => updateObsFlag(team.id, event.target.checked)}
+                              className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                            />
+                            {locale === "ru" ? "OBS сдан мне" : "OBS submitted"}
+                          </label>
+                        </div>
+                        {team.photos.length > 0 && (
+                          <div className="rounded-xl border border-gray-200 p-4">
+                            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-900">
+                              <Camera className="h-4 w-4 text-gray-500" />
+                              {locale === "ru" ? "Фотоотчёт" : "Photo report"}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                              {team.photos.slice(0, 12).map((photo) => (
+                                <a key={photo.id} href={photo.fileUrl} target="_blank" rel="noopener noreferrer">
+                                  <img src={photo.fileUrl} alt={photo.fileName} className="aspect-square rounded-lg object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              ))}
+                  )
+                })}
             </div>
           )}
         </>

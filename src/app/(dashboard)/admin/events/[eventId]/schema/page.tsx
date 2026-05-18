@@ -13,6 +13,14 @@ interface JudgementOption {
   label: string
 }
 
+interface SkillGroup {
+  id: string
+  number: number
+  name: string
+  nameEn: string | null
+  maxScore: number
+}
+
 interface Criterion {
   id: string
   type: "M" | "J"
@@ -20,7 +28,7 @@ interface Criterion {
   verificationMethod: string | null
   maxScore: number
   judgementOptions: JudgementOption[]
-  skillGroup?: { number: number; name: string } | null
+  skillGroup?: SkillGroup | null
   order: number
 }
 
@@ -47,7 +55,7 @@ interface Schema {
   name: string
   totalMaxScore: number
   modules: Module[]
-  skillGroups: { id: string; number: number; name: string; nameEn: string }[]
+  skillGroups: SkillGroup[]
 }
 
 export default function SchemaUploadPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -63,9 +71,11 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
   const [showModuleModal, setShowModuleModal] = useState(false)
   const [showSubModal, setShowSubModal] = useState(false)
   const [showCriterionModal, setShowCriterionModal] = useState(false)
+  const [showSkillGroupModal, setShowSkillGroupModal] = useState(false)
   const [editingModule, setEditingModule] = useState<Module | null>(null)
   const [editingSub, setEditingSub] = useState<SubCriterion | null>(null)
   const [editingCriterion, setEditingCriterion] = useState<Criterion | null>(null)
+  const [editingSkillGroup, setEditingSkillGroup] = useState<SkillGroup | null>(null)
   const [currentModuleId, setCurrentModuleId] = useState<string | null>(null)
   const [currentSubId, setCurrentSubId] = useState<string | null>(null)
 
@@ -80,6 +90,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
     skillGroupNumber: 0,
     judgementOptions: [] as JudgementOption[],
   })
+  const [skillGroupForm, setSkillGroupForm] = useState({ name: "", nameEn: "" })
 
   useEffect(() => {
     fetchSchema()
@@ -96,6 +107,45 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
       }
     } catch (error) {
       console.error("Error fetching schema:", error)
+    }
+  }
+
+  const getSkillGroupCriteria = (skillGroupNumber: number) => {
+    if (!schema) return []
+
+    return schema.modules.flatMap((module) =>
+      module.subCriteria.flatMap((sub) =>
+        sub.criteria
+          .filter((criterion) => criterion.skillGroup?.number === skillGroupNumber)
+          .map((criterion) => ({
+            moduleCode: module.code,
+            subCode: sub.code,
+            criterion,
+          }))
+      )
+    )
+  }
+
+  const openEditSkillGroup = (skillGroup: SkillGroup) => {
+    setEditingSkillGroup(skillGroup)
+    setSkillGroupForm({ name: skillGroup.name, nameEn: skillGroup.nameEn || "" })
+    setShowSkillGroupModal(true)
+  }
+
+  const saveSkillGroup = async () => {
+    if (!editingSkillGroup) return
+
+    try {
+      await fetch(`/api/events/${eventId}/schema/skill-groups/${editingSkillGroup.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(skillGroupForm),
+      })
+      setShowSkillGroupModal(false)
+      setEditingSkillGroup(null)
+      fetchSchema()
+    } catch (error) {
+      console.error("Error saving skill group:", error)
     }
   }
 
@@ -404,6 +454,78 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
         </Card>
       )}
 
+      {schema && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>{locale === "ru" ? "Матрица навыков (WSSS)" : "Skill Matrix (WSSS)"}</CardTitle>
+                <p className="mt-1 text-sm text-gray-500">
+                  {locale === "ru"
+                    ? "Аспекты импортируются из Excel. Здесь их можно проверить и скорректировать до генерации дипломов."
+                    : "Aspects are imported from Excel. Review and correct them before diploma generation."}
+                </p>
+              </div>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+                {schema.skillGroups.length} WSSS
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead>
+                  <tr className="border-b text-xs uppercase text-gray-500">
+                    <th className="py-2 pr-3 font-medium">WSSS</th>
+                    <th className="py-2 pr-3 font-medium">{locale === "ru" ? "Название" : "Name"}</th>
+                    <th className="py-2 pr-3 font-medium">{locale === "ru" ? "Название EN" : "Name RU/EN"}</th>
+                    <th className="py-2 pr-3 font-medium">{locale === "ru" ? "Критерии" : "Criteria"}</th>
+                    <th className="py-2 pr-3 font-medium">{locale === "ru" ? "Баллы" : "Points"}</th>
+                    <th className="py-2 pr-3 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schema.skillGroups.map((skillGroup) => {
+                    const linkedCriteria = getSkillGroupCriteria(skillGroup.number)
+
+                    return (
+                      <tr key={skillGroup.id} className="border-b last:border-0">
+                        <td className="py-3 pr-3 align-top font-mono text-gray-700">{skillGroup.number}</td>
+                        <td className="py-3 pr-3 align-top text-gray-900">{skillGroup.name}</td>
+                        <td className="py-3 pr-3 align-top text-gray-600">{skillGroup.nameEn || "—"}</td>
+                        <td className="py-3 pr-3 align-top">
+                          <div className="space-y-1">
+                            <span className="font-medium text-gray-700">{linkedCriteria.length}</span>
+                            {linkedCriteria.length > 0 && (
+                              <div className="flex max-w-md flex-wrap gap-1">
+                                {linkedCriteria.slice(0, 8).map(({ moduleCode, subCode, criterion }) => (
+                                  <span key={criterion.id} className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+                                    {moduleCode}.{subCode}
+                                  </span>
+                                ))}
+                                {linkedCriteria.length > 8 && (
+                                  <span className="text-xs text-gray-500">+{linkedCriteria.length - 8}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 pr-3 align-top text-gray-700">{skillGroup.maxScore}</td>
+                        <td className="py-3 pr-3 align-top text-right">
+                          <Button variant="ghost" size="sm" onClick={() => openEditSkillGroup(skillGroup)}>
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Schema View */}
       {schema && (
         <Card>
@@ -494,7 +616,9 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                                     </span>
                                     <span className="text-gray-600">{crit.maxScore} {locale === "ru" ? "б." : "pts"}</span>
                                     {crit.skillGroup && (
-                                      <span className="text-xs text-gray-400">WSSS {crit.skillGroup.number}</span>
+                                      <span className="text-xs text-gray-400">
+                                        WSSS {crit.skillGroup.number}: {locale === "en" ? crit.skillGroup.nameEn || crit.skillGroup.name : crit.skillGroup.name}
+                                      </span>
                                     )}
                                   </div>
                                   <p className="text-gray-700 mt-1">{crit.description}</p>
@@ -535,10 +659,39 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
         </Card>
       )}
 
+      {/* Skill Group Modal */}
+      {showSkillGroupModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+          <div className="modal-panel w-full max-w-md rounded-lg bg-white p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {locale === "ru" ? "Редактировать аспект матрицы навыков" : "Edit Skill Matrix Aspect"}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">WSSS</label>
+                <Input value={editingSkillGroup?.number ?? ""} disabled />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{locale === "ru" ? "Название" : "Name"}</label>
+                <Input value={skillGroupForm.name} onChange={(e) => setSkillGroupForm({ ...skillGroupForm, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{locale === "ru" ? "Название (EN)" : "Name (EN)"}</label>
+                <Input value={skillGroupForm.nameEn} onChange={(e) => setSkillGroupForm({ ...skillGroupForm, nameEn: e.target.value })} />
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setShowSkillGroupModal(false)}>{locale === "ru" ? "Отмена" : "Cancel"}</Button>
+              <Button onClick={saveSkillGroup} className="bg-[#C41E3A] hover:bg-[#a01830]">{locale === "ru" ? "Сохранить" : "Save"}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Module Modal */}
       {showModuleModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+          <div className="modal-panel w-full max-w-md rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingModule ? (locale === "ru" ? "Редактировать модуль" : "Edit Module") : (locale === "ru" ? "Новый модуль" : "New Module")}
             </h3>
@@ -566,8 +719,8 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
       {/* Sub-criterion Modal */}
       {showSubModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+          <div className="modal-panel w-full max-w-md rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingSub ? (locale === "ru" ? "Редактировать подкритерий" : "Edit Sub-criterion") : (locale === "ru" ? "Новый подкритерий" : "New Sub-criterion")}
             </h3>
@@ -591,8 +744,8 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
 
       {/* Criterion Modal */}
       {showCriterionModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 py-8 sm:items-center">
-          <div className="mx-4 w-full max-w-lg rounded-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/70 backdrop-blur-sm py-8 sm:items-center">
+          <div className="modal-panel mx-4 w-full max-w-lg rounded-lg bg-white p-6">
             <h3 className="text-lg font-semibold mb-4">
               {editingCriterion ? (locale === "ru" ? "Редактировать критерий" : "Edit Criterion") : (locale === "ru" ? "Новый критерий" : "New Criterion")}
             </h3>
@@ -645,7 +798,7 @@ export default function SchemaUploadPage({ params }: { params: Promise<{ eventId
                   <option value={0}>{locale === "ru" ? "Не выбрано" : "Not selected"}</option>
                   {schema?.skillGroups.map((sg) => (
                     <option key={sg.id} value={sg.number}>
-                      {sg.number}. {locale === "ru" ? sg.name : sg.nameEn}
+                      {sg.number}. {locale === "ru" ? sg.name : sg.nameEn || sg.name}
                     </option>
                   ))}
                 </select>

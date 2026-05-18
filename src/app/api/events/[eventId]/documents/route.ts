@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { canAccessEventDocument, resolveEventDocumentAccessContext } from "@/lib/event-document-access"
+import { canManageEvent } from "@/lib/authz"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -56,11 +57,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const formData = await req.formData()
     const file = formData.get("file") as File
     const name = formData.get("name") as string
@@ -135,11 +135,10 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const body = await req.json()
     const orderedIds: string[] = Array.isArray(body?.orderedIds)
       ? body.orderedIds.filter((id: unknown): id is string => typeof id === "string")
@@ -190,7 +189,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -201,8 +201,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Document ID required" }, { status: 400 })
     }
 
-    await prisma.eventDocument.delete({
-      where: { id: documentId },
+    await prisma.eventDocument.deleteMany({
+      where: { id: documentId, eventId },
     })
 
     return NextResponse.json({ success: true })

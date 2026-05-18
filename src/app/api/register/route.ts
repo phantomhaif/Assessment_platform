@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { validateCode } from "@/lib/verification-codes"
+import { normalizeOrganizationName } from "@/lib/organizations"
+import { createNotifications } from "@/lib/notifications"
+import { NotificationType, UserRole } from "@prisma/client"
 
 const registerSchema = z.object({
   email: z.string().email("Некорректный email"),
@@ -11,6 +14,7 @@ const registerSchema = z.object({
   lastName: z.string().min(1, "Введите фамилию"),
   middleName: z.string().optional(),
   organization: z.string().optional(),
+  organizationId: z.string().optional(),
   phone: z.string().optional(),
   agreedToTerms: z.boolean().refine(val => val === true, "Необходимо принять условия"),
   agreedToDataProcessing: z.boolean().refine(val => val === true, "Необходимо дать согласие на обработку данных"),
@@ -46,6 +50,48 @@ export async function POST(req: NextRequest) {
     // Хешируем пароль
     const passwordHash = await bcrypt.hash(validatedData.password, 12)
 
+    const organizationName = normalizeOrganizationName(validatedData.organization)
+    let organizationId = validatedData.organizationId || null
+    let createdPendingOrganization: { id: string; name: string } | null = null
+
+    if (organizationName) {
+      if (organizationId) {
+        const selectedOrganization = await prisma.organization.findUnique({
+          where: { id: organizationId },
+          select: { id: true, name: true },
+        })
+
+        organizationId = selectedOrganization?.id || null
+      }
+
+      if (!organizationId) {
+        const existingOrganization = await prisma.organization.findFirst({
+          where: {
+            name: {
+              equals: organizationName,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true, name: true },
+        })
+
+        if (existingOrganization) {
+          organizationId = existingOrganization.id
+        } else {
+          const organization = await prisma.organization.create({
+            data: {
+              name: organizationName,
+              isApproved: false,
+            },
+            select: { id: true, name: true },
+          })
+
+          organizationId = organization.id
+          createdPendingOrganization = organization
+        }
+      }
+    }
+
     // Создаём пользователя с подтверждённым email
     const user = await prisma.user.create({
       data: {
@@ -54,7 +100,8 @@ export async function POST(req: NextRequest) {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         middleName: validatedData.middleName,
-        organization: validatedData.organization,
+        organization: organizationName,
+        organizationId,
         phone: validatedData.phone,
         agreedToTerms: validatedData.agreedToTerms,
         agreedToDataProcessing: validatedData.agreedToDataProcessing,
@@ -67,6 +114,31 @@ export async function POST(req: NextRequest) {
         lastName: true,
       }
     })
+
+    if (createdPendingOrganization) {
+      try {
+        const admins = await prisma.user.findMany({
+          where: {
+            role: {
+              in: [UserRole.ADMIN, UserRole.ORGANIZER],
+            },
+          },
+          select: { id: true },
+        })
+
+        await createNotifications(
+          admins.map((admin) => ({
+            userId: admin.id,
+            title: "Новая организация на модерации",
+            message: `Пользователь ${user.lastName} ${user.firstName} указал новую организацию "${createdPendingOrganization.name}" при регистрации.`,
+            link: "/admin/organizations",
+            type: NotificationType.WARNING,
+          }))
+        )
+      } catch (error) {
+        console.error("Error creating organization moderation notifications:", error)
+      }
+    }
 
     return NextResponse.json({ user }, { status: 201 })
   } catch (error) {

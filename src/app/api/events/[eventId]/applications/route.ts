@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent, isAdmin } from "@/lib/authz"
 
 const eventApplicationRoles = ["PARTICIPANT", "EXPERT"] as const
 type EventApplicationRole = (typeof eventApplicationRoles)[number]
@@ -21,8 +22,8 @@ export async function GET(
 
     const { eventId } = await params
 
-    // For admin/organizer - return all applications
-    if (session.user.role === "ADMIN" || session.user.role === "ORGANIZER") {
+    // For admin / managing organizer - return all applications
+    if (isAdmin(session.user.role) || (await canManageEvent(session, eventId))) {
       const applications = await prisma.application.findMany({
         where: { eventId },
         include: {
@@ -126,11 +127,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { eventId } = await params
     const { applicationId, status, comment, approvedRole } = await req.json()
 
     const existingApplication = await prisma.application.findUnique({

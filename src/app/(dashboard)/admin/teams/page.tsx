@@ -21,6 +21,7 @@ interface Team {
       firstName: string
       lastName: string
       organization: string | null
+      photo: string | null
     }
   }[]
   event: {
@@ -199,10 +200,15 @@ export default function AdminTeamsPage() {
                   <ul className="space-y-2">
                     {team.members.map((member) => (
                       <li key={member.id} className="flex items-center gap-2 text-sm">
-                        <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
-                          {member.user.firstName[0]}
-                          {member.user.lastName[0]}
-                        </div>
+                        {member.user.photo ? (
+                          <a href={member.user.photo} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                            <img src={member.user.photo} alt="" className="h-[42px] w-8 rounded-md object-cover" />
+                          </a>
+                        ) : (
+                          <div className="h-[42px] w-8 shrink-0 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">
+                            {locale === "ru" ? "Нет" : "No"}
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium">
                             <Link

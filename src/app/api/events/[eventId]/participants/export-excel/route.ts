@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 import ExcelJS from "exceljs"
 
 export async function GET(
@@ -12,11 +13,11 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { eventId } = await params
 
     // Get event info
     const event = await prisma.event.findUnique({

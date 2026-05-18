@@ -40,6 +40,7 @@ export default function AdminPassportsPage() {
   const [selectedEventId, setSelectedEventId] = useState(searchParams.get("eventId") || "")
   const [passports, setPassports] = useState<Passport[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false)
 
   useEffect(() => {
     fetchEvents()
@@ -98,8 +99,35 @@ export default function AdminPassportsPage() {
   }
 
   const downloadAllPdfs = async () => {
-    for (const passport of passports) {
-      await downloadPdf(passport.id)
+    if (!selectedEventId || isDownloadingAll) return
+    setIsDownloadingAll(true)
+    try {
+      const response = await fetch(
+        `/api/events/${selectedEventId}/passports/download-all?lang=${locale}`
+      )
+      if (!response.ok) {
+        console.error("Error downloading passports archive:", response.status)
+        return
+      }
+      const blob = await response.blob()
+      const disposition = response.headers.get("Content-Disposition") || ""
+      const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i)
+      const asciiMatch = disposition.match(/filename="([^"]+)"/i)
+      const fileName = utfMatch
+        ? decodeURIComponent(utfMatch[1])
+        : asciiMatch?.[1] || `skill-passports-${locale}.zip`
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error("Error downloading passports archive:", error)
+    } finally {
+      setIsDownloadingAll(false)
     }
   }
 
@@ -111,9 +139,11 @@ export default function AdminPassportsPage() {
           <p className="text-gray-500 mt-1">{t.passportsAdmin.subtitle}</p>
         </div>
         {passports.length > 0 && (
-          <Button onClick={downloadAllPdfs} className="w-full sm:w-auto">
+          <Button onClick={downloadAllPdfs} disabled={isDownloadingAll} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
-            {t.passportsAdmin.downloadAll}
+            {isDownloadingAll
+              ? (locale === "ru" ? "Готовим архив…" : "Preparing archive…")
+              : t.passportsAdmin.downloadAll}
           </Button>
         )}
       </div>

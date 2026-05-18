@@ -33,15 +33,17 @@ export function WaveDots({ className = "", color = "#64748b" }: WaveDotsProps) {
 
           const size = 0.8 + combined * 1.8   // 0.8..2.6px
           const opacity = 0.05 + combined * 0.28 // 0.05..0.33
+          const roundedSize = Number(size.toFixed(3))
+          const roundedOpacity = Number(opacity.toFixed(3))
 
           return (
             <circle
               key={`${row}-${col}`}
               cx={x}
               cy={y}
-              r={size}
+              r={roundedSize}
               fill={color}
-              opacity={opacity}
+              opacity={roundedOpacity}
             />
           )
         })

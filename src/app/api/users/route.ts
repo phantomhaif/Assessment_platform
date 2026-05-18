@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { normalizeOrganizationName } from "@/lib/organizations"
+import { organizerScopedUserWhere } from "@/lib/authz"
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +17,24 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { email, password, firstName, lastName, middleName, organization, position, phone, role } = body
+    const organizationName = normalizeOrganizationName(organization)
+    const organizationRecord = organizationName
+      ? await prisma.organization.findFirst({
+          where: {
+            name: {
+              equals: organizationName,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true },
+        }).then(async (existing) => {
+          if (existing) return existing
+          return prisma.organization.create({
+            data: { name: organizationName, isApproved: true, createdById: session.user.id },
+            select: { id: true },
+          })
+        })
+      : null
 
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json({ error: "Required: email, password, firstName, lastName" }, { status: 400 })
@@ -33,7 +53,8 @@ export async function POST(req: NextRequest) {
         firstName,
         lastName,
         middleName: middleName || null,
-        organization: organization || null,
+        organization: organizationName,
+        organizationId: organizationRecord?.id || null,
         position: position || null,
         phone: phone || null,
         role: role || "PARTICIPANT",
@@ -58,7 +79,11 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    // Organizers only see users who participate in events they organize.
+    const scopedWhere = await organizerScopedUserWhere(session)
+
     const users = await prisma.user.findMany({
+      where: scopedWhere,
       select: {
         id: true,
         email: true,
@@ -66,8 +91,10 @@ export async function GET() {
         lastName: true,
         middleName: true,
         organization: true,
+        organizationId: true,
         position: true,
         phone: true,
+        photo: true,
         role: true,
         createdAt: true,
         _count: {

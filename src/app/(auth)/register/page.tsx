@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -10,14 +10,24 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ArrowLeft, Mail } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { WaveDots } from "@/components/ui/wave-dots"
+import { getOrganizationTypeLabel } from "@/lib/organizations"
+
+interface OrganizationSuggestion {
+  id: string
+  name: string
+  type: string | null
+}
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { t, locale } = useI18n()
+  const { locale } = useI18n()
   const [step, setStep] = useState<"form" | "verify">("form")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [verificationCode, setVerificationCode] = useState("")
+  const [organizationSuggestions, setOrganizationSuggestions] = useState<OrganizationSuggestion[]>([])
+  const [isSearchingOrganizations, setIsSearchingOrganizations] = useState(false)
+  const [isOrganizationListOpen, setIsOrganizationListOpen] = useState(false)
 
   const [formData, setFormData] = useState({
     email: "",
@@ -27,6 +37,7 @@ export default function RegisterPage() {
     lastName: "",
     middleName: "",
     organization: "",
+    organizationId: "",
     phone: "",
     agreedToTerms: false,
     agreedToDataProcessing: false,
@@ -36,8 +47,45 @@ export default function RegisterPage() {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
+      ...(name === "organization" ? { organizationId: "" } : {}),
     }))
+  }
+
+  useEffect(() => {
+    const query = formData.organization.trim()
+    if (query.length < 2 || formData.organizationId) {
+      setOrganizationSuggestions([])
+      return
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      setIsSearchingOrganizations(true)
+      try {
+        const response = await fetch(`/api/organizations?q=${encodeURIComponent(query)}&limit=20`)
+        if (response.ok) {
+          const data = await response.json()
+          setOrganizationSuggestions(data)
+          setIsOrganizationListOpen(true)
+        }
+      } catch (error) {
+        console.error("Error searching organizations:", error)
+      } finally {
+        setIsSearchingOrganizations(false)
+      }
+    }, 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [formData.organization, formData.organizationId])
+
+  const selectOrganization = (organization: OrganizationSuggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      organization: organization.name,
+      organizationId: organization.id,
+    }))
+    setOrganizationSuggestions([])
+    setIsOrganizationListOpen(false)
   }
 
   const handleSendCode = async (e: React.FormEvent) => {
@@ -291,13 +339,49 @@ export default function RegisterPage() {
               required
             />
 
-            <Input
-              label={locale === "ru" ? "Организация / Учебное заведение" : "Organization / School"}
-              name="organization"
-              placeholder={locale === "ru" ? "МИРЭА — Российский технологический университет" : "University name"}
-              value={formData.organization}
-              onChange={handleChange}
-            />
+            <div className="relative">
+              <Input
+                label={locale === "ru" ? "Организация / Учебное заведение" : "Organization / School"}
+                name="organization"
+                placeholder={locale === "ru" ? "Начните вводить название организации" : "Start typing organization name"}
+                value={formData.organization}
+                onChange={handleChange}
+                onFocus={() => setIsOrganizationListOpen(true)}
+                autoComplete="off"
+              />
+              {isOrganizationListOpen && (organizationSuggestions.length > 0 || isSearchingOrganizations) && (
+                <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                  {isSearchingOrganizations && (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      {locale === "ru" ? "Поиск..." : "Searching..."}
+                    </div>
+                  )}
+                  {organizationSuggestions.map((organization) => (
+                    <button
+                      key={organization.id}
+                      type="button"
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-red-50"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectOrganization(organization)}
+                    >
+                      <span className="font-medium text-gray-900">{organization.name}</span>
+                      {organization.type && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          {getOrganizationTypeLabel(organization.type, locale)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {formData.organization.trim().length >= 2 && !formData.organizationId && organizationSuggestions.length === 0 && !isSearchingOrganizations && (
+                <p className="mt-1 text-xs text-gray-500">
+                  {locale === "ru"
+                    ? "Если организации нет в списке, оставьте введённое название."
+                    : "If the organization is not listed, keep your typed name."}
+                </p>
+              )}
+            </div>
 
             <Input
               label={locale === "ru" ? "Телефон" : "Phone"}

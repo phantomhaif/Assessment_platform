@@ -49,8 +49,30 @@ export async function GET(req: NextRequest) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                    photo: true,
                   },
                 },
+              },
+            },
+            adminFlags: {
+              where: { key: "obs_submitted" },
+              select: {
+                key: true,
+                value: true,
+                note: true,
+                updatedAt: true,
+              },
+            },
+            photos: {
+              orderBy: { createdAt: "desc" },
+              select: {
+                id: true,
+                fileName: true,
+                fileUrl: true,
+                fileSize: true,
+                mimeType: true,
+                caption: true,
+                createdAt: true,
               },
             },
             files: {

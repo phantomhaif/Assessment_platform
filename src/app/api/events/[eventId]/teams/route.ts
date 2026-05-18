@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 
 export async function GET(
   req: NextRequest,
@@ -21,6 +22,7 @@ export async function GET(
                 lastName: true,
                 email: true,
                 organization: true,
+                photo: true,
               },
             },
           },
@@ -49,11 +51,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { eventId } = await params
     const { name, number, memberIds } = await req.json()
 
     const team = await prisma.team.create({

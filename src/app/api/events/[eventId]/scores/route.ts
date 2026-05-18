@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { canManageEvent } from "@/lib/authz"
 
 interface ScorePayload {
   criterionId: string
@@ -31,16 +32,48 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only admins can view scores
-    if (session.user.role !== "ADMIN") {
+    if (!["ADMIN", "ORGANIZER", "EXPERT"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { eventId } = await params
+
+    // Organizers may only read scores for events they manage.
+    if (
+      session.user.role === "ORGANIZER" &&
+      !(await canManageEvent(session, eventId))
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const { searchParams } = new URL(req.url)
     const teamId = searchParams.get("teamId")
 
     const where: any = {}
+
+    // Experts may only see scores for teams where they are assigned as an expert.
+    if (session.user.role === "EXPERT") {
+      const expertTeams = await prisma.teamMember.findMany({
+        where: {
+          userId: session.user.id,
+          role: "EXPERT",
+          team: { eventId },
+        },
+        select: { teamId: true },
+      })
+
+      const expertTeamIds = expertTeams.map((member) => member.teamId)
+
+      if (expertTeamIds.length === 0) {
+        return NextResponse.json([])
+      }
+
+      if (teamId && !expertTeamIds.includes(teamId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+
+      where.teamId = teamId ? teamId : { in: expertTeamIds }
+    }
 
     // Get all criteria for this event's schema
     const schema = await prisma.assessmentSchema.findUnique({
@@ -101,8 +134,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only admins can submit scores
-    if (session.user.role !== "ADMIN") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

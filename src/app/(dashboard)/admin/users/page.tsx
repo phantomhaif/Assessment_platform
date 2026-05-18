@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import Link from "next/link"
 import { Search, User, Plus, X, Trash2 } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
@@ -14,6 +15,7 @@ interface UserData {
   lastName: string
   middleName?: string | null
   organization: string | null
+  photo: string | null
   position?: string | null
   phone?: string | null
   role: string
@@ -71,6 +73,7 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [selectedRole, setSelectedRole] = useState<string>("ALL")
+  const [onlyWithoutPhoto, setOnlyWithoutPhoto] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserData | null>(null)
   const [formData, setFormData] = useState<UserFormData>(EMPTY_FORM)
@@ -240,7 +243,8 @@ export default function AdminUsersPage() {
         user.firstName.toLowerCase().includes(search.toLowerCase()) ||
         user.lastName.toLowerCase().includes(search.toLowerCase())
       const matchesRole = selectedRole === "ALL" || user.role === selectedRole
-      return matchesSearch && matchesRole
+      const matchesPhoto = !onlyWithoutPhoto || !user.photo
+      return matchesSearch && matchesRole && matchesPhoto
     }
   )
 
@@ -295,6 +299,15 @@ export default function AdminUsersPage() {
               <option value="ORGANIZER">{t.roles.organizer}</option>
               <option value="ADMIN">{t.roles.admin}</option>
             </select>
+            <label className="flex h-10 items-center gap-2 rounded-md border border-gray-300 px-3 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={onlyWithoutPhoto}
+                onChange={(event) => setOnlyWithoutPhoto(event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              {locale === "ru" ? "Только без фото" : "Only without photo"}
+            </label>
           </div>
         </CardContent>
       </Card>
@@ -306,13 +319,19 @@ export default function AdminUsersPage() {
             <Card key={user.id}>
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-                    <User className="h-5 w-5 text-gray-500" />
-                  </div>
+                  {user.photo ? (
+                    <a href={user.photo} target="_blank" rel="noopener noreferrer">
+                      <img src={user.photo} alt="" className="h-[52px] w-10 shrink-0 rounded-md object-cover" />
+                    </a>
+                  ) : (
+                    <div className="flex h-[52px] w-10 shrink-0 items-center justify-center rounded-md bg-gray-100 text-[10px] text-gray-500">
+                      {locale === "ru" ? "Нет фото" : "No photo"}
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900">
+                    <Link href={`/admin/users/${user.id}/profile`} className="font-medium text-gray-900 hover:text-[#C41E3A]">
                       {user.lastName} {user.firstName}
-                    </p>
+                    </Link>
                     <p className="break-all text-sm text-gray-500">{user.email}</p>
                   </div>
                 </div>
@@ -393,6 +412,9 @@ export default function AdminUsersPage() {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {locale === "ru" ? "Фото" : "Photo"}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 {t.admin.user}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -415,14 +437,25 @@ export default function AdminUsersPage() {
               return (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
+                    {user.photo ? (
+                      <a href={user.photo} target="_blank" rel="noopener noreferrer">
+                        <img src={user.photo} alt="" className="h-[52px] w-10 rounded-md object-cover" />
+                      </a>
+                    ) : (
+                      <div className="flex h-[52px] w-10 items-center justify-center rounded-md bg-gray-100 text-[10px] leading-tight text-gray-500">
+                        {locale === "ru" ? "Нет фото" : "No photo"}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <User className="h-5 w-5 text-gray-500" />
                       </div>
                       <div>
-                        <p className="font-medium">
+                        <Link href={`/admin/users/${user.id}/profile`} className="font-medium hover:text-[#C41E3A]">
                           {user.lastName} {user.firstName}
-                        </p>
+                        </Link>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
                     </div>
@@ -479,8 +512,8 @@ export default function AdminUsersPage() {
 
       {/* Modal: Create / Edit User */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+          <div className="modal-panel bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between gap-3 border-b p-6">
               <h2 className="text-lg font-bold">
                 {editingUser ? t.admin.editUser : t.admin.addUser}

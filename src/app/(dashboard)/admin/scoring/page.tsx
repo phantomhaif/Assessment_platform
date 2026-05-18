@@ -1,11 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Save, ChevronDown, ChevronRight } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { getLocalizedEventName } from "@/lib/events"
+
+interface SkillGroupRef {
+  name: string
+  nameEn?: string | null
+  number: number
+}
 
 interface Criterion {
   id: string
@@ -14,7 +21,7 @@ interface Criterion {
   verificationMethod: string | null
   maxScore: number
   judgementOptions: { score: number; label: string }[] | null
-  skillGroup: { name: string; number: number } | null
+  skillGroup: SkillGroupRef | null
 }
 
 interface SubCriterion {
@@ -62,6 +69,7 @@ interface ScorePayload {
 }
 
 export default function AdminScoringPage() {
+  const { data: session } = useSession()
   const [events, setEvents] = useState<EventOption[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [modules, setModules] = useState<Module[]>([])
@@ -75,6 +83,8 @@ export default function AdminScoringPage() {
   const [saveStatus, setSaveStatus] = useState("")
   const { t, locale } = useI18n()
   const getModuleName = (module: Module) => (locale === "en" ? module.nameEn || module.name : module.name)
+  const canEditScores = session?.user?.role === "ADMIN" || session?.user?.role === "ORGANIZER"
+  const isSchemaOnlyView = !canEditScores
 
   useEffect(() => {
     fetchEvents()
@@ -83,15 +93,22 @@ export default function AdminScoringPage() {
   useEffect(() => {
     if (selectedEventId) {
       fetchSchema()
-      fetchTeams()
+      if (canEditScores) {
+        fetchTeams()
+      } else {
+        setTeams([])
+        setSelectedTeamId("")
+        setScores(new Map())
+        setJudgeScores(new Map())
+      }
     }
-  }, [selectedEventId])
+  }, [selectedEventId, canEditScores])
 
   useEffect(() => {
-    if (selectedEventId && selectedTeamId) {
+    if (canEditScores && selectedEventId && selectedTeamId) {
       fetchScores()
     }
-  }, [selectedEventId, selectedTeamId])
+  }, [canEditScores, selectedEventId, selectedTeamId])
 
   const fetchEvents = async () => {
     try {
@@ -321,6 +338,8 @@ export default function AdminScoringPage() {
   }
 
   const saveScores = async (force: boolean = false) => {
+    if (!canEditScores) return
+
     // Check for missing criteria
     const missing = checkMissingCriteria()
     if (missing.length > 0 && !force) {
@@ -394,14 +413,27 @@ export default function AdminScoringPage() {
     return score
   }
 
+  const getSkillGroupName = (skillGroup: SkillGroupRef) => {
+    if (locale === "en") return skillGroup.nameEn || skillGroup.name
+    return skillGroup.name
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.scoring.title}</h1>
-          <p className="text-gray-500 mt-1">{t.scoring.subtitle}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isSchemaOnlyView ? (locale === "ru" ? "Схема оценки" : "Assessment Schema") : t.scoring.title}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {isSchemaOnlyView
+              ? (locale === "ru"
+                ? "Просмотр критериев оценивания без внесения оценок"
+                : "View assessment criteria without score entry")
+              : t.scoring.subtitle}
+          </p>
         </div>
-        {selectedTeamId && (
+        {selectedTeamId && canEditScores && (
           <Button onClick={() => saveScores()} isLoading={isSaving} className="w-full sm:w-auto">
             <Save className="h-4 w-4 mr-2" />
             {t.common.save}
@@ -443,24 +475,26 @@ export default function AdminScoringPage() {
                 ))}
               </select>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.scoring.team}
-              </label>
-              <select
-                value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
-                disabled={!selectedEventId}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-              >
-                <option value="">{t.scoring.selectTeam}</option>
-                {teams.map(team => (
-                  <option key={team.id} value={team.id}>
-                    {team.number ? `#${team.number} ` : ""}{team.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {canEditScores && (
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t.scoring.team}
+                </label>
+                <select
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  disabled={!selectedEventId}
+                  className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                >
+                  <option value="">{t.scoring.selectTeam}</option>
+                  {teams.map(team => (
+                    <option key={team.id} value={team.id}>
+                      {team.number ? `#${team.number} ` : ""}{team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -470,7 +504,7 @@ export default function AdminScoringPage() {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
         </div>
-      ) : !selectedTeamId ? (
+      ) : canEditScores && !selectedTeamId ? (
         <Card>
           <CardContent className="p-12 text-center text-gray-500">
             {t.scoring.selectEventAndTeam}
@@ -502,15 +536,19 @@ export default function AdminScoringPage() {
                         {t.scoring.module} {module.code}: {getModuleName(module)}
                       </CardTitle>
                       <p className="text-sm text-gray-500 mt-1">
-                        {t.scoring.earned}: {calculateModuleScore(module).toFixed(1)} / {module.maxScore} {t.scoring.points}
+                        {canEditScores
+                          ? `${t.scoring.earned}: ${calculateModuleScore(module).toFixed(1)} / ${module.maxScore} ${t.scoring.points}`
+                          : `${locale === "ru" ? "Максимальный балл" : "Max score"}: ${module.maxScore}`}
                       </p>
                     </div>
                   </div>
-                  <div className="text-left sm:text-right">
-                    <div className="text-2xl font-bold text-red-600">
-                      {((calculateModuleScore(module) / module.maxScore) * 100).toFixed(0)}%
+                  {canEditScores && (
+                    <div className="text-left sm:text-right">
+                      <div className="text-2xl font-bold text-red-600">
+                        {((calculateModuleScore(module) / module.maxScore) * 100).toFixed(0)}%
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </CardHeader>
 
@@ -544,11 +582,21 @@ export default function AdminScoringPage() {
                                   )}
                                   {criterion.skillGroup && (
                                     <p className="text-xs text-gray-400 mt-1">
-                                      WSSS: {criterion.skillGroup.number}. {criterion.skillGroup.name}
+                                      WSSS: {criterion.skillGroup.number}. {getSkillGroupName(criterion.skillGroup)}
                                     </p>
                                   )}
+                                  {isSchemaOnlyView && criterion.type === "J" && criterion.judgementOptions && criterion.judgementOptions.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {criterion.judgementOptions.map(option => (
+                                        <span key={`${criterion.id}-${option.score}`} className="rounded bg-white px-2 py-1 text-xs text-gray-600">
+                                          {option.score}: {option.label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
+                                {canEditScores ? (
+                                  <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
                                   {criterion.type === "M" ? (
                                     // Measurement type - numeric input with 0.5 step
                                     <input
@@ -562,6 +610,7 @@ export default function AdminScoringPage() {
                                         e.target.value,
                                         criterion.maxScore
                                       )}
+                                      disabled={!canEditScores}
                                       className="h-10 w-20 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm leading-tight text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                                       placeholder={locale === "ru" ? "—" : "-"}
                                     />
@@ -580,6 +629,7 @@ export default function AdminScoringPage() {
                                                 judgeIndex,
                                                 e.target.value
                                               )}
+                                              disabled={!canEditScores}
                                               className="h-10 w-28 min-w-[7rem] shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-center text-base leading-tight focus:outline-none focus:ring-2 focus:ring-red-500 sm:w-32 sm:min-w-[8rem]"
                                               title={`Judge ${judgeIndex + 1}`}
                                             >
@@ -603,6 +653,7 @@ export default function AdminScoringPage() {
                                                 judgeIndex,
                                                 e.target.value
                                               )}
+                                              disabled={!canEditScores}
                                               className="h-10 w-28 min-w-[7rem] shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-center text-base leading-tight focus:outline-none focus:ring-2 focus:ring-red-500 sm:w-32 sm:min-w-[8rem]"
                                               title={`Judge ${judgeIndex + 1}`}
                                               placeholder={locale === "ru" ? "—" : "-"}
@@ -618,7 +669,17 @@ export default function AdminScoringPage() {
                                   <span className="w-auto text-sm text-gray-500 sm:w-16 sm:text-right">
                                     {currentScore !== undefined ? currentScore : "—"} / {criterion.maxScore}
                                   </span>
-                                </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
+                                    <span className={`rounded px-2 py-1 text-xs font-mono ${criterion.type === "M" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
+                                      {criterion.type}
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                      {criterion.maxScore} {t.scoring.points}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             )
                           })}

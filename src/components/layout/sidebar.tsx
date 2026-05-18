@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/lib/i18n/context"
 import { getPlatformName } from "@/lib/brand"
@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Settings,
   Bell,
+  Building2,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -33,6 +34,7 @@ interface SidebarProps {
 
 export function Sidebar({ userRole, userName, className, onNavigate }: SidebarProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const { t, locale } = useI18n()
   const platformName = getPlatformName(locale)
 
@@ -52,6 +54,7 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { href: "/scoring", label: t.nav.scoring, icon: ClipboardList },
     { href: "/rankings", label: locale === "ru" ? "Рейтинг" : "Rankings", icon: Award },
+    { href: "/passports", label: t.nav.passports, icon: Award },
     { href: "/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
@@ -70,6 +73,7 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
     { href: "/admin/regulations", label: t.nav.regulations, icon: FileText },
     { href: "/admin/passports", label: t.nav.passports, icon: Award },
     { href: "/admin/users", label: t.nav.users, icon: Users },
+    { href: "/admin/organizations", label: locale === "ru" ? "Организации" : "Organizations", icon: Building2 },
     { href: "/admin/profile-fields", label: locale === "ru" ? "Поля профиля" : "Profile Fields", icon: Settings },
     { href: "/notifications", label: locale === "ru" ? "Уведомления" : "Notifications", icon: Bell },
     { href: "/profile", label: t.nav.profile, icon: UserCircle },
@@ -98,21 +102,21 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
   }
 
   return (
-    <aside className={cn("flex min-h-screen w-64 flex-col", className)} style={{ background: "var(--sidebar-background)" }}>
-      <div className="border-b border-gray-200 p-5">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <Image src="/logo.png" alt="Industry Skills" width={52} height={52} className="flex-shrink-0" />
+    <aside className={cn("sidebar", className)}>
+      <div>
+        <Link href="/dashboard" className="sidebar-logo">
+          <Image src="/logo.png" alt="Industry Skills" width={42} height={42} className="flex-shrink-0" />
           <BrandLockup
             locale={locale}
             subtitle={platformName}
-            className={locale === "ru" ? "relative top-[3px] h-[52px] justify-end gap-1" : "h-[52px]"}
-            titleClassName={locale === "ru" ? "text-[13px] leading-none tracking-[0.05em]" : "text-[14px]"}
-            subtitleClassName={cn("max-w-[148px] leading-[1.08]", locale === "ru" ? "text-[9px]" : "text-[10px]")}
+            className={locale === "ru" ? "relative top-[2px] justify-end gap-1" : ""}
+            titleClassName="sidebar-logo-title"
+            subtitleClassName="sidebar-logo-sub"
           />
         </Link>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
+      <nav className="sidebar-nav">
         <ul className="space-y-1">
           {links.map((link) => {
             const Icon = link.icon
@@ -124,10 +128,8 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
                   href={link.href}
                   onClick={onNavigate}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-[#C41E3A] text-white shadow-lg shadow-red-500/20 hover:bg-[#a01830]"
-                      : "text-[#94a3b8] hover:bg-gray-100 hover:text-[#C41E3A]"
+                    "nav-item",
+                    isActive && "active"
                   )}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
@@ -140,20 +142,30 @@ export function Sidebar({ userRole, userName, className, onNavigate }: SidebarPr
         </ul>
       </nav>
 
-      <div className="border-t border-white/10 p-4">
-        <div className="mb-3 flex items-center gap-3 px-3 py-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C41E3A]/20">
-            <UserCircle className="h-5 w-5 text-[#C41E3A]" />
+      <div className="sidebar-footer">
+        <div className="user-block">
+          <div className="user-avatar">
+            {session?.user?.photo ? (
+              <Image
+                src={session.user.photo}
+                alt=""
+                width={34}
+                height={34}
+                className="h-full w-full rounded-[5px] object-cover"
+              />
+            ) : (
+              <UserCircle className="h-5 w-5 text-[#ff8da3]" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            {userName && <p className="truncate text-sm font-medium text-white">{userName}</p>}
-            <p className="text-xs text-[#64748b]">{getRoleName(userRole)}</p>
+            {userName && <p className="user-name truncate">{userName}</p>}
+            <p className="user-role">{getRoleName(userRole)}</p>
           </div>
         </div>
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#94a3b8] transition-all duration-200 hover:bg-white/5 hover:text-white"
+          className="nav-item"
         >
           <LogOut className="h-5 w-5" />
           {t.nav.logout}

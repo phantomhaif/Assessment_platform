@@ -76,7 +76,7 @@ export default function DashboardPage() {
         const eventsRes = await fetch("/api/events")
         if (eventsRes.ok) {
           const eventsData = await eventsRes.json()
-          setEvents(eventsData.slice(0, 5))
+          setEvents(eventsData)
         }
 
         if (!isAdmin && !isExpert) {
@@ -142,6 +142,17 @@ export default function DashboardPage() {
     )
   }
 
+  const now = Date.now()
+  const upcomingEvents = events
+    .filter((event) => event.status !== "ARCHIVED" && new Date(event.eventEnd).getTime() >= now)
+    .sort((left, right) => new Date(left.eventStart).getTime() - new Date(right.eventStart).getTime())
+    .slice(0, 3)
+
+  const pastEvents = events
+    .filter((event) => event.status === "ARCHIVED" || new Date(event.eventEnd).getTime() < now)
+    .sort((left, right) => new Date(right.eventEnd).getTime() - new Date(left.eventEnd).getTime())
+    .slice(0, 3)
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -153,12 +164,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.dashboard.title}</h1>
-        <p className="mt-1 text-gray-500">
-          {isAdmin && t.dashboard.adminSubtitle}
-          {isExpert && t.dashboard.expertSubtitle}
-          {!isAdmin && !isExpert && t.dashboard.participantSubtitle}
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {isAdmin
+            ? t.dashboard.title
+            : isExpert
+              ? t.nav.scoring
+              : locale === "ru"
+                ? "Мои мероприятия"
+                : "My Events"}
+        </h1>
+        {isAdmin && <p className="mt-1 text-gray-500">{t.dashboard.adminSubtitle}</p>}
       </div>
 
       {!isAdmin && !isExpert && (
@@ -267,32 +282,72 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          {events.length > 0 ? (
+          {upcomingEvents.length > 0 ? (
             <div className="space-y-3">
-              {events
-                .filter((event) => event.status !== "ARCHIVED")
-                .slice(0, 3)
-                .map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/events/${event.id}`}
-                    className="block rounded-lg border border-gray-200 p-3 transition-colors hover:border-red-300 hover:bg-red-50"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">{getEventName(event)}</p>
-                        <p className="text-sm text-gray-500">{getCompetencyName(event)}</p>
-                      </div>
-                      <div className="text-right text-sm text-gray-500">
-                        <p>{format(new Date(event.eventStart), "d MMM", { locale: dateLocale })}</p>
-                        <p>{format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}</p>
-                      </div>
+              {upcomingEvents.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className="block rounded-lg border border-gray-200 p-3 transition-colors hover:border-red-300 hover:bg-red-50"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{getEventName(event)}</p>
+                      <p className="text-sm text-gray-500">{getCompetencyName(event)}</p>
                     </div>
-                  </Link>
-                ))}
+                    <div className="text-right text-sm text-gray-500">
+                      <p className="whitespace-nowrap">
+                        {format(new Date(event.eventStart), "d MMM", { locale: dateLocale })}
+                        {" — "}
+                        {format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           ) : (
             <p className="text-sm text-gray-500">{t.dashboard.noPlannedEvents}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-lg">{locale === "ru" ? "Прошедшие мероприятия" : "Past Events"}</CardTitle>
+          <Link href="/events" className="flex items-center gap-1 text-sm text-red-600 hover:underline">
+            {t.common.all} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {pastEvents.length > 0 ? (
+            <div className="space-y-3">
+              {pastEvents.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className="block rounded-lg border border-gray-200 p-3 transition-colors hover:border-red-300 hover:bg-red-50"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{getEventName(event)}</p>
+                      <p className="text-sm text-gray-500">{getCompetencyName(event)}</p>
+                    </div>
+                    <div className="text-right text-sm text-gray-500">
+                      <p className="whitespace-nowrap">
+                        {format(new Date(event.eventStart), "d MMM", { locale: dateLocale })}
+                        {" — "}
+                        {format(new Date(event.eventEnd), "d MMM yyyy", { locale: dateLocale })}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              {locale === "ru" ? "Прошедшие чемпионаты пока не найдены." : "No past events yet."}
+            </p>
           )}
         </CardContent>
       </Card>

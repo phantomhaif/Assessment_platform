@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { writeFile, mkdir } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
+import { canManageUser } from "@/lib/authz"
 
 // Use Railway Volume path in production, local public folder in development
 const UPLOADS_BASE = process.env.NODE_ENV === "production"
@@ -20,9 +21,20 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const file = formData.get("file") as File | null
     const type = formData.get("type") as string | null
+    const targetUserIdValue = formData.get("userId")
+    const targetUserId = typeof targetUserIdValue === "string" && targetUserIdValue.trim()
+      ? targetUserIdValue.trim()
+      : session.user.id
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    }
+
+    if (
+      targetUserId !== session.user.id &&
+      !(await canManageUser(session, targetUserId))
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     // Validate file size (max 10MB)
@@ -48,7 +60,7 @@ export async function POST(req: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now()
     const extension = file.name.split(".").pop() || "jpg"
-    const filename = `${session.user.id}_${timestamp}.${extension}`
+    const filename = `${targetUserId}_${timestamp}.${extension}`
 
     // Determine upload directory
     let uploadDir: string
@@ -86,7 +98,7 @@ export async function POST(req: NextRequest) {
     // If avatar upload, update user profile
     if (type === "avatar") {
       await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: targetUserId },
         data: { photo: url },
       })
     }

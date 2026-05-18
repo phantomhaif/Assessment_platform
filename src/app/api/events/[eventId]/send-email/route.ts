@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { renderEmailBrandHeader, sendEmail } from "@/lib/email"
+import { canManageEvent } from "@/lib/authz"
 
 export async function POST(
   req: NextRequest,
@@ -12,11 +13,11 @@ export async function POST(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { eventId } = await params
+    if (!(await canManageEvent(session, eventId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { eventId } = await params
     const { subject, bodyRu, bodyEn, roles } = await req.json()
 
     if (!subject || !bodyRu) {

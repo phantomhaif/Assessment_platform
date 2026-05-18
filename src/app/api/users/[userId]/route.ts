@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { normalizeOrganizationName } from "@/lib/organizations"
+import { canManageUser, isAdmin } from "@/lib/authz"
 
 export async function GET(
   req: NextRequest,
@@ -12,11 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "ORGANIZER") {
+    const { userId } = await params
+
+    if (!(await canManageUser(session, userId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const { userId } = await params
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -29,6 +31,8 @@ export async function GET(
                 name: true,
                 nameEn: true,
                 type: true,
+                options: true,
+                optionsEn: true,
               },
             },
           },
@@ -63,20 +67,48 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (session.user.role !== "ADMIN") {
+    const { userId } = await params
+
+    if (!(await canManageUser(session, userId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { userId } = await params
     const body = await req.json()
     const { role, firstName, lastName, middleName, organization, position, phone, customFields } = body
 
     const data: Record<string, unknown> = {}
-    if (role !== undefined) data.role = role
+    // Only the admin may change roles (prevents privilege escalation and an
+    // organizer "poaching" or locking out accounts shared across events).
+    if (role !== undefined && isAdmin(session.user.role)) data.role = role
     if (firstName !== undefined) data.firstName = firstName
     if (lastName !== undefined) data.lastName = lastName
     if (middleName !== undefined) data.middleName = middleName
-    if (organization !== undefined) data.organization = organization
+    if (organization !== undefined) {
+      const organizationName = normalizeOrganizationName(organization)
+      data.organization = organizationName
+
+      if (organizationName) {
+        const existingOrganization = await prisma.organization.findFirst({
+          where: {
+            name: {
+              equals: organizationName,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true },
+        })
+        const organizationRecord =
+          existingOrganization ||
+          (await prisma.organization.create({
+            data: { name: organizationName, isApproved: true, createdById: session.user.id },
+            select: { id: true },
+          }))
+
+        data.organizationId = organizationRecord.id
+      } else {
+        data.organizationId = null
+      }
+    }
     if (position !== undefined) data.position = position
     if (phone !== undefined) data.phone = phone
 

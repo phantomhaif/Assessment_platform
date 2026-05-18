@@ -94,6 +94,10 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    if (session.user.role === "EXPERT") {
+      return NextResponse.json({ error: "Экспертам недоступна загрузка конкурсных заданий" }, { status: 403 })
+    }
+
     // Check event status allows uploads
     const eventStatus = teamMember.team.event.status
     if (!["IN_PROGRESS", "SCORING"].includes(eventStatus)) {

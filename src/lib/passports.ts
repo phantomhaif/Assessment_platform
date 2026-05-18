@@ -64,6 +64,13 @@ function hasCyrillic(value: string) {
   return /[А-Яа-яЁё]/.test(value)
 }
 
+function splitBilingualLabel(value: string | null | undefined) {
+  const trimmed = value?.trim() || ""
+  const parts = trimmed.split(/\s+\/\s+/).map((part) => part.trim()).filter(Boolean)
+  if (parts.length !== 2) return null
+  return { ru: parts[0], en: parts[1] }
+}
+
 function transliterateRu(value: string) {
   const map: Record<string, string> = {
     А: "A", а: "a", Б: "B", б: "b", В: "V", в: "v", Г: "G", г: "g",
@@ -85,9 +92,30 @@ function transliterateRu(value: string) {
 
 function toEnglishText(primary: string | null | undefined, fallback: string | null | undefined) {
   const primaryValue = primary?.trim()
-  if (primaryValue) return primaryValue
+  if (primaryValue) {
+    const splitPrimary = splitBilingualLabel(primaryValue)
+    if (splitPrimary?.en) return splitPrimary.en
+    if (!hasCyrillic(primaryValue)) return primaryValue
+  }
   const fallbackValue = fallback?.trim() || ""
+  if (!fallbackValue) return fallbackValue
+  const splitFallback = splitBilingualLabel(fallbackValue)
+  if (splitFallback?.en) return splitFallback.en
   return hasCyrillic(fallbackValue) ? transliterateRu(fallbackValue) : fallbackValue
+}
+
+function toRussianText(primary: string | null | undefined, fallback: string | null | undefined) {
+  const primaryValue = primary?.trim()
+  if (primaryValue) {
+    const splitPrimary = splitBilingualLabel(primaryValue)
+    if (splitPrimary?.ru) return splitPrimary.ru
+    if (hasCyrillic(primaryValue)) return primaryValue
+  }
+  const fallbackValue = fallback?.trim() || ""
+  if (!fallbackValue) return fallbackValue
+  const splitFallback = splitBilingualLabel(fallbackValue)
+  if (splitFallback?.ru) return splitFallback.ru
+  return fallbackValue
 }
 
 export function formatPassportDateRange(
@@ -135,7 +163,7 @@ export function buildSkillPassportData(
     name:
       locale === "en"
         ? toEnglishText(group.nameEn, group.name) || `Skill group ${Number(group.number ?? index + 1)}`
-        : group.name || group.nameEn || `Группа ${Number(group.number ?? index + 1)}`,
+        : toRussianText(group.name, group.nameEn) || `Группа ${Number(group.number ?? index + 1)}`,
     score: Number(group.score ?? 0),
     maxScore: Number(group.maxScore ?? 0),
   }))
@@ -147,13 +175,11 @@ export function buildSkillPassportData(
         const schemaModule = schemaModulesByCode.get(String(module.code || ""))
         if (locale === "en") {
           return (
-            (module.nameEn || schemaModule?.nameEn || "").trim() ||
-            module.name ||
-            schemaModule?.name ||
+            (module.nameEn || schemaModule?.nameEn || "").trim() || toEnglishText(module.name, schemaModule?.name) ||
             `Module ${String(module.code || index + 1)}`
           )
         }
-        return module.name || schemaModule?.name || module.nameEn || schemaModule?.nameEn || `Модуль ${String(module.code || index + 1)}`
+        return toRussianText(module.name || schemaModule?.name, module.nameEn || schemaModule?.nameEn) || `Модуль ${String(module.code || index + 1)}`
       })(),
     score: Number(module.score ?? 0),
     maxScore: Number(module.maxScore ?? 0),
@@ -174,15 +200,15 @@ export function buildSkillPassportData(
     organization:
       locale === "en"
         ? toEnglishText(passport.user.organization, passport.team?.name || "") || ""
-        : passport.user.organization || passport.team?.name || "",
+        : toRussianText(passport.user.organization, passport.team?.name || "") || "",
     eventName:
       locale === "en"
         ? toEnglishText(passport.event.nameEn, passport.event.name)
-        : passport.event.name,
+        : toRussianText(passport.event.name, passport.event.nameEn),
     competency:
       locale === "en"
         ? toEnglishText(passport.event.competencyEn, passport.event.competency)
-        : passport.event.competency,
+        : toRussianText(passport.event.competency, passport.event.competencyEn),
     passportBackgroundUrl:
       locale === "en"
         ? passport.event.passportBackgroundEn || passport.event.passportBackgroundRu || undefined
@@ -250,3 +276,4 @@ export async function ensurePassportPdf(
 export async function readPassportPdf(passportId: string, locale: PassportLocale): Promise<Buffer> {
   return readFile(getPassportPdfFilePath(passportId, locale))
 }
+
