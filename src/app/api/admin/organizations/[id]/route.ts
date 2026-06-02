@@ -26,10 +26,19 @@ export async function PATCH(
     const mergeIntoId = normalizeText(body.mergeIntoId)
 
     if (mergeIntoId && mergeIntoId !== id) {
+      const target = await prisma.organization.findUnique({
+        where: { id: mergeIntoId },
+        select: { name: true },
+      })
+
+      if (!target) {
+        return NextResponse.json({ error: "Target organization not found" }, { status: 404 })
+      }
+
       await prisma.$transaction([
         prisma.user.updateMany({
           where: { organizationId: id },
-          data: { organizationId: mergeIntoId },
+          data: { organizationId: mergeIntoId, organization: target.name },
         }),
         prisma.organization.delete({ where: { id } }),
       ])
@@ -50,10 +59,20 @@ export async function PATCH(
     if ("country" in body) data.country = normalizeText(body.country)
     if ("isApproved" in body) data.isApproved = Boolean(body.isApproved)
 
-    const organization = await prisma.organization.update({
-      where: { id },
-      data,
-    })
+    const [organization] = await prisma.$transaction([
+      prisma.organization.update({
+        where: { id },
+        data,
+      }),
+      ...(data.name
+        ? [
+            prisma.user.updateMany({
+              where: { organizationId: id },
+              data: { organization: data.name },
+            }),
+          ]
+        : []),
+    ])
 
     return NextResponse.json(organization)
   } catch (error) {

@@ -214,7 +214,7 @@ export default function RankingsPage() {
             <div className="flex flex-wrap gap-2">
               {[
                 ["teams", locale === "ru" ? "Команды" : "Teams"],
-                ["universities", locale === "ru" ? "Университеты" : "Universities"],
+                ["universities", locale === "ru" ? "Организации" : "Organizations"],
                 ["participants", locale === "ru" ? "Участники" : "Participants"],
                 ["live", locale === "ru" ? "По дням мероприятия" : "Event days"],
               ].map(([key, label]) => (
@@ -469,7 +469,7 @@ function getMedalColor(rank: number) {
 }
 
 function getViewTitle(view: RankingView, locale: "ru" | "en") {
-  if (view === "universities") return locale === "ru" ? "Сводный рейтинг университетов" : "Overall University Ranking"
+  if (view === "universities") return locale === "ru" ? "Сводный рейтинг организаций" : "Overall Organization Ranking"
   if (view === "participants") return locale === "ru" ? "Рейтинг участников" : "Participant Ranking"
   if (view === "live") return locale === "ru" ? "Рейтинг по дням мероприятия" : "Event Day Ranking"
   return locale === "ru" ? "Рейтинг команд по компетенциям" : "Team Rankings by Competency"

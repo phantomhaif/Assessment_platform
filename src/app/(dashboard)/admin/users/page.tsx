@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Search, User, Plus, X, Trash2 } from "lucide-react"
+import { Search, Plus, X, Trash2 } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 
 interface UserData {
@@ -448,16 +448,11 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-gray-500" />
-                      </div>
-                      <div>
-                        <Link href={`/admin/users/${user.id}/profile`} className="font-medium hover:text-[#C41E3A]">
-                          {user.lastName} {user.firstName}
-                        </Link>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
+                    <div>
+                      <Link href={`/admin/users/${user.id}/profile`} className="font-medium hover:text-[#C41E3A]">
+                        {user.lastName} {user.firstName}
+                      </Link>
+                      <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
