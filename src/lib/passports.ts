@@ -219,6 +219,7 @@ export function buildSkillPassportData(
       locale
     ),
     totalScore: Number(passport.totalScore ?? 0),
+    totalMaxScore: modules.reduce((sum, module) => sum + (module.maxScore ?? 0), 0),
     locale,
     skillGroups,
     modules,

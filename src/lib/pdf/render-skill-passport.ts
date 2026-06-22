@@ -24,6 +24,7 @@ export interface SkillPassportData {
   competency: string
   dateRange: string
   totalScore: number
+  totalMaxScore: number
   passportBackgroundUrl?: string
   locale?: PassportLocale
   skillGroups: ScoreRowData[]
@@ -39,7 +40,7 @@ const copy = {
     signRole1: "Председатель правления Кластера «Креономика»",
     signRole2: "Академик Санкт-Петербургской Инженерной Академии",
     resultsTitle: "Полученные\nрезультаты",
-    totalLabel: "из 100 баллов",
+    totalLabel: (max: string) => `из ${max} баллов`,
     skillSection: "Детализация полученных результатов в разрезе группы навыков / WSSS:",
     moduleSection: "Детализация полученных результатов в разрезе модулей:",
   },
@@ -51,7 +52,7 @@ const copy = {
     signRole1: "CHAIRMAN OF THE CLUSTER CREONOMYCA",
     signRole2: "Academician of St. Petersburg Engineering Academy",
     resultsTitle: "Achieved\nresults",
-    totalLabel: "out of 100 points",
+    totalLabel: (max: string) => `out of ${max} points`,
     skillSection: "Detailed score breakdown by skill group / WSSS:",
     moduleSection: "Detailed score breakdown by modules:",
   },
@@ -155,6 +156,8 @@ function buildPassportHtml(data: SkillPassportData) {
   const eventName = (data.eventName || "-").replace(/\s+/g, " ").trim()
   const competency = ((data.competency || "-").toUpperCase()).replace(/\s+/g, " ").trim()
   const totalScore = formatScore(data.totalScore ?? 0, locale)
+  const totalMaxScore = formatScore(data.totalMaxScore ?? 0, locale)
+  const totalLabel = text.totalLabel(totalMaxScore)
   const backgroundSrc = resolveBackgroundSrc(locale, data.passportBackgroundUrl)
   const signatureSrc = signatureSets[locale]
   const sortedSkillGroups = [...(data.skillGroups || [])].sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
@@ -299,7 +302,7 @@ function buildPassportHtml(data: SkillPassportData) {
           <h2 class="results-title">${escapeHtml(text.resultsTitle)}</h2>
           <div class="total-wrap">
             <p class="total-value">${escapeHtml(totalScore)}</p>
-            <div class="total-label">${escapeHtml(text.totalLabel)}</div>
+            <div class="total-label">${escapeHtml(totalLabel)}</div>
           </div>
         </div>
 

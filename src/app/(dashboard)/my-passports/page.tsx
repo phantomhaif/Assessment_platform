@@ -120,7 +120,15 @@ export default function MyPassportsPage() {
                     <p className="text-white text-3xl font-bold">
                       {passport.totalScore.toFixed(1)}
                     </p>
-                    <p className="text-red-100 text-xs">{t.passports.outOf100}</p>
+                    <p className="text-red-100 text-xs">
+                      {(() => {
+                        const maxScore = passport.moduleScores.reduce(
+                          (sum, module) => sum + (module.maxScore || 0),
+                          0
+                        )
+                        return locale === "ru" ? `из ${maxScore} баллов` : `out of ${maxScore} points`
+                      })()}
+                    </p>
                   </div>
                 </div>
               </div>
