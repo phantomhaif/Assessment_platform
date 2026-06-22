@@ -11,6 +11,7 @@ import { getLocalizedEventName } from "@/lib/events"
 interface Passport {
   id: string
   totalScore: number
+  moduleScores?: { maxScore?: number }[]
   publishedAt: string | null
   user: {
     firstName: string
@@ -41,6 +42,9 @@ export default function AdminPassportsPage() {
   const [passports, setPassports] = useState<Passport[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloadingAll, setIsDownloadingAll] = useState(false)
+
+  const getMaxScore = (passport: Passport) =>
+    (passport.moduleScores || []).reduce((sum, module) => sum + (module.maxScore || 0), 0)
 
   useEffect(() => {
     fetchEvents()
@@ -205,7 +209,7 @@ export default function AdminPassportsPage() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t.scoring.score}</p>
-                      <p className="mt-1 text-lg font-bold text-red-600">{passport.totalScore.toFixed(1)}<span className="ml-1 text-sm font-normal text-gray-400">/100</span></p>
+                      <p className="mt-1 text-lg font-bold text-red-600">{passport.totalScore.toFixed(1)}<span className="ml-1 text-sm font-normal text-gray-400">/{getMaxScore(passport)}</span></p>
                     </div>
                   </div>
                   <div>
@@ -262,7 +266,7 @@ export default function AdminPassportsPage() {
                     <span className="text-lg font-bold text-red-600">
                       {passport.totalScore.toFixed(1)}
                     </span>
-                    <span className="text-gray-400">/100</span>
+                    <span className="text-gray-400">/{getMaxScore(passport)}</span>
                   </td>
                   <td className="px-6 py-4">
                     {passport.publishedAt ? (
