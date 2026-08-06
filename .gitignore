@@ -45,3 +45,15 @@ next-env.d.ts
 # uploads (user-generated files)
 /public/uploads
 /uploads
+
+# local dev / agent logs and scratch files
+.codex-*.log
+.codex-*.err.log
+.codex-*.out.log
+next-dev.log
+/tmp/
+/tmp_pre_issue/
+/tmp_pre_issue_fix/
+tmp-check-*
+tmp-partner-logos-*
+tmp_dashboard_latest.png

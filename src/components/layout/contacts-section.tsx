@@ -27,13 +27,6 @@ const contacts = {
         email: "gladkova.m@iitb.ru",
         phone: "+7 (911) 195-47-45",
       },
-      {
-        name: "Тимур Белышев",
-        role: "Технический эксперт",
-        description: "Инженер тренингового центра компетенций профессионального мастерства Industry Skills",
-        email: "belyshev.t@iitb.ru",
-        phone: "+7 (812) 644-01-26",
-      },
     ],
   },
   en: {
@@ -54,13 +47,6 @@ const contacts = {
         email: "gladkova.m@iitb.ru",
         phone: "+7 (911) 195-47-45",
       },
-      {
-        name: "Timur Belyshev",
-        role: "Technical Expert",
-        description: "Engineer at the Industry Skills professional mastery competency training center",
-        email: "belyshev.t@iitb.ru",
-        phone: "+7 (812) 644-01-26",
-      },
     ],
   },
 } as const
@@ -76,7 +62,7 @@ export function ContactsSection({ locale, className }: ContactsSectionProps) {
         <p className="mt-2 max-w-2xl text-sm text-[#8ea0b5] sm:text-base">{copy.subtitle}</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={cn("grid gap-4", copy.people.length > 1 && "lg:grid-cols-2")}>
         {copy.people.map((person) => (
           <article
             key={person.email}
@@ -84,9 +70,6 @@ export function ContactsSection({ locale, className }: ContactsSectionProps) {
           >
             <h3 className="text-2xl font-semibold text-[#f5f7fb]">{person.name}</h3>
             <p className="mt-3 text-sm font-medium text-[#b8c5d5]">{person.role}</p>
-            {"description" in person && person.description ? (
-              <p className="mt-2 text-sm leading-6 text-[#7d8da1]">{person.description}</p>
-            ) : null}
             <div className="mt-6 space-y-2 text-sm">
               <a className="block text-[#b8c5d5] transition-colors hover:text-[#ff8da3]" href={`mailto:${person.email}`}>
                 {person.email}

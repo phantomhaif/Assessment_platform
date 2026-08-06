@@ -4,7 +4,7 @@ import { ChangeEvent, useState, useEffect, use } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ArrowLeft, User, Mail, Phone, Building, Briefcase, Award, Camera, Pencil, Save, X } from "lucide-react"
+import { ArrowLeft, User, Mail, Phone, Building, Briefcase, Award, Camera, Crop, Pencil, Save, X } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { PhotoCropModal } from "@/components/ui/photo-crop-modal"
 
@@ -60,6 +60,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [isPreparingCrop, setIsPreparingCrop] = useState(false)
   const [message, setMessage] = useState("")
   const [cropFile, setCropFile] = useState<File | null>(null)
   const { t, locale } = useI18n()
@@ -159,6 +160,29 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
     event.currentTarget.value = ""
     if (!user || !file) return
     setCropFile(file)
+  }
+
+  const cropCurrentPhoto = async () => {
+    if (!user?.photo) return
+
+    setIsPreparingCrop(true)
+    setMessage("")
+    try {
+      const response = await fetch(user.photo, { cache: "no-store" })
+      if (!response.ok) throw new Error("Failed to load current photo")
+
+      const blob = await response.blob()
+      const extension =
+        blob.type === "image/png" ? "png" :
+        blob.type === "image/webp" ? "webp" :
+        blob.type === "image/gif" ? "gif" :
+        "jpg"
+      setCropFile(new File([blob], `current-user-photo.${extension}`, { type: blob.type || "image/jpeg" }))
+    } catch {
+      setMessage(locale === "ru" ? "Не удалось открыть текущее фото для кадрирования" : "Failed to open current photo for cropping")
+    } finally {
+      setIsPreparingCrop(false)
+    }
   }
 
   const uploadPhoto = async (file: File) => {
@@ -313,6 +337,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
                 <Camera className="mr-2 h-4 w-4" />
                 {locale === "ru" ? "Заменить" : "Replace"}
               </Button>
+              {user.photo && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  isLoading={isPreparingCrop}
+                  onClick={cropCurrentPhoto}
+                  className="mt-2 w-36"
+                >
+                  <Crop className="mr-2 h-4 w-4" />
+                  {locale === "ru" ? "Кадрировать" : "Crop"}
+                </Button>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>

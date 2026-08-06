@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Camera, Trash2 } from "lucide-react"
+import { Camera, Crop, Trash2 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useI18n } from "@/lib/i18n/context"
 import { PhotoCropModal } from "@/components/ui/photo-crop-modal"
@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const { t, locale } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isPreparingCrop, setIsPreparingCrop] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
   const [isDeleting, setIsDeleting] = useState(false)
   const [profileFields, setProfileFields] = useState<ProfileField[]>([])
@@ -132,6 +133,33 @@ export default function ProfilePage() {
     e.target.value = ""
     if (!file) return
     setCropFile(file)
+  }
+
+  const handleCurrentPhotoCrop = async () => {
+    if (!profile.photo) return
+
+    setIsPreparingCrop(true)
+    setMessage({ type: "", text: "" })
+    try {
+      const response = await fetch(profile.photo, { cache: "no-store" })
+      if (!response.ok) throw new Error("Failed to load current photo")
+
+      const blob = await response.blob()
+      const extension =
+        blob.type === "image/png" ? "png" :
+        blob.type === "image/webp" ? "webp" :
+        blob.type === "image/gif" ? "gif" :
+        "jpg"
+      setCropFile(new File([blob], `current-profile-photo.${extension}`, { type: blob.type || "image/jpeg" }))
+    } catch (error) {
+      console.error("Error preparing current photo crop:", error)
+      setMessage({
+        type: "error",
+        text: locale === "ru" ? "Не удалось открыть текущее фото для кадрирования" : "Failed to open current photo for cropping",
+      })
+    } finally {
+      setIsPreparingCrop(false)
+    }
   }
 
   const uploadCroppedPhoto = async (file: File) => {
@@ -246,6 +274,19 @@ export default function ProfilePage() {
               <div>
                 <p className="font-medium text-gray-900">{t.profile.profilePhoto}</p>
                 <p className="text-sm text-gray-500">{t.profile.photoHint}</p>
+                {profile.photo && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    isLoading={isPreparingCrop}
+                    onClick={handleCurrentPhotoCrop}
+                    className="mt-3"
+                  >
+                    <Crop className="mr-2 h-4 w-4" />
+                    {locale === "ru" ? "Кадрировать текущее фото" : "Crop current photo"}
+                  </Button>
+                )}
               </div>
             </div>
 
